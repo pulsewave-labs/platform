@@ -1,12 +1,18 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+let _supabase: ReturnType<typeof createBrowserClient> | null = null
+function getSupabase() {
+  if (!_supabase) {
+    _supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+  }
+  return _supabase
+}
 
 async function getAuthHeaders() {
-  const { data: { session } } = await supabase.auth.getSession()
+  const { data: { session } } = await getSupabase().auth.getSession()
   return session?.access_token 
     ? { 'Authorization': `Bearer ${session.access_token}`, 'Content-Type': 'application/json' }
     : { 'Content-Type': 'application/json' }
@@ -40,4 +46,5 @@ export const api = {
 }
 
 // Auth utilities
-export { supabase }
+export { getSupabase as supabase }
+export const supabaseClient = getSupabase
