@@ -1,9 +1,40 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import RiskGauge from '../../../components/dashboard/risk-gauge'
+import { Skeleton } from '../../../components/ui/skeleton'
+import { DemoModeBanner } from '../../../components/ui/empty-state'
+import { useJournal, useJournalStats, useSettings, useRiskCalculation } from '../../../lib/hooks'
 import { Shield, Calculator, AlertTriangle, TrendingDown } from 'lucide-react'
+
+// Mock data for fallback
+const mockOpenPositions = [
+  {
+    id: '1',
+    pair: 'BTC/USDT',
+    direction: 'LONG' as const,
+    size: '$12,500',
+    unrealizedPnL: 847.30,
+    riskPercent: 2.1
+  },
+  {
+    id: '2',
+    pair: 'ETH/USDT',
+    direction: 'SHORT' as const,
+    size: '$8,200',
+    unrealizedPnL: -234.50,
+    riskPercent: 1.8
+  },
+  {
+    id: '3',
+    pair: 'SOL/USDT',
+    direction: 'LONG' as const,
+    size: '$5,800',
+    unrealizedPnL: 156.20,
+    riskPercent: 1.2
+  }
+]
 
 // Mock position data
 const openPositions = [
@@ -47,27 +78,111 @@ export default function RiskPage() {
   const [riskPercent, setRiskPercent] = useState('2')
   const [entryPrice, setEntryPrice] = useState('69420')
   const [stopLoss, setStopLoss] = useState('68200')
+  const [calculation, setCalculation] = useState<any>(null)
   
-  const calculatePositionSize = () => {
-    const account = parseFloat(accountSize)
-    const risk = parseFloat(riskPercent) / 100
-    const entry = parseFloat(entryPrice)
-    const stop = parseFloat(stopLoss)
-    
-    if (account && risk && entry && stop && entry !== stop) {
-      const riskAmount = account * risk
-      const priceRisk = Math.abs(entry - stop)
-      const positionSize = riskAmount / priceRisk
-      return positionSize.toFixed(4)
+  // Fetch data
+  const { data: openTrades, loading: tradesLoading, error: tradesError } = useJournal({ status: 'open' })
+  const { data: journalStats, loading: statsLoading } = useJournalStats()
+  const { data: settings, loading: settingsLoading } = useSettings()
+  const { calculateRisk, loading: calculationLoading } = useRiskCalculation()
+
+  // Update account size from settings
+  useEffect(() => {
+    if (settings?.accountSize) {
+      setAccountSize(settings.accountSize.toString())
     }
-    return '0.0000'
-  }
+    if (settings?.maxRiskPerTrade) {
+      setRiskPercent(settings.maxRiskPerTrade.toString())
+    }
+  }, [settings])
+
+  // Calculate position size using API
+  useEffect(() => {
+    const calculatePositionSize = async () => {
+      const account = parseFloat(accountSize)
+      const risk = parseFloat(riskPercent) / 100
+      const entry = parseFloat(entryPrice)
+      const stop = parseFloat(stopLoss)
+      
+      if (account && risk && entry && stop && entry !== stop) {
+        try {
+          const result = await calculateRisk({
+            accountSize: account,
+            riskPercent: risk * 100,
+            entryPrice: entry,
+            stopLoss: stop
+          })
+          setCalculation(result)
+        } catch (error) {
+          // Fallback to manual calculation
+          const riskAmount = account * risk
+          const priceRisk = Math.abs(entry - stop)
+          const positionSize = riskAmount / priceRisk
+          
+          setCalculation({
+            positionSize: positionSize.toFixed(4),
+            riskAmount: riskAmount.toFixed(2),
+            priceRisk: priceRisk.toFixed(2)
+          })
+        }
+      }
+    }
+    
+    calculatePositionSize()
+  }, [accountSize, riskPercent, entryPrice, stopLoss, calculateRisk])
+
+  // Prepare risk metrics from real data
+  const openPositions = openTrades?.slice(0, 3).map(trade => ({
+    id: trade.id,
+    pair: trade.pair,
+    direction: trade.direction,
+    size: `$${(trade.positionSize * trade.entryPrice || 0).toFixed(0)}`,
+    unrealizedPnL: trade.unrealizedPnL || 0,
+    riskPercent: ((Math.abs(trade.entryPrice - trade.stopLoss) * trade.positionSize) / parseFloat(accountSize) * 100) || 0
+  })) || mockOpenPositions
+
+  const dailyPnL = journalStats?.dailyPnL || 1247.50
+  const lossLimitRemaining = settings?.maxDailyLoss ? (settings.maxDailyLoss * parseFloat(accountSize) / 100) - Math.abs(Math.min(dailyPnL, 0)) : 1200
+  const maxPositions = settings?.maxPositions || 5
+  const currentPositions = openTrades?.length || 3
   
-  const calculateRiskAmount = () => {
-    const account = parseFloat(accountSize)
-    const risk = parseFloat(riskPercent) / 100
-    return (account * risk).toFixed(2)
-  }
+  const riskMetrics = [
+    { 
+      label: 'Daily P&L', 
+      value: `${dailyPnL >= 0 ? '+' : ''}$${dailyPnL.toFixed(2)}`, 
+      status: dailyPnL >= 0 ? 'positive' as const : 'negative' as const
+    },
+    { 
+      label: 'Loss Limit Remaining', 
+      value: `$${lossLimitRemaining.toFixed(2)}`, 
+      status: 'neutral' as const
+    },
+    { 
+      label: 'Max Positions', 
+      value: `${currentPositions} of ${maxPositions}`, 
+      status: 'neutral' as const
+    },
+    { 
+      label: 'Correlation Risk', 
+      value: 'Low', 
+      status: 'positive' as const
+    },
+    { 
+      label: 'Tilt Score', 
+      value: '😎 Cool', 
+      status: 'positive' as const
+    },
+    { 
+      label: 'Drawdown', 
+      value: `${journalStats?.drawdown || 2.3}%`, 
+      status: 'positive' as const
+    }
+  ]
+
+  // Calculate portfolio heat
+  const portfolioHeat = openPositions.reduce((total, pos) => total + pos.riskPercent, 0)
+  
+  const isDemo = tradesError || !openTrades
   
   return (
     <motion.div 
@@ -76,6 +191,9 @@ export default function RiskPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
     >
+      {/* Demo Mode Banner */}
+      {isDemo && <DemoModeBanner />}
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -106,13 +224,17 @@ export default function RiskPage() {
           </div>
           
           <div className="flex justify-center mb-6">
-            <RiskGauge percentage={42} />
+            <RiskGauge percentage={Math.min(portfolioHeat, 100)} />
           </div>
           
           <div className="text-sm text-[#9ca3af]">
-            You're using <span className="text-white font-semibold">42%</span> of your risk budget.
+            You're using <span className="text-white font-semibold">{portfolioHeat.toFixed(0)}%</span> of your risk budget.
             <br />
-            This is considered a <span className="text-[#4ade80] font-semibold">healthy</span> level.
+            This is considered a <span className={`font-semibold ${
+              portfolioHeat < 50 ? 'text-[#4ade80]' : portfolioHeat < 75 ? 'text-[#fbbf24]' : 'text-[#f87171]'
+            }`}>
+              {portfolioHeat < 50 ? 'healthy' : portfolioHeat < 75 ? 'moderate' : 'high'}
+            </span> level.
           </div>
         </div>
       </motion.div>
@@ -282,27 +404,39 @@ export default function RiskPage() {
             <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">
               Risk Amount
             </div>
-            <div className="text-lg font-bold text-[#f87171] font-mono">
-              ${calculateRiskAmount()}
-            </div>
+            {calculationLoading ? (
+              <Skeleton className="w-20 h-6" />
+            ) : (
+              <div className="text-lg font-bold text-[#f87171] font-mono">
+                ${calculation?.riskAmount || '0.00'}
+              </div>
+            )}
           </div>
           
           <div className="bg-[#0a0e17] rounded-xl p-4 border border-[#1b2332]">
             <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">
               Position Size
             </div>
-            <div className="text-lg font-bold text-[#00F0B5] font-mono">
-              {calculatePositionSize()} BTC
-            </div>
+            {calculationLoading ? (
+              <Skeleton className="w-24 h-6" />
+            ) : (
+              <div className="text-lg font-bold text-[#00F0B5] font-mono">
+                {calculation?.positionSize || '0.0000'} BTC
+              </div>
+            )}
           </div>
           
           <div className="bg-[#0a0e17] rounded-xl p-4 border border-[#1b2332]">
             <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">
               Price Risk
             </div>
-            <div className="text-lg font-bold text-white font-mono">
-              ${Math.abs(parseFloat(entryPrice || '0') - parseFloat(stopLoss || '0')).toFixed(2)}
-            </div>
+            {calculationLoading ? (
+              <Skeleton className="w-16 h-6" />
+            ) : (
+              <div className="text-lg font-bold text-white font-mono">
+                ${calculation?.priceRisk || Math.abs(parseFloat(entryPrice || '0') - parseFloat(stopLoss || '0')).toFixed(2)}
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

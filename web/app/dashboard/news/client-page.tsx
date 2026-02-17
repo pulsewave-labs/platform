@@ -2,7 +2,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import NewsItem from '../../../components/dashboard/news-item'
-import { Newspaper, Globe, TrendingUp, DollarSign, Scale, AlertCircle } from 'lucide-react'
+import { NewsItemSkeleton } from '../../../components/ui/skeleton'
+import { EmptyState, DemoModeBanner } from '../../../components/ui/empty-state'
+import { useNews } from '../../../lib/hooks'
+import { Newspaper, Globe, TrendingUp, DollarSign, Scale, AlertCircle, RefreshCw } from 'lucide-react'
 
 type Category = 'All' | 'Macro' | 'Whale' | 'Funding' | 'Regulatory'
 
@@ -119,14 +122,18 @@ const categoryIcons = {
 export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState<Category>('All')
   
+  // Fetch news data
+  const { data: news, loading, error, refetch } = useNews(selectedCategory)
+  
+  const newsData = news || mockNews
   const filteredNews = selectedCategory === 'All' 
-    ? mockNews 
-    : mockNews.filter(news => news.category === selectedCategory)
+    ? newsData 
+    : newsData.filter(item => item.category === selectedCategory)
   
   const impactCounts = {
-    HIGH: mockNews.filter(n => n.impact === 'HIGH').length,
-    MED: mockNews.filter(n => n.impact === 'MED').length,
-    LOW: mockNews.filter(n => n.impact === 'LOW').length
+    HIGH: newsData.filter(n => n.impact === 'HIGH').length,
+    MED: newsData.filter(n => n.impact === 'MED').length,
+    LOW: newsData.filter(n => n.impact === 'LOW').length
   }
   
   return (
@@ -136,24 +143,38 @@ export default function NewsPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
     >
+      {/* Demo Mode Banner */}
+      {error && <DemoModeBanner />}
+      
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.6 }}
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-[#00F0B5]/20 rounded-xl flex items-center justify-center">
-            <Newspaper size={18} className="text-[#00F0B5]" />
-          </div>
-          <div>
-            <div className="text-sm text-[#6b7280]">Market News</div>
-            <div className="flex items-center gap-4 text-sm">
-              <span className="text-[#f87171] font-semibold">{impactCounts.HIGH} High Impact</span>
-              <span className="text-[#fbbf24] font-semibold">{impactCounts.MED} Medium</span>
-              <span className="text-[#6b7280] font-semibold">{impactCounts.LOW} Low</span>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-[#00F0B5]/20 rounded-xl flex items-center justify-center">
+              <Newspaper size={18} className="text-[#00F0B5]" />
+            </div>
+            <div>
+              <div className="text-sm text-[#6b7280]">Market News</div>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-[#f87171] font-semibold">{impactCounts.HIGH} High Impact</span>
+                <span className="text-[#fbbf24] font-semibold">{impactCounts.MED} Medium</span>
+                <span className="text-[#6b7280] font-semibold">{impactCounts.LOW} Low</span>
+              </div>
             </div>
           </div>
+          
+          <button
+            onClick={() => refetch()}
+            disabled={loading}
+            className="flex items-center gap-2 px-3 py-2 text-[#6b7280] hover:text-white border border-[#1b2332] rounded-lg transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+            Refresh
+          </button>
         </div>
       </motion.div>
       
@@ -195,28 +216,30 @@ export default function NewsPage() {
         transition={{ delay: 0.3, duration: 0.6 }}
       >
         <div className="space-y-0">
-          {filteredNews.map((news, index) => (
-            <motion.div
-              key={news.id}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + index * 0.03, duration: 0.4 }}
-            >
-              <NewsItem news={news} />
-            </motion.div>
-          ))}
-          
-          {filteredNews.length === 0 && (
-            <motion.div
-              className="text-center py-12"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.4, duration: 0.4 }}
-            >
-              <Newspaper size={48} className="text-[#1b2332] mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-white mb-2">No news found</h3>
-              <p className="text-[#6b7280]">Try selecting a different category.</p>
-            </motion.div>
+          {loading ? (
+            Array.from({ length: 8 }).map((_, index) => (
+              <NewsItemSkeleton key={index} />
+            ))
+          ) : filteredNews.length > 0 ? (
+            filteredNews.map((newsItem, index) => (
+              <motion.div
+                key={newsItem.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + index * 0.03, duration: 0.4 }}
+              >
+                <NewsItem news={newsItem} />
+              </motion.div>
+            ))
+          ) : (
+            <div className="py-12">
+              <EmptyState
+                icon={Newspaper}
+                title="No news found"
+                description="Try selecting a different category or refresh to load new articles."
+                action={{ label: 'Refresh', onClick: refetch }}
+              />
+            </div>
           )}
         </div>
       </motion.div>

@@ -1,7 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { ToastProvider, useSuccessToast, useErrorToast } from '../../../components/ui/toast'
+import { DemoModeBanner } from '../../../components/ui/empty-state'
+import { Skeleton } from '../../../components/ui/skeleton'
+import { useSettings } from '../../../lib/hooks'
+import { supabase } from '../../../lib/api'
 import { Settings as SettingsIcon, User, Bell, Link, Shield, Check, X } from 'lucide-react'
 
 type Tab = 'Account' | 'Notifications' | 'Exchanges' | 'Risk Parameters'
@@ -42,6 +47,12 @@ const exchangeConnections = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>('Account')
+  const [userProfile, setUserProfile] = useState({
+    fullName: '',
+    email: '',
+    timezone: 'UTC-8',
+    tradingStyle: 'Swing Trader'
+  })
   const [notifications, setNotifications] = useState({
     signals: true,
     trades: true,
@@ -50,7 +61,6 @@ export default function SettingsPage() {
     email: true,
     push: false
   })
-  
   const [riskParams, setRiskParams] = useState({
     maxRiskPerTrade: '2',
     maxDailyLoss: '5',
@@ -58,6 +68,47 @@ export default function SettingsPage() {
     autoStopTrading: true,
     requireConfirmation: true
   })
+  const [saving, setSaving] = useState(false)
+
+  // Fetch settings and user data
+  const { data: settings, loading: settingsLoading, error: settingsError, updateSettings } = useSettings()
+  const showSuccess = useSuccessToast()
+  const showError = useErrorToast()
+
+  // Load user profile from Supabase
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          setUserProfile(prev => ({
+            ...prev,
+            fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
+            email: user.email || ''
+          }))
+        }
+      } catch (error) {
+        console.error('Failed to load user profile:', error)
+      }
+    }
+    
+    loadUserProfile()
+  }, [])
+
+  // Load settings data
+  useEffect(() => {
+    if (settings) {
+      if (settings.notifications) {
+        setNotifications(prev => ({ ...prev, ...settings.notifications }))
+      }
+      if (settings.riskParams) {
+        setRiskParams(prev => ({ ...prev, ...settings.riskParams }))
+      }
+      if (settings.profile) {
+        setUserProfile(prev => ({ ...prev, ...settings.profile }))
+      }
+    }
+  }, [settings])
   
   const tabIcons = {
     Account: User,
@@ -73,6 +124,42 @@ export default function SettingsPage() {
   const updateRiskParam = (key: keyof typeof riskParams, value: string | boolean) => {
     setRiskParams(prev => ({ ...prev, [key]: value }))
   }
+
+  const handleSaveProfile = async () => {
+    setSaving(true)
+    try {
+      await updateSettings({ profile: userProfile })
+      showSuccess('Profile saved', 'Your profile information has been updated.')
+    } catch (error) {
+      showError('Failed to save profile', 'Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveNotifications = async () => {
+    setSaving(true)
+    try {
+      await updateSettings({ notifications })
+      showSuccess('Notifications saved', 'Your notification preferences have been updated.')
+    } catch (error) {
+      showError('Failed to save notifications', 'Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleSaveRiskParams = async () => {
+    setSaving(true)
+    try {
+      await updateSettings({ riskParams })
+      showSuccess('Risk settings saved', 'Your risk parameters have been updated.')
+    } catch (error) {
+      showError('Failed to save risk settings', 'Please try again.')
+    } finally {
+      setSaving(false)
+    }
+  }
   
   return (
     <motion.div 
@@ -81,7 +168,10 @@ export default function SettingsPage() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
     >
-      {/* Header */}
+        {/* Demo Mode Banner */}
+        {settingsError && <DemoModeBanner />}
+        
+        {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -142,58 +232,86 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-lg font-semibold text-white mb-4">Profile Information</h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Full Name
-                  </label>
-                  <input
-                    type="text"
-                    defaultValue="Mason Clarke"
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
-                  />
+              {settingsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i}>
+                      <Skeleton className="w-20 h-4 mb-2" />
+                      <Skeleton className="w-full h-12 rounded-xl" />
+                    </div>
+                  ))}
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    defaultValue="mason@pulsewavelabs.com"
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
-                  />
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={userProfile.fullName}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, fullName: e.target.value }))}
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      placeholder="Your full name"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={userProfile.email}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      placeholder="your.email@example.com"
+                      disabled
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
+                      Timezone
+                    </label>
+                    <select 
+                      value={userProfile.timezone}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, timezone: e.target.value }))}
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                    >
+                      <option value="UTC-8">UTC-8 (Pacific Time)</option>
+                      <option value="UTC-5">UTC-5 (Eastern Time)</option>
+                      <option value="UTC+0">UTC+0 (London)</option>
+                      <option value="UTC+1">UTC+1 (Central Europe)</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
+                      Trading Style
+                    </label>
+                    <select 
+                      value={userProfile.tradingStyle}
+                      onChange={(e) => setUserProfile(prev => ({ ...prev, tradingStyle: e.target.value }))}
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                    >
+                      <option value="Swing Trader">Swing Trader</option>
+                      <option value="Day Trader">Day Trader</option>
+                      <option value="Scalper">Scalper</option>
+                      <option value="Position Trader">Position Trader</option>
+                    </select>
+                  </div>
                 </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Timezone
-                  </label>
-                  <select className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors">
-                    <option>UTC-8 (Pacific Time)</option>
-                    <option>UTC-5 (Eastern Time)</option>
-                    <option>UTC+0 (London)</option>
-                    <option>UTC+1 (Central Europe)</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Trading Style
-                  </label>
-                  <select className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors">
-                    <option>Swing Trader</option>
-                    <option>Day Trader</option>
-                    <option>Scalper</option>
-                    <option>Position Trader</option>
-                  </select>
-                </div>
-              </div>
+              )}
             </div>
             
             <div className="flex justify-end pt-4">
-              <button className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 transition-colors">
-                Save Changes
+              <button 
+                onClick={handleSaveProfile}
+                disabled={saving || settingsLoading}
+                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -314,6 +432,16 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+            </div>
+            
+            <div className="flex justify-end pt-4">
+              <button 
+                onClick={handleSaveNotifications}
+                disabled={saving || settingsLoading}
+                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Notifications'}
+              </button>
             </div>
           </div>
         )}
@@ -487,8 +615,12 @@ export default function SettingsPage() {
             </div>
             
             <div className="flex justify-end pt-4">
-              <button className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 transition-colors">
-                Save Risk Settings
+              <button 
+                onClick={handleSaveRiskParams}
+                disabled={saving || settingsLoading}
+                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {saving ? 'Saving...' : 'Save Risk Settings'}
               </button>
             </div>
           </div>

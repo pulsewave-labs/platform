@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ToastProvider } from '../../components/ui/toast'
 import { 
   LayoutDashboard,
   Target, 
@@ -186,30 +187,32 @@ export default function DashboardLayout({
         />
       </head>
       <body className="min-h-screen bg-[#0a0e17] text-white font-['Plus_Jakarta_Sans']">
-        <Sidebar />
-        <MobileNavigation />
-        
-        <main className="md:ml-16 mb-20 md:mb-0 min-h-screen">
-          <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
-            {/* Top Bar */}
-            <motion.div 
-              className="flex items-center justify-between mb-8"
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <h1 className="text-2xl font-semibold text-white">
-                {getPageTitle()}
-              </h1>
+        <ToastProvider>
+          <Sidebar />
+          <MobileNavigation />
+          
+          <main className="md:ml-16 mb-20 md:mb-0 min-h-screen">
+            <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
+              {/* Top Bar */}
+              <motion.div 
+                className="flex items-center justify-between mb-8"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                <h1 className="text-2xl font-semibold text-white">
+                  {getPageTitle()}
+                </h1>
+                
+                <div className="w-8 h-8 bg-gradient-to-br from-[#00F0B5] to-[#00a882] rounded-full flex items-center justify-center">
+                  <User size={16} className="text-white" />
+                </div>
+              </motion.div>
               
-              <div className="w-8 h-8 bg-gradient-to-br from-[#00F0B5] to-[#00a882] rounded-full flex items-center justify-center">
-                <User size={16} className="text-white" />
-              </div>
-            </motion.div>
-            
-            {children}
-          </div>
-        </main>
+              {children}
+            </div>
+          </main>
+        </ToastProvider>
       </body>
     </html>
   )

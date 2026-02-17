@@ -2,6 +2,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import SignalCard from '../../../components/dashboard/signal-card'
+import { SignalCardSkeleton } from '../../../components/ui/skeleton'
+import { EmptyState, DemoModeBanner } from '../../../components/ui/empty-state'
+import { useSignals } from '../../../lib/hooks'
 import { ChevronDown, Filter, Target } from 'lucide-react'
 
 type Direction = 'ALL' | 'LONG' | 'SHORT'
@@ -124,7 +127,15 @@ export default function SignalsPage() {
   const [selectedDirection, setSelectedDirection] = useState<Direction>('ALL')
   const [selectedTimeframe, setSelectedTimeframe] = useState<Timeframe>('ALL')
   
-  const filteredSignals = mockSignals.filter(signal => {
+  // Fetch signals with filters
+  const { data: signals, loading, error, refetch } = useSignals({
+    pair: selectedPair === 'ALL' ? undefined : selectedPair,
+    direction: selectedDirection === 'ALL' ? undefined : selectedDirection,
+    timeframe: selectedTimeframe === 'ALL' ? undefined : selectedTimeframe
+  })
+
+  // Use mock data for demo mode
+  const filteredSignals = signals || mockSignals.filter(signal => {
     const pairMatch = selectedPair === 'ALL' || signal.pair === selectedPair
     const directionMatch = selectedDirection === 'ALL' || signal.direction === selectedDirection
     const timeframeMatch = selectedTimeframe === 'ALL' || signal.timeframe === selectedTimeframe
@@ -222,6 +233,9 @@ export default function SignalsPage() {
         </div>
       </motion.div>
       
+      {/* Demo Mode Banner */}
+      {error && <DemoModeBanner />}
+      
       {/* Signals List */}
       <motion.div 
         className="space-y-4"
@@ -229,34 +243,34 @@ export default function SignalsPage() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3, duration: 0.6 }}
       >
-        {filteredSignals.map((signal, index) => (
-          <motion.div
-            key={signal.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 + index * 0.05, duration: 0.4 }}
-          >
-            <SignalCard signal={signal} />
-            {signal.reasoning && (
-              <div className="mt-3 ml-4 p-4 bg-[#0a0e17] border-l-2 border-[#1b2332] rounded-r-xl">
-                <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">Analysis</div>
-                <p className="text-sm text-[#9ca3af] leading-relaxed">{signal.reasoning}</p>
-              </div>
-            )}
-          </motion.div>
-        ))}
-        
-        {filteredSignals.length === 0 && (
-          <motion.div
-            className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-12 text-center"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.4 }}
-          >
-            <Target size={48} className="text-[#1b2332] mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No signals found</h3>
-            <p className="text-[#6b7280]">Try adjusting your filters to see more signals.</p>
-          </motion.div>
+        {loading ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <SignalCardSkeleton key={index} />
+          ))
+        ) : filteredSignals.length > 0 ? (
+          filteredSignals.map((signal, index) => (
+            <motion.div
+              key={signal.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.05, duration: 0.4 }}
+            >
+              <SignalCard signal={signal} />
+              {signal.reasoning && (
+                <div className="mt-3 ml-4 p-4 bg-[#0a0e17] border-l-2 border-[#1b2332] rounded-r-xl">
+                  <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">Analysis</div>
+                  <p className="text-sm text-[#9ca3af] leading-relaxed">{signal.reasoning}</p>
+                </div>
+              )}
+            </motion.div>
+          ))
+        ) : (
+          <EmptyState
+            icon={Target}
+            title="No signals found"
+            description="Try adjusting your filters to see more signals."
+            action={{ label: 'Refresh', onClick: refetch }}
+          />
         )}
       </motion.div>
     </motion.div>

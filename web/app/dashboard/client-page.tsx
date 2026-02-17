@@ -1,15 +1,19 @@
 'use client'
 import { motion } from 'framer-motion'
+import { useMemo } from 'react'
 import AIBriefing from '../../components/dashboard/ai-briefing'
 import StatCard from '../../components/dashboard/stat-card'
 import SignalCard from '../../components/dashboard/signal-card'
 import NewsItem from '../../components/dashboard/news-item'
 import RiskGauge from '../../components/dashboard/risk-gauge'
 import EquityCurve from '../../components/dashboard/equity-curve'
+import { StatCardSkeleton, SignalCardSkeleton, NewsItemSkeleton } from '../../components/ui/skeleton'
+import { DemoModeBanner } from '../../components/ui/empty-state'
+import { useSignals, useJournalStats, usePortfolio, useMarketPrices, useNews, useJournal } from '../../lib/hooks'
 import Link from 'next/link'
 import { ArrowRight, TrendingUp, Target } from 'lucide-react'
 
-// Mock data
+// Mock data for graceful degradation
 const mockStats = [
   {
     title: 'Portfolio Value',
@@ -33,6 +37,7 @@ const mockStats = [
     icon: 'chart' as const
   },
   {
+    id: 'open-trades',
     title: 'Open Trades',
     value: '3',
     change: '2 winning',
@@ -41,7 +46,7 @@ const mockStats = [
   }
 ]
 
-const activeSignals = [
+const mockActiveSignals = [
   {
     id: '1',
     pair: 'BTC/USDT',
@@ -80,7 +85,7 @@ const activeSignals = [
   }
 ]
 
-const recentNews = [
+const mockRecentNews = [
   {
     id: '1',
     title: 'Fed Minutes: Hawkish tone as inflation remains sticky above target',
@@ -104,13 +109,11 @@ const recentNews = [
   }
 ]
 
-const recentTrades = [
+const mockRecentTrades = [
   { pair: 'BTC/USDT', direction: 'LONG' as const, pnl: 1247.50, rMultiple: 2.1, date: 'Today' },
   { pair: 'ETH/USDT', direction: 'SHORT' as const, pnl: -342.20, rMultiple: -0.8, date: 'Yesterday' },
   { pair: 'SOL/USDT', direction: 'LONG' as const, pnl: 856.30, rMultiple: 1.9, date: 'Yesterday' }
 ]
-
-const briefingText = `**BTC** testing key support at **$69,420** — 4H regime shows **VOLATILE** with strong volume. Fed minutes released **hawkish tone** causing macro fear. However, **funding rates turned negative** suggesting overleveraged shorts. Your portfolio heat at **42%** remains healthy. **3 active signals** with strong confluence factors.`
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -136,6 +139,69 @@ const itemVariants = {
 }
 
 export default function Dashboard() {
+  // Fetch data with API hooks
+  const { data: signals, loading: signalsLoading, error: signalsError } = useSignals({ limit: 3 })
+  const { data: journalStats, loading: statsLoading, error: statsError } = useJournalStats()
+  const { data: portfolio, loading: portfolioLoading } = usePortfolio(30)
+  const { data: marketPrices, loading: pricesLoading } = useMarketPrices(['BTC/USDT', 'ETH/USDT', 'SOL/USDT'])
+  const { data: news, loading: newsLoading } = useNews()
+  const { data: recentTrades, loading: tradesLoading } = useJournal({ limit: 3 })
+
+  // Prepare stats data
+  const stats = useMemo(() => {
+    if (statsLoading || !journalStats) return mockStats
+
+    return [
+      {
+        title: 'Portfolio Value',
+        value: journalStats.portfolioValue ? `$${journalStats.portfolioValue.toLocaleString()}` : '$142,847',
+        change: journalStats.portfolioChange || '+2.3%',
+        trend: 'up' as const,
+        icon: 'dollar' as const
+      },
+      {
+        title: 'Win Rate (30d)',
+        value: `${Math.round(journalStats.winRate * 100)}%`,
+        change: `${journalStats.totalTrades} trades`,
+        trend: journalStats.winRate >= 0.6 ? 'up' as const : 'down' as const,
+        icon: 'percent' as const
+      },
+      {
+        title: 'Profit Factor',
+        value: journalStats.profitFactor?.toFixed(2) || '2.14',
+        change: journalStats.profitFactor >= 1.5 ? 'Excellent' : 'Good',
+        trend: journalStats.profitFactor >= 1.5 ? 'up' as const : 'neutral' as const,
+        icon: 'chart' as const
+      },
+      {
+        title: 'Open Trades',
+        value: journalStats.openTrades?.toString() || '3',
+        change: journalStats.winningTrades ? `${journalStats.winningTrades} winning` : '2 winning',
+        trend: 'neutral' as const,
+        icon: 'trades' as const
+      }
+    ]
+  }, [journalStats, statsLoading])
+
+  // Generate AI briefing from real data
+  const briefingText = useMemo(() => {
+    if (!signals || !marketPrices || !journalStats) {
+      return `**BTC** testing key support at **$69,420** — 4H regime shows **VOLATILE** with strong volume. Fed minutes released **hawkish tone** causing macro fear. However, **funding rates turned negative** suggesting overleveraged shorts. Your portfolio heat at **42%** remains healthy. **3 active signals** with strong confluence factors.`
+    }
+
+    const btcPrice = marketPrices['BTC/USDT'] || 69420
+    const activeSignalsCount = signals.filter(s => s.status === 'active').length
+    const winRate = Math.round(journalStats.winRate * 100)
+    
+    return `**BTC** trading at **$${btcPrice.toLocaleString()}** with active momentum. Current win rate at **${winRate}%** shows strong performance. Portfolio risk management remains **healthy**. **${activeSignalsCount} active signals** providing confluence opportunities across multiple timeframes.`
+  }, [signals, marketPrices, journalStats])
+
+  // Show demo mode if data fails to load
+  const isDemo = signalsError || statsError
+  const activeSignals = signals || mockActiveSignals
+  const recentNews = news?.slice(0, 3) || mockRecentNews
+  const latestTrades = recentTrades || mockRecentTrades
+
   return (
     <motion.div 
       className="space-y-8"
@@ -143,6 +209,8 @@ export default function Dashboard() {
       initial="hidden"
       animate="visible"
     >
+      {/* Demo Mode Banner */}
+      {isDemo && <DemoModeBanner />}
       {/* AI Briefing */}
       <motion.div variants={itemVariants}>
         <AIBriefing content={briefingText} />
@@ -153,16 +221,22 @@ export default function Dashboard() {
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
         variants={itemVariants}
       >
-        {mockStats.map((stat, index) => (
-          <StatCard
-            key={index}
-            title={stat.title}
-            value={stat.value}
-            change={stat.change}
-            trend={stat.trend}
-            icon={stat.icon}
-          />
-        ))}
+        {statsLoading ? (
+          Array.from({ length: 4 }).map((_, index) => (
+            <StatCardSkeleton key={index} />
+          ))
+        ) : (
+          stats.map((stat, index) => (
+            <StatCard
+              key={index}
+              title={stat.title}
+              value={stat.value}
+              change={stat.change}
+              trend={stat.trend}
+              icon={stat.icon}
+            />
+          ))
+        )}
       </motion.div>
 
       {/* Main Content - Two Column */}
@@ -260,9 +334,15 @@ export default function Dashboard() {
             </div>
             
             <div className="space-y-3">
-              {activeSignals.map((signal) => (
-                <SignalCard key={signal.id} signal={signal} compact />
-              ))}
+              {signalsLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <SignalCardSkeleton key={index} />
+                ))
+              ) : (
+                activeSignals.slice(0, 3).map((signal) => (
+                  <SignalCard key={signal.id} signal={signal} compact />
+                ))
+              )}
             </div>
           </div>
         </motion.div>
@@ -287,9 +367,15 @@ export default function Dashboard() {
           </div>
           
           <div className="space-y-3">
-            {recentNews.map((news) => (
-              <NewsItem key={news.id} news={news} />
-            ))}
+            {newsLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <NewsItemSkeleton key={index} />
+              ))
+            ) : (
+              recentNews.map((news) => (
+                <NewsItem key={news.id} news={news} />
+              ))
+            )}
           </div>
         </motion.div>
 
@@ -310,34 +396,49 @@ export default function Dashboard() {
           </div>
           
           <div className="space-y-3">
-            {recentTrades.map((trade, index) => (
-              <div key={index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
-                <div>
-                  <div className="text-sm font-medium text-white">{trade.pair}</div>
-                  <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                    <span className={`px-2 py-0.5 rounded text-white font-medium ${
-                      trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+            {tradesLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
+                  <div className="animate-pulse space-y-2">
+                    <div className="w-20 h-4 bg-white/[0.06] rounded" />
+                    <div className="w-16 h-3 bg-white/[0.06] rounded" />
+                  </div>
+                  <div className="animate-pulse space-y-2">
+                    <div className="w-16 h-4 bg-white/[0.06] rounded" />
+                    <div className="w-12 h-3 bg-white/[0.06] rounded" />
+                  </div>
+                </div>
+              ))
+            ) : (
+              latestTrades.map((trade, index) => (
+                <div key={trade.id || index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
+                  <div>
+                    <div className="text-sm font-medium text-white">{trade.pair}</div>
+                    <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+                      <span className={`px-2 py-0.5 rounded text-white font-medium ${
+                        trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+                      }`}>
+                        {trade.direction}
+                      </span>
+                      <span>{trade.date || new Date(trade.entryTime || Date.now()).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <div className={`text-sm font-mono tabular-nums font-semibold ${
+                      (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
                     }`}>
-                      {trade.direction}
-                    </span>
-                    <span>{trade.date}</span>
+                      {(trade.pnl || 0) > 0 ? '+' : ''}${(trade.pnl || 0).toFixed(2)}
+                    </div>
+                    <div className={`text-xs font-mono tabular-nums ${
+                      (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                    }`}>
+                      {(trade.rMultiple || 0) > 0 ? '+' : ''}{(trade.rMultiple || 0).toFixed(1)}R
+                    </div>
                   </div>
                 </div>
-                
-                <div className="text-right">
-                  <div className={`text-sm font-mono tabular-nums font-semibold ${
-                    trade.pnl > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                  }`}>
-                    {trade.pnl > 0 ? '+' : ''}${trade.pnl}
-                  </div>
-                  <div className={`text-xs font-mono tabular-nums ${
-                    trade.rMultiple > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                  }`}>
-                    {trade.rMultiple > 0 ? '+' : ''}{trade.rMultiple}R
-                  </div>
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </motion.div>
 
