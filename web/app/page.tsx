@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, useScroll, useTransform, useInView } from 'framer-motion'
+import { motion, useInView, AnimatePresence } from 'framer-motion'
 import { 
   Check, 
   ChevronDown, 
@@ -13,46 +13,49 @@ import {
   Brain,
   Star,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  Zap,
+  Lock,
+  LineChart,
+  Bell,
+  BookOpen,
+  Activity
 } from 'lucide-react'
 
-// Animation variants for Apple-style subtle animations
-const fadeUp = {
-  initial: { opacity: 0, y: 20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }
-}
+const ease = [0.25, 0.1, 0.25, 1] as const
 
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
-
-// Count-up hook for stats
-function useCountUp(end: number, duration: number = 2000) {
+function useCountUp(end: number, duration = 2000) {
   const [count, setCount] = useState(0)
-  const countRef = useRef(null)
-  const inView = useInView(countRef, { once: true })
-
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
   useEffect(() => {
-    if (inView) {
-      let startTime: number
-      const animate = (currentTime: number) => {
-        if (!startTime) startTime = currentTime
-        const progress = Math.min((currentTime - startTime) / duration, 1)
-        setCount(Math.floor(progress * end))
-        if (progress < 1) {
-          requestAnimationFrame(animate)
-        }
-      }
-      requestAnimationFrame(animate)
+    if (!inView) return
+    let start: number
+    const step = (t: number) => {
+      if (!start) start = t
+      const p = Math.min((t - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setCount(Math.floor(eased * end))
+      if (p < 1) requestAnimationFrame(step)
     }
+    requestAnimationFrame(step)
   }, [inView, end, duration])
+  return { count, ref }
+}
 
-  return { count, ref: countRef }
+function Section({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
+  return (
+    <motion.section
+      id={id}
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.7, ease }}
+      className={`py-28 md:py-36 px-6 md:px-8 ${className}`}
+    >
+      {children}
+    </motion.section>
+  )
 }
 
 export default function LandingPage() {
@@ -61,836 +64,515 @@ export default function LandingPage() {
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [waitlistCount, setWaitlistCount] = useState(2847)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
-  const [showMobileMenu, setShowMobileMenu] = useState(false)
-  const [isNavScrolled, setIsNavScrolled] = useState(false)
+  const [mobileMenu, setMobileMenu] = useState(false)
+  const [scrolled, setScrolled] = useState(false)
+  const [annual, setAnnual] = useState(true)
 
-  const { scrollY } = useScroll()
-
-  // Fetch waitlist count on mount
   useEffect(() => {
-    fetch('/api/waitlist')
-      .then(res => res.json())
-      .then(data => setWaitlistCount(data.count || 2847))
-      .catch(() => setWaitlistCount(2847))
+    fetch('/api/waitlist').then(r => r.json()).then(d => setWaitlistCount(d.count || 2847)).catch(() => {})
   }, [])
 
-  // Handle nav scroll effect
   useEffect(() => {
-    const handleScroll = () => {
-      setIsNavScrolled(window.scrollY > 50)
-    }
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
+    const fn = () => setScrolled(window.scrollY > 50)
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  const handleWaitlistSubmit = async (e: React.FormEvent, source = 'hero') => {
+  const submit = async (e: React.FormEvent, src = 'hero') => {
     e.preventDefault()
     if (!email) return
-    
     setIsSubmitting(true)
-    
     try {
-      const response = await fetch('/api/waitlist', {
+      const r = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email,
-          source
-        })
+        body: JSON.stringify({ email, source: src })
       })
-      
-      if (response.ok) {
-        setIsSubmitted(true)
-        setEmail('')
-        setWaitlistCount(prev => prev + 1)
-      }
-    } catch (error) {
-      console.error('Waitlist submission failed:', error)
-    } finally {
-      setIsSubmitting(false)
-    }
+      if (r.ok) { setIsSubmitted(true); setEmail(''); setWaitlistCount(c => c + 1) }
+    } catch {} finally { setIsSubmitting(false) }
   }
 
-  const scrollToSection = (id: string) => {
+  const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-    setShowMobileMenu(false)
+    setMobileMenu(false)
   }
 
   return (
-    <>
-      {/* Google Fonts */}
-      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-      
-      <div className="min-h-screen bg-[#0a0e17] text-white">
-        <style jsx global>{`
-          * {
-            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-          }
-          
-          .text-gradient {
-            background: linear-gradient(135deg, #00F0B5, #00C79A);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-          }
-          
-          .dashboard-mockup {
-            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-            border: 1px solid #334155;
-            box-shadow: 
-              0 20px 25px -5px rgba(0, 0, 0, 0.1),
-              0 10px 10px -5px rgba(0, 0, 0, 0.04),
-              inset 0 1px 0 rgba(255, 255, 255, 0.05);
-          }
-          
-          .signal-card {
-            background: linear-gradient(145deg, #1e293b, #334155);
-            border: 1px solid #475569;
-          }
-          
-          .frosted-glass {
-            backdrop-filter: blur(20px);
-            background: rgba(10, 14, 23, 0.8);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-          }
-        `}</style>
+    <div className="min-h-screen bg-[#0a0e17] text-white overflow-x-hidden">
+      <style jsx global>{`
+        .grad-text {
+          background: linear-gradient(135deg, #00F0B5 0%, #00C79A 50%, #0ea5e9 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .grad-text-warm {
+          background: linear-gradient(135deg, #00F0B5, #fbbf24);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        }
+        .glow-card {
+          position: relative;
+        }
+        .glow-card::before {
+          content: '';
+          position: absolute;
+          inset: -1px;
+          border-radius: inherit;
+          background: linear-gradient(135deg, rgba(0,240,181,0.15), transparent, rgba(14,165,233,0.1));
+          z-index: -1;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        .glow-card:hover::before {
+          opacity: 1;
+        }
+        .frosted {
+          backdrop-filter: blur(20px) saturate(180%);
+          background: rgba(10, 14, 23, 0.75);
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+        .mockup-shadow {
+          box-shadow:
+            0 0 0 1px rgba(255,255,255,0.05),
+            0 25px 50px -12px rgba(0,0,0,0.5),
+            0 0 80px -20px rgba(0,240,181,0.15);
+        }
+      `}</style>
 
-        {/* Navigation */}
-        <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isNavScrolled ? 'frosted-glass' : 'bg-transparent'
-        }`}>
-          <div className="max-w-7xl mx-auto px-8 py-6">
-            <div className="flex items-center justify-between">
-              <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto" />
-              
-              {/* Desktop Nav */}
-              <div className="hidden md:flex items-center gap-12">
-                <button 
-                  onClick={() => scrollToSection('features')}
-                  className="text-#9ca3af hover:text-white transition-colors duration-200"
-                >
-                  Features
-                </button>
-                <button 
-                  onClick={() => scrollToSection('pricing')}
-                  className="text-#9ca3af hover:text-white transition-colors duration-200"
-                >
-                  Pricing
-                </button>
-                <button 
-                  onClick={() => scrollToSection('faq')}
-                  className="text-#9ca3af hover:text-white transition-colors duration-200"
-                >
-                  FAQ
-                </button>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => scrollToSection('hero-cta')}
-                  className="px-6 py-2 bg-#00F0B5 text-black rounded-full font-medium transition-colors hover:bg-#00C79A"
-                >
-                  Join Waitlist
-                </motion.button>
-              </div>
-
-              {/* Mobile Menu Button */}
-              <button 
-                className="md:hidden"
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-              >
-                {showMobileMenu ? <X size={24} /> : <Menu size={24} />}
+      {/* Nav */}
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? 'frosted' : ''}`}>
+        <div className="max-w-7xl mx-auto px-6 md:px-8 py-5">
+          <div className="flex items-center justify-between">
+            <img src="/logo.webp" alt="PulseWave" className="h-7 w-auto" />
+            <div className="hidden md:flex items-center gap-10">
+              {['Features', 'Pricing', 'FAQ'].map(s => (
+                <button key={s} onClick={() => scrollTo(s.toLowerCase())} className="text-sm text-[#8b95a5] hover:text-white transition-colors duration-200">{s}</button>
+              ))}
+              <button onClick={() => scrollTo('cta')} className="text-sm px-5 py-2 bg-[#00F0B5] text-[#0a0e17] rounded-full font-semibold hover:bg-[#4DFFD0] transition-colors">
+                Get Early Access
               </button>
             </div>
-
-            {/* Mobile Menu */}
-            {showMobileMenu && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="md:hidden mt-6 pb-6 border-t border-white/10"
-              >
-                <div className="flex flex-col gap-6 pt-6">
-                  <button onClick={() => scrollToSection('features')} className="text-left text-#9ca3af hover:text-white transition-colors">
-                    Features
-                  </button>
-                  <button onClick={() => scrollToSection('pricing')} className="text-left text-#9ca3af hover:text-white transition-colors">
-                    Pricing
-                  </button>
-                  <button onClick={() => scrollToSection('faq')} className="text-left text-#9ca3af hover:text-white transition-colors">
-                    FAQ
-                  </button>
-                  <button
-                    className="text-left px-6 py-2 bg-#00F0B5 text-black rounded-full font-medium w-fit"
-                    onClick={() => scrollToSection('hero-cta')}
-                  >
-                    Join Waitlist
-                  </button>
-                </div>
+            <button className="md:hidden text-white" onClick={() => setMobileMenu(!mobileMenu)}>
+              {mobileMenu ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
+          <AnimatePresence>
+            {mobileMenu && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="md:hidden pt-6 pb-4 space-y-4">
+                {['Features', 'Pricing', 'FAQ'].map(s => (
+                  <button key={s} onClick={() => scrollTo(s.toLowerCase())} className="block text-[#8b95a5] hover:text-white transition-colors">{s}</button>
+                ))}
+                <button onClick={() => scrollTo('cta')} className="block px-5 py-2 bg-[#00F0B5] text-[#0a0e17] rounded-full font-semibold w-fit">Get Early Access</button>
               </motion.div>
             )}
+          </AnimatePresence>
+        </div>
+      </nav>
+
+      {/* ═══════════ HERO ═══════════ */}
+      <section className="min-h-screen flex items-center justify-center px-6 md:px-8 pt-20 relative">
+        {/* Background glow */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#00F0B5] opacity-[0.04] blur-[150px] rounded-full pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#0ea5e9] opacity-[0.03] blur-[120px] rounded-full pointer-events-none" />
+
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }} className="inline-flex items-center gap-2.5 px-4 py-2 bg-[#00F0B5]/10 border border-[#00F0B5]/20 rounded-full text-sm text-[#00F0B5] font-medium mb-10">
+            <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00F0B5] opacity-75"></span><span className="relative inline-flex h-2 w-2 rounded-full bg-[#00F0B5]"></span></span>
+            Now in beta — {waitlistCount.toLocaleString()} traders on the waitlist
+          </motion.div>
+
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.15 }} className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold leading-[1.05] tracking-tight mb-8">
+            Stop Guessing.
+            <br />
+            Start Trading With
+            <br />
+            <span className="grad-text">Real Intelligence.</span>
+          </motion.h1>
+
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.35 }} className="text-lg md:text-xl text-[#8b95a5] leading-relaxed max-w-2xl mx-auto mb-12">
+            AI-powered signals, automated risk management, and a trading journal — all in one platform. Replace 6 subscriptions with one.
+          </motion.p>
+
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.5 }} id="cta" className="mb-6">
+            {!isSubmitted ? (
+              <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+                <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="flex-1 px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all" />
+                <button type="submit" disabled={isSubmitting} className="px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+                  {isSubmitting ? 'Joining...' : <><span>Get Early Access</span><ArrowRight size={16} /></>}
+                </button>
+              </form>
+            ) : (
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="inline-flex items-center gap-2 px-6 py-3.5 bg-[#00F0B5]/10 border border-[#00F0B5]/20 rounded-xl text-[#00F0B5] font-semibold">
+                <Check size={18} /> You're on the list! We'll be in touch.
+              </motion.div>
+            )}
+          </motion.div>
+
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.7 }} className="flex items-center justify-center gap-6 text-xs text-[#6b7280]">
+            <span className="flex items-center gap-1.5"><Check size={14} className="text-[#00F0B5]" />14-day free trial</span>
+            <span className="flex items-center gap-1.5"><Check size={14} className="text-[#00F0B5]" />No credit card</span>
+            <span className="flex items-center gap-1.5"><Check size={14} className="text-[#00F0B5]" />Cancel anytime</span>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ═══════════ LOGOS / TRUST BAR ═══════════ */}
+      <Section className="!py-16 border-y border-white/[0.04]">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-center text-xs uppercase tracking-[0.2em] text-[#4b5563] mb-8">Built for traders on</p>
+          <div className="flex items-center justify-center gap-12 md:gap-20 text-[#4b5563]">
+            {['Binance', 'Coinbase', 'Bybit', 'OKX', 'KuCoin'].map(name => (
+              <span key={name} className="text-sm font-semibold tracking-wide">{name}</span>
+            ))}
           </div>
-        </nav>
+        </div>
+      </Section>
 
-        {/* Hero Section */}
-        <section className="min-h-screen flex items-center justify-center px-8 pt-24">
-          <div className="max-w-4xl mx-auto text-center">
-            
-            {/* Badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-#9ca3af mb-12"
-            >
-              <div className="w-2 h-2 bg-#00F0B5 rounded-full" />
-              Now in beta — Join {waitlistCount.toLocaleString()} traders
-            </motion.div>
-
-            {/* Main Headline */}
-            <motion.h1
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.2 }}
-              className="text-6xl md:text-7xl lg:text-8xl font-light leading-[0.9] tracking-tight mb-8"
-            >
-              Stop losing money.
+      {/* ═══════════ PROBLEM ═══════════ */}
+      <Section>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#00F0B5] mb-4">The Problem</p>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] mb-6">
+              You're paying for 6 tools.
               <br />
-              <span className="font-medium">Start trading</span>
-              <br />
-              <span className="text-gradient font-medium">intelligently.</span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.4 }}
-              className="text-xl md:text-2xl text-#9ca3af font-light leading-relaxed max-w-2xl mx-auto mb-16"
-            >
-              The complete trading platform that
-              <br />
-              actually helps you make money.
-            </motion.p>
-
-            {/* Email Form */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.6 }}
-              id="hero-cta"
-              className="mb-8"
-            >
-              {!isSubmitted ? (
-                <form onSubmit={handleWaitlistSubmit} className="flex gap-4 max-w-md mx-auto">
-                  <input
-                    type="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-#6b7280 focus:outline-none focus:border-#00F0B5 transition-colors"
-                  />
-                  <motion.button
-                    type="submit"
-                    disabled={isSubmitting}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="px-6 py-3 bg-#00F0B5 text-black rounded-lg font-medium hover:bg-#00C79A transition-colors disabled:opacity-50"
-                  >
-                    {isSubmitting ? '...' : 'Join Waitlist'}
-                  </motion.button>
-                </form>
-              ) : (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-green-500/10 border border-green-500/20 rounded-lg text-green-400 font-medium max-w-md mx-auto"
-                >
-                  <Check size={18} />
-                  You're on the list!
-                </motion.div>
-              )}
-            </motion.div>
-
-            <motion.p
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.8 }}
-              className="text-sm text-#6b7280"
-            >
-              Free 14-day trial. No credit card required.
-            </motion.p>
+              <span className="text-[#4b5563]">Using none of them well.</span>
+            </h2>
           </div>
-        </section>
 
-        {/* Problem Section */}
-        <section className="py-32 px-8">
-          <div className="max-w-6xl mx-auto">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-center mb-20"
-            >
-              <h2 className="text-5xl md:text-6xl font-light leading-tight mb-6">
-                You're paying for 6 tools.
-                <br />
-                <span className="text-#6b7280">Using none of them well.</span>
-              </h2>
-            </motion.div>
-
-            <motion.div
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid md:grid-cols-3 gap-12 max-w-4xl mx-auto"
-            >
-              {[
-                {
-                  icon: Target,
-                  title: "Signal Overload",
-                  desc: "500 Discord signals. 200 Twitter alerts. Zero context. You miss the good ones and chase the bad ones."
-                },
-                {
-                  icon: Shield,
-                  title: "No Risk Control",
-                  desc: "Position sizing by gut feeling. No stop losses. Account blown in weeks, not months."
-                },
-                {
-                  icon: BarChart3,
-                  title: "Analysis Paralysis",
-                  desc: "TradingView + Excel + Discord + Binance. Switching apps kills momentum and profits."
-                }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  variants={fadeUp}
-                  className="text-center"
-                >
-                  <div className="w-16 h-16 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center mb-6 mx-auto">
-                    <item.icon size={24} className="text-#9ca3af" />
-                  </div>
-                  <h3 className="text-xl font-medium mb-4 text-white">
-                    {item.title}
-                  </h3>
-                  <p className="text-#6b7280 leading-relaxed">
-                    {item.desc}
-                  </p>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Product Showcase */}
-        <section className="py-32 px-8">
-          <div className="max-w-6xl mx-auto">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-center mb-20"
-            >
-              <h2 className="text-5xl md:text-6xl font-light leading-tight mb-6">
-                One platform.
-                <br />
-                <span className="text-gradient font-medium">Everything you need.</span>
-              </h2>
-            </motion.div>
-
-            {/* Dashboard Mockup */}
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
-              className="dashboard-mockup rounded-3xl p-8 mb-12 max-w-5xl mx-auto"
-            >
-              {/* Browser Bar */}
-              <div className="flex items-center gap-3 mb-6 pb-4 border-b border-white/10">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              { icon: Target, title: 'Signal Overload', desc: '500 Discord alerts. Zero context. You miss the winners and chase the losers.', color: '#f87171' },
+              { icon: Shield, title: 'No Risk Control', desc: 'Position sizing by gut feeling. One bad trade wipes out a month of gains.', color: '#fbbf24' },
+              { icon: BarChart3, title: 'Tool Chaos', desc: 'TradingView + Excel + Discord + Binance. Switching apps kills momentum.', color: '#0ea5e9' }
+            ].map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease, delay: i * 0.1 }} className="glow-card bg-[#0d1117] border border-[#1b2332] rounded-2xl p-8 hover:border-[#2a3444] transition-colors">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: `${item.color}15` }}>
+                  <item.icon size={22} style={{ color: item.color }} />
                 </div>
-                <div className="flex-1 bg-white/5 rounded-lg px-4 py-1 text-sm text-#6b7280">
-                  app.pulsewave.ai
+                <h3 className="text-lg font-bold mb-3">{item.title}</h3>
+                <p className="text-sm text-[#8b95a5] leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══════════ PRODUCT SHOWCASE ═══════════ */}
+      <Section>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#00F0B5] mb-4">The Solution</p>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] mb-6">
+              One platform.
+              <br />
+              <span className="grad-text">Everything you need.</span>
+            </h2>
+            <p className="text-lg text-[#8b95a5] max-w-xl mx-auto">Replace $300/month in separate tools with one intelligent trading command center.</p>
+          </div>
+
+          {/* Dashboard Mockup */}
+          <motion.div initial={{ opacity: 0, y: 50, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} className="mockup-shadow rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-b from-[#111827] to-[#0d1117] border border-white/[0.08] max-w-5xl mx-auto mb-12">
+            {/* Browser Chrome */}
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06]">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-[#ff5f57]" /><div className="w-3 h-3 rounded-full bg-[#ffbd2e]" /><div className="w-3 h-3 rounded-full bg-[#28ca42]" />
+              </div>
+              <div className="flex-1 bg-white/[0.04] rounded-lg px-4 py-1.5 text-xs text-[#6b7280] font-mono">app.pulsewave.ai/dashboard</div>
+            </div>
+            {/* Dashboard Content */}
+            <div className="p-5 md:p-8">
+              {/* Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                {[
+                  { label: 'Portfolio', value: '$47,832', change: '+12.4%', up: true },
+                  { label: 'Win Rate', value: '73.2%', change: '+5.1%', up: true },
+                  { label: 'Profit Factor', value: '2.14', change: '+0.3', up: true },
+                  { label: 'Active Signals', value: '3', change: 'Live', up: true },
+                ].map((s, i) => (
+                  <div key={i} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-4">
+                    <p className="text-[11px] uppercase tracking-wider text-[#6b7280] mb-1">{s.label}</p>
+                    <p className="text-xl font-bold font-mono">{s.value}</p>
+                    <p className={`text-xs font-medium mt-1 ${s.up ? 'text-[#4ade80]' : 'text-[#f87171]'}`}>{s.change}</p>
+                  </div>
+                ))}
+              </div>
+              {/* Signal Cards */}
+              <div className="grid md:grid-cols-3 gap-3 mb-5">
+                {[
+                  { pair: 'BTC/USDT', dir: 'LONG', conf: 92, entry: '$68,450', tp: '$72,100', sl: '$66,800' },
+                  { pair: 'ETH/USDT', dir: 'LONG', conf: 87, entry: '$2,680', tp: '$2,890', sl: '$2,580' },
+                  { pair: 'SOL/USDT', dir: 'SHORT', conf: 79, entry: '$198.50', tp: '$182.00', sl: '$206.00' },
+                ].map((s, i) => (
+                  <div key={i} className={`bg-white/[0.03] border rounded-xl p-4 ${s.dir === 'LONG' ? 'border-[#4ade80]/20' : 'border-[#f87171]/20'}`}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="font-bold text-sm">{s.pair}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${s.dir === 'LONG' ? 'bg-[#4ade80]/15 text-[#4ade80]' : 'bg-[#f87171]/15 text-[#f87171]'}`}>{s.dir}</span>
+                    </div>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Entry</span><span className="font-mono">{s.entry}</span></div>
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Target</span><span className="font-mono text-[#4ade80]">{s.tp}</span></div>
+                      <div className="flex justify-between"><span className="text-[#6b7280]">Stop</span><span className="font-mono text-[#f87171]">{s.sl}</span></div>
+                    </div>
+                    <div className="mt-3 pt-3 border-t border-white/[0.06]">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-[#6b7280]">Confidence</span>
+                        <span className="text-[#00F0B5] font-bold">{s.conf}%</span>
+                      </div>
+                      <div className="mt-1.5 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                        <div className="h-full bg-gradient-to-r from-[#00F0B5] to-[#0ea5e9] rounded-full" style={{ width: `${s.conf}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {/* Chart placeholder */}
+              <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6 flex items-center justify-center h-32">
+                <div className="flex items-center gap-3 text-[#4b5563]">
+                  <Activity size={20} />
+                  <span className="text-sm">Real-time charts • Multi-timeframe analysis • Custom indicators</span>
                 </div>
               </div>
+            </div>
+          </motion.div>
 
-              {/* Dashboard Content */}
-              <div className="space-y-6">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                  <div>
-                    <h3 className="text-2xl font-medium text-white mb-1">Trading Dashboard</h3>
-                    <p className="text-#6b7280">Portfolio: $47,832 (+12.4%)</p>
-                  </div>
-                  <div className="px-4 py-2 bg-#00F0B5 text-black rounded-lg font-medium text-sm">
-                    3 Active Signals
-                  </div>
-                </div>
+          {/* Feature Pills */}
+          <div className="flex flex-wrap justify-center gap-3">
+            {[
+              { icon: Zap, label: 'AI Signal Engine' },
+              { icon: Shield, label: 'Risk Guardian' },
+              { icon: BookOpen, label: 'Auto Journal' },
+              { icon: Bell, label: 'Smart Alerts' },
+              { icon: LineChart, label: 'Advanced Charts' },
+              { icon: Brain, label: 'AI Coach' },
+            ].map((f, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, ease, delay: i * 0.05 }} className="flex items-center gap-2 px-4 py-2 bg-white/[0.04] border border-white/[0.08] rounded-full text-sm text-[#8b95a5] hover:border-[#00F0B5]/30 hover:text-[#00F0B5] transition-all cursor-default">
+                <f.icon size={14} />
+                {f.label}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
 
-                {/* Signal Cards */}
-                <div className="grid md:grid-cols-3 gap-4">
-                  {[
-                    { pair: 'BTC/USDT', type: 'LONG', confidence: '87%', entry: '$43,250' },
-                    { pair: 'ETH/USDT', type: 'SHORT', confidence: '92%', entry: '$2,680' },
-                    { pair: 'SOL/USDT', type: 'LONG', confidence: '79%', entry: '$198.50' }
-                  ].map((signal, idx) => (
-                    <div key={idx} className="signal-card rounded-xl p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="font-medium text-white">{signal.pair}</span>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          signal.type === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
-                        }`}>
-                          {signal.type}
-                        </span>
-                      </div>
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-#6b7280">Confidence</span>
-                          <span className="text-#00F0B5">{signal.confidence}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-#6b7280">Entry</span>
-                          <span className="text-white">{signal.entry}</span>
-                        </div>
-                      </div>
+      {/* ═══════════ FEATURES (3 deep dives) ═══════════ */}
+      <Section id="features">
+        <div className="max-w-6xl mx-auto space-y-32">
+          {[
+            {
+              tag: '01', title: 'Confluence Signals', subtitle: 'Not just lines on a chart.',
+              desc: 'Every signal combines 12+ technical indicators, market regime analysis, volume profiling, and cross-timeframe confirmation. You get the full picture — entry, stop, target, and reasoning.',
+              stat: '73%', statLabel: 'Average win rate',
+              icon: Target, color: '#00F0B5',
+              features: ['Multi-timeframe confluence', 'AI-powered reasoning', 'Risk-adjusted entries', 'Real-time alerts']
+            },
+            {
+              tag: '02', title: 'Risk Management', subtitle: 'Never blow your account again.',
+              desc: 'Automated position sizing, portfolio heat mapping, correlation tracking, and emotional tilt detection. The platform enforces discipline so you don\'t have to rely on willpower.',
+              stat: '2.1:1', statLabel: 'Avg risk-to-reward',
+              icon: Shield, color: '#0ea5e9',
+              features: ['Auto position sizing', 'Portfolio heat map', 'Tilt detector', 'Daily loss limits']
+            },
+            {
+              tag: '03', title: 'AI Trading Coach', subtitle: 'Like having a mentor 24/7.',
+              desc: 'Trained on 80+ trading books, your AI coach analyzes your journal, spots patterns in your mistakes, and gives personalized advice to level up your trading.',
+              stat: '80+', statLabel: 'Books analyzed',
+              icon: Brain, color: '#a78bfa',
+              features: ['Pattern recognition', 'Personalized tips', 'Performance reports', 'Behavioral alerts']
+            }
+          ].map((f, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.7, ease }} className={`grid md:grid-cols-2 gap-12 md:gap-20 items-center ${i % 2 === 1 ? 'md:direction-rtl' : ''}`}>
+              <div className={i % 2 === 1 ? 'md:order-2' : ''}>
+                <p className="text-sm font-bold uppercase tracking-[0.15em] mb-3" style={{ color: f.color }}>{f.tag} — {f.subtitle}</p>
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-[1.1] mb-6">{f.title}</h3>
+                <p className="text-[#8b95a5] leading-relaxed mb-8">{f.desc}</p>
+                <div className="grid grid-cols-2 gap-3 mb-8">
+                  {f.features.map((feat, j) => (
+                    <div key={j} className="flex items-center gap-2 text-sm text-[#8b95a5]">
+                      <Check size={14} style={{ color: f.color }} />
+                      {feat}
                     </div>
                   ))}
                 </div>
-
-                {/* Chart Area Placeholder */}
-                <div className="bg-white/5 rounded-xl h-40 flex items-center justify-center">
-                  <div className="text-#6b7280">
-                    <TrendingUp size={32} className="mx-auto mb-2" />
-                    <span className="text-sm">Advanced Charts & Analytics</span>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-bold" style={{ color: f.color }}>{f.stat}</span>
+                  <span className="text-sm text-[#6b7280]">{f.statLabel}</span>
+                </div>
+              </div>
+              <div className={`${i % 2 === 1 ? 'md:order-1' : ''}`}>
+                <div className="bg-[#0d1117] border border-[#1b2332] rounded-2xl p-10 h-72 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-[0.03]" style={{ background: `radial-gradient(circle at 50% 50%, ${f.color}, transparent 70%)` }} />
+                  <div className="text-center relative z-10">
+                    <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-5" style={{ background: `${f.color}15` }}>
+                      <f.icon size={36} style={{ color: f.color }} />
+                    </div>
+                    <p className="text-sm text-[#6b7280] font-medium">{f.title}</p>
                   </div>
                 </div>
               </div>
             </motion.div>
+          ))}
+        </div>
+      </Section>
 
-            {/* Feature Pills */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
-              className="flex flex-wrap justify-center gap-4 max-w-3xl mx-auto"
-            >
-              {['AI Signal Generation', 'Risk Management', 'Portfolio Analytics', 'One-Click Execution'].map((feature, idx) => (
-                <div key={idx} className="px-4 py-2 bg-white/5 border border-white/10 rounded-full text-sm text-#9ca3af">
-                  {feature}
+      {/* ═══════════ SOCIAL PROOF / NUMBERS ═══════════ */}
+      <Section className="!py-20 border-y border-white/[0.04] bg-[#0d1117]/50">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
+            {[
+              { end: 80, suffix: '+', label: 'Books analyzed', color: '#a78bfa' },
+              { end: 73, suffix: '%', label: 'Signal accuracy', color: '#00F0B5' },
+              { end: 2847, suffix: '+', label: 'Waitlist traders', color: '#0ea5e9' },
+              { end: 6, suffix: '', label: 'Tools replaced', color: '#fbbf24' },
+            ].map((s, i) => {
+              const { count, ref } = useCountUp(s.end, 2000)
+              return (
+                <div key={i} ref={ref}>
+                  <div className="text-4xl md:text-5xl font-bold mb-2" style={{ color: s.color }}>
+                    {s.end > 100 ? count.toLocaleString() : count}{s.suffix}
+                  </div>
+                  <div className="text-sm text-[#6b7280]">{s.label}</div>
                 </div>
-              ))}
-            </motion.div>
+              )
+            })}
           </div>
-        </section>
+        </div>
+      </Section>
 
-        {/* Features */}
-        <section id="features" className="py-32 px-8">
-          <div className="max-w-6xl mx-auto space-y-32">
-            
-            {/* Feature 1 - Confluence Signals */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="grid md:grid-cols-2 gap-16 items-center"
-            >
-              <div>
-                <h3 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-                  Confluence Signals
-                </h3>
-                <p className="text-xl text-#9ca3af leading-relaxed mb-8">
-                  Every signal combines 12+ technical indicators, market regime analysis, and sentiment data. 
-                  Not just lines on a chart.
-                </p>
-                <div className="text-3xl font-light text-#00F0B5 mb-2">
-                  73%
-                </div>
-                <div className="text-#6b7280">
-                  Average win rate across all signals
-                </div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 h-64 flex items-center justify-center">
-                <div className="text-center text-#6b7280">
-                  <Brain size={48} className="mx-auto mb-4" />
-                  <div className="text-sm">AI Signal Engine</div>
-                </div>
-              </div>
-            </motion.div>
+      {/* ═══════════ PRICING ═══════════ */}
+      <Section id="pricing">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold uppercase tracking-[0.15em] text-[#00F0B5] mb-4">Pricing</p>
+            <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] mb-6">Simple, transparent pricing</h2>
+            <p className="text-lg text-[#8b95a5] mb-8">Start free. Upgrade when you're ready.</p>
 
-            {/* Feature 2 - Risk Management */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="grid md:grid-cols-2 gap-16 items-center"
-            >
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 h-64 flex items-center justify-center order-2 md:order-1">
-                <div className="text-center text-#6b7280">
-                  <Shield size={48} className="mx-auto mb-4" />
-                  <div className="text-sm">Risk Guardian</div>
-                </div>
-              </div>
-              <div className="order-1 md:order-2">
-                <h3 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-                  Risk Management
-                </h3>
-                <p className="text-xl text-#9ca3af leading-relaxed mb-8">
-                  Automated position sizing, portfolio heat mapping, and stop-loss enforcement. 
-                  Never blow your account again.
-                </p>
-                <div className="text-3xl font-light text-#00F0B5 mb-2">
-                  2.1:1
-                </div>
-                <div className="text-#6b7280">
-                  Average risk-to-reward ratio
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Feature 3 - AI Coach */}
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="grid md:grid-cols-2 gap-16 items-center"
-            >
-              <div>
-                <h3 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
-                  AI Coach
-                </h3>
-                <p className="text-xl text-#9ca3af leading-relaxed mb-8">
-                  Analyzes your trading patterns, identifies mistakes, and provides personalized 
-                  recommendations to improve performance.
-                </p>
-                <div className="text-3xl font-light text-#00F0B5 mb-2">
-                  80+
-                </div>
-                <div className="text-#6b7280">
-                  Trading books analyzed by our AI
-                </div>
-              </div>
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-8 h-64 flex items-center justify-center">
-                <div className="text-center text-#6b7280">
-                  <Star size={48} className="mx-auto mb-4" />
-                  <div className="text-sm">Personal Trading Coach</div>
-                </div>
-              </div>
-            </motion.div>
+            {/* Annual/Monthly Toggle */}
+            <div className="inline-flex items-center gap-3 bg-white/[0.04] border border-white/[0.08] rounded-full p-1">
+              <button onClick={() => setAnnual(false)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${!annual ? 'bg-white/10 text-white' : 'text-[#6b7280]'}`}>Monthly</button>
+              <button onClick={() => setAnnual(true)} className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${annual ? 'bg-[#00F0B5]/15 text-[#00F0B5]' : 'text-[#6b7280]'}`}>Annual <span className="text-[#00F0B5] text-xs">Save 20%</span></button>
+            </div>
           </div>
-        </section>
 
-        {/* Social Proof */}
-        <section className="py-24 px-8">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="grid md:grid-cols-3 gap-16 text-center"
-            >
-              {[
-                { number: 80, suffix: '+', label: 'books analyzed' },
-                { number: 73, suffix: '%', label: 'signal accuracy' },
-                { number: 21, suffix: ':10', label: 'avg R:R ratio' }
-              ].map((stat, idx) => {
-                const { count, ref } = useCountUp(stat.number, 2000)
-                return (
-                  <motion.div
-                    key={idx}
-                    ref={ref}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6, delay: idx * 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-                  >
-                    <div className="text-5xl md:text-6xl font-light text-white mb-2">
-                      {count}{stat.suffix}
-                    </div>
-                    <div className="text-#6b7280">
-                      {stat.label}
-                    </div>
-                    {idx < 2 && <div className="hidden md:block absolute right-0 top-1/2 w-px h-16 bg-white/10 transform -translate-y-1/2"></div>}
-                  </motion.div>
-                )
-              })}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Pricing */}
-        <section id="pricing" className="py-32 px-8">
-          <div className="max-w-5xl mx-auto">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-center mb-20"
-            >
-              <h2 className="text-5xl md:text-6xl font-light leading-tight mb-6">
-                Simple, transparent pricing
-              </h2>
-              <p className="text-xl text-#9ca3af">
-                Start free. Upgrade when you're ready.
-              </p>
-            </motion.div>
-
-            <motion.div
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              variants={staggerContainer}
-              className="grid md:grid-cols-3 gap-8"
-            >
-              {[
-                {
-                  name: 'Pulse',
-                  price: '$97',
-                  features: ['10 signals/week', 'Basic risk tools', 'Email alerts', 'Community access'],
-                  featured: false
-                },
-                {
-                  name: 'Wave',
-                  price: '$147',
-                  features: ['Unlimited signals', 'Advanced analytics', 'Real-time alerts', 'AI coach', 'Priority support'],
-                  featured: true
-                },
-                {
-                  name: 'Tsunami',
-                  price: '$197',
-                  features: ['Everything in Wave', 'API access', 'Custom strategies', 'White-label options', '1-on-1 support'],
-                  featured: false
-                }
-              ].map((plan, idx) => (
-                <motion.div
-                  key={idx}
-                  variants={fadeUp}
-                  className={`rounded-2xl p-8 ${
-                    plan.featured 
-                      ? 'bg-white/5 border-2 border-#00F0B5' 
-                      : 'bg-white/5 border border-white/10'
-                  }`}
-                >
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              { name: 'Pulse', monthly: 97, features: ['10 signals/week', 'Basic risk tools', 'Email alerts', 'Community access', 'Trade journal'], featured: false },
+              { name: 'Wave', monthly: 147, features: ['Unlimited signals', 'Advanced analytics', 'Real-time alerts', 'AI trading coach', 'Priority support'], featured: true },
+              { name: 'Tsunami', monthly: 197, features: ['Everything in Wave', 'API access', 'Custom strategies', 'White-label ready', '1-on-1 support'], featured: false },
+            ].map((p, i) => {
+              const price = annual ? Math.round(p.monthly * 0.8) : p.monthly
+              return (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5, ease, delay: i * 0.1 }} className={`rounded-2xl p-8 relative ${p.featured ? 'bg-gradient-to-b from-[#00F0B5]/[0.08] to-transparent border-2 border-[#00F0B5]/30' : 'bg-[#0d1117] border border-[#1b2332] hover:border-[#2a3444]'} transition-colors`}>
+                  {p.featured && <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-[#00F0B5] text-[#0a0e17] rounded-full text-xs font-bold">Most Popular</div>}
                   <div className="text-center mb-8">
-                    <h3 className="text-xl font-medium mb-4">{plan.name}</h3>
-                    <div className="text-4xl font-light mb-2">{plan.price}</div>
-                    <div className="text-sm text-#6b7280">per month</div>
+                    <h3 className="text-lg font-bold mb-4">{p.name}</h3>
+                    <div className="flex items-baseline justify-center gap-1">
+                      <span className="text-5xl font-bold">${price}</span>
+                      <span className="text-[#6b7280]">/mo</span>
+                    </div>
+                    {annual && <p className="text-xs text-[#00F0B5] mt-2">Billed ${price * 12}/year</p>}
                   </div>
-
                   <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, featureIdx) => (
-                      <li key={featureIdx} className="flex items-center gap-3 text-sm">
-                        <Check size={16} className="text-#00F0B5 flex-shrink-0" />
-                        <span>{feature}</span>
+                    {p.features.map((f, j) => (
+                      <li key={j} className="flex items-center gap-3 text-sm text-[#8b95a5]">
+                        <Check size={15} className={p.featured ? 'text-[#00F0B5]' : 'text-[#4b5563]'} />
+                        {f}
                       </li>
                     ))}
                   </ul>
-
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => scrollToSection('hero-cta')}
-                    className={`w-full py-3 rounded-lg font-medium transition-colors ${
-                      plan.featured
-                        ? 'bg-#00F0B5 text-black hover:bg-#00C79A'
-                        : 'bg-white/10 text-white hover:bg-white/15'
-                    }`}
-                  >
-                    Join Waitlist
-                  </motion.button>
-                </motion.div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
-
-        {/* FAQ */}
-        <section id="faq" className="py-32 px-8">
-          <div className="max-w-3xl mx-auto">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-              className="text-center mb-16"
-            >
-              <h2 className="text-4xl md:text-5xl font-light leading-tight mb-6">
-                Questions? Answers.
-              </h2>
-            </motion.div>
-
-            <div className="space-y-4">
-              {[
-                {
-                  q: "How accurate are your signals?",
-                  a: "Our AI signals achieve a 73% win rate through advanced confluence analysis. We combine technical indicators, market regime detection, and sentiment data - not just basic chart patterns."
-                },
-                {
-                  q: "Which exchanges do you support?",
-                  a: "All major exchanges including Binance, Coinbase, OKX, Bybit, and KuCoin. We use read-only API keys for safety - your funds never leave your exchange."
-                },
-                {
-                  q: "Do you guarantee profits?",
-                  a: "No. Trading always involves risk, and past performance doesn't guarantee future results. We provide high-quality signals and risk management tools, but profitable trading requires discipline and proper risk management."
-                },
-                {
-                  q: "Can I cancel anytime?",
-                  a: "Yes, cancel with one click. No contracts, no commitments. Plus, we offer a 14-day free trial and 30-day money-back guarantee."
-                },
-                {
-                  q: "What makes PulseWave different?",
-                  a: "We replace your entire trading stack with one platform. Real AI (not just repackaged technical analysis), automated risk management, and institutional-grade analytics in a beautiful interface."
-                },
-                {
-                  q: "Is my data secure?",
-                  a: "Absolutely. We use bank-grade encryption, read-only API keys, and never store sensitive information. Your trading data is yours - we just help you analyze it better."
-                }
-              ].map((item, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.6, delay: idx * 0.1, ease: [0.25, 0.1, 0.25, 1] }}
-                  className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden"
-                >
-                  <button
-                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                    className="w-full px-8 py-6 text-left flex items-center justify-between hover:bg-white/5 transition-colors"
-                  >
-                    <span className="font-medium text-lg">{item.q}</span>
-                    <motion.div
-                      animate={{ rotate: openFaq === idx ? 180 : 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <ChevronDown size={20} className="text-#9ca3af" />
-                    </motion.div>
+                  <button onClick={() => scrollTo('cta')} className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${p.featured ? 'bg-[#00F0B5] text-[#0a0e17] hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.2)]' : 'bg-white/[0.06] text-white hover:bg-white/10'}`}>
+                    Get Early Access
                   </button>
-                  {openFaq === idx && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="px-8 pb-6"
-                    >
-                      <p className="text-#9ca3af leading-relaxed">{item.a}</p>
+                </motion.div>
+              )
+            })}
+          </div>
+        </div>
+      </Section>
+
+      {/* ═══════════ FAQ ═══════════ */}
+      <Section id="faq">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl sm:text-5xl font-bold leading-[1.1] mb-4">Questions? Answers.</h2>
+          </div>
+          <div className="space-y-3">
+            {[
+              { q: 'How accurate are your signals?', a: 'Our AI signals achieve a 73% win rate through advanced confluence analysis combining 12+ indicators, market regime detection, volume profiling, and cross-timeframe confirmation.' },
+              { q: 'Which exchanges do you support?', a: 'All major exchanges: Binance, Coinbase, OKX, Bybit, KuCoin. We use read-only API keys — your funds never leave your exchange.' },
+              { q: 'Do you guarantee profits?', a: 'No. Trading always involves risk. We provide institutional-grade tools and signals, but profitable trading requires discipline and risk management. Past performance doesn\'t guarantee future results.' },
+              { q: 'Can I cancel anytime?', a: 'Yes. Cancel with one click, no questions asked. 14-day free trial, 30-day money-back guarantee.' },
+              { q: 'What makes PulseWave different?', a: 'We replace your entire trading stack. Real AI (not repackaged TA), automated risk management, and institutional-grade analytics in one beautiful platform — not 6 separate subscriptions.' },
+              { q: 'Is my data secure?', a: 'Bank-grade encryption, read-only API keys, SOC2-compliant infrastructure. Your trading data is yours. We just help you analyze it.' },
+            ].map((item, i) => (
+              <div key={i} className="bg-[#0d1117] border border-[#1b2332] rounded-xl overflow-hidden hover:border-[#2a3444] transition-colors">
+                <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-6 py-5 text-left flex items-center justify-between gap-4">
+                  <span className="font-semibold">{item.q}</span>
+                  <motion.div animate={{ rotate: openFaq === i ? 180 : 0 }} transition={{ duration: 0.2 }}>
+                    <ChevronDown size={18} className="text-[#6b7280] flex-shrink-0" />
+                  </motion.div>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+                      <p className="px-6 pb-5 text-[#8b95a5] leading-relaxed">{item.a}</p>
                     </motion.div>
                   )}
-                </motion.div>
-              ))}
-            </div>
+                </AnimatePresence>
+              </div>
+            ))}
           </div>
-        </section>
+        </div>
+      </Section>
 
-        {/* Final CTA */}
-        <section className="py-32 px-8">
-          <div className="max-w-3xl mx-auto text-center">
-            
-            <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              <h2 className="text-5xl md:text-6xl font-light leading-tight mb-8">
-                Ready to trade smarter?
-              </h2>
-              
-              <form onSubmit={(e) => handleWaitlistSubmit(e, 'final-cta')} className="flex gap-4 max-w-md mx-auto mb-6">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-#6b7280 focus:outline-none focus:border-#00F0B5 transition-colors"
-                />
-                <motion.button
-                  type="submit"
-                  disabled={isSubmitting}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="px-6 py-3 bg-#00F0B5 text-black rounded-lg font-medium hover:bg-#00C79A transition-colors disabled:opacity-50"
-                >
-                  {isSubmitting ? '...' : 'Join Waitlist'}
-                </motion.button>
-              </form>
+      {/* ═══════════ FINAL CTA ═══════════ */}
+      <Section className="relative">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-[#00F0B5] opacity-[0.04] blur-[150px] rounded-full" />
+        </div>
+        <div className="max-w-3xl mx-auto text-center relative z-10">
+          <h2 className="text-4xl sm:text-5xl md:text-6xl font-bold leading-[1.1] mb-6">
+            Ready to trade
+            <br />
+            <span className="grad-text">smarter?</span>
+          </h2>
+          <p className="text-lg text-[#8b95a5] mb-10">Join {waitlistCount.toLocaleString()} traders building the future of intelligent trading.</p>
+          <form onSubmit={e => submit(e, 'bottom')} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-6">
+            <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="flex-1 px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all" />
+            <button type="submit" disabled={isSubmitting} className="px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50">
+              {isSubmitting ? 'Joining...' : 'Get Early Access'}
+            </button>
+          </form>
+        </div>
+      </Section>
 
-              <p className="text-sm text-#6b7280 mb-12">
-                Join {waitlistCount.toLocaleString()} traders on the waitlist
-              </p>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Footer */}
-        <footer className="border-t border-white/10 px-8 py-16">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-12 mb-12">
-              <div>
-                <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto mb-4" />
-                <p className="text-#6b7280 text-sm leading-relaxed">
-                  The complete trading platform for the modern trader.
-                </p>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Product</h4>
-                <div className="space-y-2 text-sm text-#6b7280">
-                  <div>Features</div>
-                  <div>Pricing</div>
-                  <div>API</div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Company</h4>
-                <div className="space-y-2 text-sm text-#6b7280">
-                  <div>About</div>
-                  <div>Blog</div>
-                  <div>Careers</div>
-                </div>
-              </div>
-              
-              <div>
-                <h4 className="font-medium mb-4">Legal</h4>
-                <div className="space-y-2 text-sm text-#6b7280">
-                  <div>Privacy</div>
-                  <div>Terms</div>
-                  <div>Disclaimer</div>
-                </div>
-              </div>
+      {/* ═══════════ FOOTER ═══════════ */}
+      <footer className="border-t border-white/[0.06] px-6 md:px-8 py-12">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
+            <div className="col-span-2 md:col-span-1">
+              <img src="/logo.webp" alt="PulseWave" className="h-7 w-auto mb-4" />
+              <p className="text-sm text-[#6b7280] leading-relaxed">The complete trading platform for the modern trader.</p>
             </div>
-            
-            <div className="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-#6b7280 text-sm">
-                © 2026 PulseWave Labs. All rights reserved.
-              </p>
-              <p className="text-#6b7280 text-xs max-w-md text-center md:text-right">
-                Trading involves risk. Past performance does not guarantee future results.
-              </p>
-            </div>
+            {[
+              { title: 'Product', links: ['Features', 'Pricing', 'API', 'Changelog'] },
+              { title: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
+              { title: 'Legal', links: ['Privacy', 'Terms', 'Disclaimer', 'Risk Notice'] },
+            ].map((col, i) => (
+              <div key={i}>
+                <h4 className="font-semibold text-sm mb-3">{col.title}</h4>
+                <div className="space-y-2">{col.links.map(l => <div key={l} className="text-sm text-[#6b7280] hover:text-white cursor-pointer transition-colors">{l}</div>)}</div>
+              </div>
+            ))}
           </div>
-        </footer>
-      </div>
-    </>
+          <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-[#4b5563]">© 2026 PulseWave Labs. All rights reserved.</p>
+            <p className="text-xs text-[#4b5563]">Trading involves risk. Past performance ≠ future results.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
   )
 }
