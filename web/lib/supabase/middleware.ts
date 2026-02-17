@@ -17,9 +17,11 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || 
-                     request.nextUrl.pathname.startsWith('/signup')
-  const isDashboard = request.nextUrl.pathname.startsWith('/(dashboard)') ||
-                     request.nextUrl.pathname === '/dashboard'
+                     request.nextUrl.pathname.startsWith('/signup') ||
+                     request.nextUrl.pathname.startsWith('/forgot-password') ||
+                     request.nextUrl.pathname.startsWith('/reset-password')
+  const isDashboard = request.nextUrl.pathname.startsWith('/dashboard') ||
+                     request.nextUrl.pathname.match(/^\/\(dashboard\)/)
   const isApiRoute = request.nextUrl.pathname.startsWith('/api/')
 
   // Skip middleware for API routes (except protected ones)

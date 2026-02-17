@@ -2,99 +2,69 @@
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
 
-/* PulseWave Dark Theme */
+/* PulseWave Labs — Dark Theme System */
 :root {
   --color-bg: #0a0e17;
   --color-surface: #0d1117;
+  --color-surface-2: #161b22;
   --color-border: #1b2332;
+  --color-border-light: #30363d;
   --color-text: #e1e4e8;
   --color-text-muted: #6b7280;
   --color-text-accent: #9ca3af;
   --color-primary: #58a6ff;
+  --color-primary-hover: #79b8ff;
+  --color-purple: #a855f7;
   --color-success: #4ade80;
+  --color-success-dark: #16a34a;
   --color-warning: #fbbf24;
   --color-error: #f87171;
-  --color-long: #16a34a;
-  --color-short: #dc2626;
+  --color-error-dark: #dc2626;
   
-  /* Chart colors */
-  --chart-grid: #1b233244;
-  --chart-candle-up: #4ade80;
-  --chart-candle-down: #f87171;
-  --chart-volume: #6b728088;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5);
-  
-  /* Gradients */
   --gradient-primary: linear-gradient(135deg, #58a6ff, #a855f7);
   --gradient-success: linear-gradient(135deg, #4ade80, #16a34a);
-  --gradient-warning: linear-gradient(135deg, #fbbf24, #eab308);
   --gradient-error: linear-gradient(135deg, #f87171, #dc2626);
+  
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 30px rgba(88, 166, 255, 0.15);
 }
 
-/* Base styles */
-* {
-  box-sizing: border-box;
-}
+/* Base */
+* { box-sizing: border-box; }
 
 html {
   scroll-behavior: smooth;
-  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   background-color: var(--color-bg);
   color: var(--color-text);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
-  transition: background 0.2s;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
-}
-
-/* Firefox scrollbar */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-border) transparent;
-}
-
-/* Selection */
 ::selection {
   background: var(--color-primary);
   color: white;
 }
 
-/* Focus styles */
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+* { scrollbar-width: thin; scrollbar-color: var(--color-border) transparent; }
+
+/* Focus */
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
 }
 
-/* Custom utility classes */
+/* Utility Classes */
 @layer utilities {
   .text-gradient {
     background: var(--gradient-primary);
@@ -103,263 +73,112 @@ body {
     background-clip: text;
   }
   
-  .glow-primary {
-    box-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
-  }
-  
-  .glow-success {
-    box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
-  }
-  
-  .glow-error {
-    box-shadow: 0 0 20px rgba(248, 113, 113, 0.3);
-  }
-  
-  .backdrop-blur-xs {
-    backdrop-filter: blur(2px);
-  }
-  
-  .backdrop-blur-sm {
-    backdrop-filter: blur(4px);
-  }
-  
-  .backdrop-blur-md {
-    backdrop-filter: blur(8px);
-  }
-  
-  .backdrop-blur-lg {
-    backdrop-filter: blur(16px);
-  }
-  
-  .backdrop-blur-xl {
-    backdrop-filter: blur(24px);
-  }
+  .glow-primary { box-shadow: var(--shadow-glow); }
+  .glow-success { box-shadow: 0 0 30px rgba(74, 222, 128, 0.15); }
+  .glow-error { box-shadow: 0 0 30px rgba(248, 113, 113, 0.15); }
 }
 
-/* Component styles */
+/* Component Base Styles */
 @layer components {
-  /* Card component */
   .card {
-    @apply bg-dark-surface border border-dark-border rounded-lg transition-all duration-200;
+    @apply bg-dark-surface border border-dark-border rounded-xl transition-all duration-200;
   }
   
   .card-hover {
-    @apply hover:border-primary-600/30 hover:shadow-md;
+    @apply hover:border-primary-600/30 hover:shadow-lg;
   }
-  
-  /* Button components */
+
   .btn {
     @apply inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-dark-bg disabled:opacity-50 disabled:cursor-not-allowed;
   }
-  
+
   .btn-primary {
     @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
   }
-  
+
   .btn-secondary {
-    @apply btn bg-dark-border text-dark-text hover:bg-dark-border/80 focus:ring-dark-border;
+    @apply btn bg-dark-border text-dark-text hover:bg-dark-border/80;
   }
-  
+
   .btn-ghost {
-    @apply btn bg-transparent text-dark-text hover:bg-dark-border/50 focus:ring-dark-border;
+    @apply btn bg-transparent text-dark-text hover:bg-dark-border/50;
   }
-  
-  .btn-success {
-    background: #16a34a; color: white;
-  }
-  
-  .btn-error {
-    background: #dc2626; color: white;
-  }
-  
-  /* Input components */
+
   .input {
     @apply block w-full px-3 py-2 bg-dark-surface border border-dark-border rounded-lg text-dark-text placeholder-dark-muted focus:border-primary-600 focus:ring-1 focus:ring-primary-600 focus:outline-none transition-colors;
   }
-  
-  .input-error {
-    border-color: #dc2626;
-  }
-  
-  /* Badge components */
+
   .badge {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
-  
-  .badge-primary {
-    @apply bg-primary-600/20 text-primary-400;
-  }
-  
-  .badge-success {
-    background: rgba(22,163,74,0.2); color: #4ade80;
-  }
-  
-  .badge-warning {
-    @apply bg-yellow-500/20 text-yellow-400;
-  }
-  
-  .badge-error {
-    background: rgba(220,38,38,0.2); color: #f87171;
-  }
-  
-  .badge-neutral {
-    @apply bg-dark-border text-dark-accent;
-  }
-  
-  /* Signal specific styles */
-  .signal-long {
-    background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3);
-  }
-  
-  .signal-short {
-    background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3);
-  }
-  
-  .confidence-bar {
-    @apply flex-1 h-1 bg-dark-border rounded-full overflow-hidden;
-  }
-  
-  .confidence-fill {
-    @apply h-full rounded-full transition-all duration-1000;
-  }
-  
-  .confidence-high {
-    background: linear-gradient(to right, #4ade80, #16a34a);
-  }
-  
-  .confidence-medium {
-    @apply bg-gradient-to-r from-yellow-400 to-yellow-500;
-  }
-  
-  .confidence-low {
-    background: linear-gradient(to right, #f87171, #dc2626);
-  }
-  
-  /* Chart styles */
-  .chart-container {
-    @apply bg-dark-surface rounded-lg border border-dark-border overflow-hidden;
-  }
-  
-  /* Animation utilities */
-  .animate-pulse-slow {
-    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-  
-  .animate-glow {
-    animation: glow 2s ease-in-out infinite alternate;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-  
-  .animate-slide-down {
-    animation: slideDown 0.3s ease-out;
+
+  .loading-skeleton {
+    @apply bg-dark-border animate-pulse rounded;
   }
 }
 
-/* Custom animations */
+/* Signal Colors (raw CSS to avoid Tailwind @apply issues) */
+.badge-success { background: rgba(22,163,74,0.2); color: #4ade80; }
+.badge-error { background: rgba(220,38,38,0.2); color: #f87171; }
+.badge-warning { background: rgba(234,179,8,0.2); color: #fbbf24; }
+.badge-primary { background: rgba(88,166,255,0.2); color: #58a6ff; }
+
+.signal-long { background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3); }
+.signal-short { background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); }
+
+.btn-success { background: #16a34a; color: white; }
+.btn-success:hover { background: #15803d; }
+.btn-danger { background: #dc2626; color: white; }
+.btn-danger:hover { background: #b91c1c; }
+
+.confidence-high { background: linear-gradient(to right, #4ade80, #16a34a); }
+.confidence-medium { background: linear-gradient(to right, #fbbf24, #eab308); }
+.confidence-low { background: linear-gradient(to right, #f87171, #dc2626); }
+
+.toast-success { background: rgba(22,163,74,0.2); color: #4ade80; border: 1px solid rgba(22,163,74,0.3); }
+.toast-error { background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
+.toast-warning { background: rgba(234,179,8,0.2); color: #fbbf24; border: 1px solid rgba(234,179,8,0.3); }
+.toast-info { background: rgba(88,166,255,0.2); color: #58a6ff; border: 1px solid rgba(88,166,255,0.3); }
+
+/* Animations */
 @keyframes glow {
-  from {
-    box-shadow: 0 0 5px rgba(88, 166, 255, 0.2);
-  }
-  to {
-    box-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(-10px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
-/* Mobile responsiveness */
-@media (max-width: 768px) {
-  html {
-    font-size: 14px;
-  }
-  
-  .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-}
-
-/* Print styles */
-@media print {
-  body {
-    background: white;
-    color: black;
-  }
-  
-  .no-print {
-    display: none !important;
-  }
-}
-
-/* Loading states */
-.loading-skeleton {
-  @apply bg-dark-border animate-pulse rounded;
-}
-
-.loading-shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-  animation: shimmer 1.5s infinite;
+  from { box-shadow: 0 0 5px rgba(88, 166, 255, 0.2); }
+  to { box-shadow: 0 0 20px rgba(88, 166, 255, 0.4); }
 }
 
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
-/* Tooltip styles */
-.tooltip {
-  @apply absolute z-50 px-2 py-1 text-xs bg-dark-surface border border-dark-border rounded shadow-lg pointer-events-none;
+@keyframes slideUp {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
-/* Toast notification styles */
-.toast {
-  @apply flex items-center p-4 mb-4 text-sm rounded-lg shadow-lg;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-.toast-success {
-  background: rgba(22,163,74,0.2); color: #4ade80; border: 1px solid rgba(22,163,74,0.3);
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
-.toast-error {
-  background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.3);
+.animate-glow { animation: glow 2s ease-in-out infinite alternate; }
+.animate-shimmer { animation: shimmer 1.5s infinite; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-pulse-dot { animation: pulse-dot 2s infinite; }
+
+/* Print */
+@media print {
+  body { background: white; color: black; }
+  .no-print { display: none !important; }
 }
 
-.toast-warning {
-  @apply bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
-}
-
-.toast-info {
-  @apply bg-primary-600/20 text-primary-400 border border-primary-600/30;
-}
-
-/* WebGL canvas for charts */
-canvas {
-  @apply block max-w-full;
+/* Mobile */
+@media (max-width: 768px) {
+  html { font-size: 14px; }
 }
