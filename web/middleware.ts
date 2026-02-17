@@ -23,13 +23,9 @@ export async function middleware(request: NextRequest) {
     const pathname = url.pathname
 
     // Define route patterns
-    const isAuthRoute = pathname.startsWith('/login') || 
-                       pathname.startsWith('/signup') ||
-                       pathname.startsWith('/forgot-password') ||
-                       pathname.startsWith('/reset-password')
+    const isAuthRoute = pathname.startsWith('/auth/')
     
-    const isDashboardRoute = pathname.startsWith('/dashboard') ||
-                            pathname.match(/^\/\(dashboard\)/)
+    const isDashboardRoute = pathname.startsWith('/dashboard')
     
     const isApiRoute = pathname.startsWith('/api/')
     const isPublicRoute = pathname === '/' || 
@@ -53,7 +49,7 @@ export async function middleware(request: NextRequest) {
       // User is not authenticated
       if (isDashboardRoute) {
         // Redirect to login if trying to access dashboard
-        const loginUrl = new URL('/login', request.url)
+        const loginUrl = new URL('/auth/login', request.url)
         loginUrl.searchParams.set('redirectTo', pathname)
         return NextResponse.redirect(loginUrl)
       }
