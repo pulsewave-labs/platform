@@ -147,8 +147,8 @@ export default function LandingPage() {
       <div className="min-h-screen bg-black text-white overflow-hidden">
         <style jsx global>{`
           :root {
-            --electric-blue: #58a6ff;
-            --purple-accent: #a855f7;
+            --electric-blue: #00D4AA;
+            --purple-accent: #00A888;
             --dark-surface: #0a0a0a;
             --dark-border: #1a1a1a;
             --dark-text: #e6e6e6;

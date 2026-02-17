@@ -167,7 +167,7 @@ export default function ResetPasswordPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#58a6ff] to-[#7c3aed] rounded-2xl mb-4 animate-float">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#00D4AA] to-[#7c3aed] rounded-2xl mb-4 animate-float">
                 <Lock className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">Reset your password</h1>
@@ -205,7 +205,7 @@ export default function ResetPasswordPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#58a6ff] transition-colors"
+                    className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
                     placeholder="Enter your new password"
                     disabled={loading}
                   />
@@ -265,7 +265,7 @@ export default function ResetPasswordPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#58a6ff] transition-colors"
+                    className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
                     placeholder="Confirm your new password"
                     disabled={loading}
                   />
@@ -348,7 +348,7 @@ export default function ResetPasswordPage() {
               
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-[#58a6ff] hover:text-[#1f6feb] font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-[#00D4AA] hover:text-[#1f6feb] font-medium transition-colors"
               >
                 Continue to sign in
               </Link>

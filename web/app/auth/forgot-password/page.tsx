@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#58a6ff] to-[#7c3aed] rounded-2xl mb-4 animate-float">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#00D4AA] to-[#7c3aed] rounded-2xl mb-4 animate-float">
                 <Mail className="h-8 w-8 text-white" />
               </div>
               <h1 className="text-2xl font-bold text-white mb-2">Forgot your password?</h1>
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#58a6ff] transition-colors"
+                    className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
                     placeholder="Enter your email address"
                     disabled={loading}
                   />
@@ -134,7 +134,7 @@ export default function ForgotPasswordPage() {
             >
               <Link
                 href="/login"
-                className="inline-flex items-center gap-2 text-[#58a6ff] hover:text-[#1f6feb] font-medium transition-colors"
+                className="inline-flex items-center gap-2 text-[#00D4AA] hover:text-[#1f6feb] font-medium transition-colors"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to sign in
@@ -166,7 +166,7 @@ export default function ForgotPasswordPage() {
               <h1 className="text-2xl font-bold text-white mb-2">Check your email</h1>
               <p className="text-[#7d8590] mb-6 leading-relaxed">
                 We've sent a password reset link to <br />
-                <span className="text-[#58a6ff] font-medium">{email}</span>
+                <span className="text-[#00D4AA] font-medium">{email}</span>
               </p>
               
               <div className="space-y-4">
@@ -177,7 +177,7 @@ export default function ForgotPasswordPage() {
                       setSuccess(false)
                       setEmail('')
                     }}
-                    className="text-[#58a6ff] hover:text-[#1f6feb] font-medium transition-colors"
+                    className="text-[#00D4AA] hover:text-[#1f6feb] font-medium transition-colors"
                   >
                     try again
                   </button>
@@ -185,7 +185,7 @@ export default function ForgotPasswordPage() {
                 
                 <Link
                   href="/login"
-                  className="inline-flex items-center gap-2 text-[#58a6ff] hover:text-[#1f6feb] font-medium transition-colors"
+                  className="inline-flex items-center gap-2 text-[#00D4AA] hover:text-[#1f6feb] font-medium transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back to sign in

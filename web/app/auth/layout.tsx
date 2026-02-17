@@ -23,9 +23,9 @@ export default function AuthLayout({
     <div className={`${inter.variable} ${jetbrainsMono.variable} min-h-screen bg-gradient-to-br from-[#0a0e17] via-[#0d1117] to-[#161b22] font-sans antialiased`}>
       {/* Animated Background */}
       <div className="fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#58a6ff] rounded-full mix-blend-screen filter blur-xl opacity-10 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#7c3aed] rounded-full mix-blend-screen filter blur-xl opacity-10 animate-pulse animation-delay-2000"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-[#00d4aa] rounded-full mix-blend-screen filter blur-xl opacity-5 animate-pulse animation-delay-4000"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#00D4AA] rounded-full mix-blend-screen filter blur-xl opacity-10 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#00A888] rounded-full mix-blend-screen filter blur-xl opacity-10 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-60 h-60 bg-[#00D4AA] rounded-full mix-blend-screen filter blur-xl opacity-5 animate-pulse animation-delay-4000"></div>
         
         {/* Subtle grid pattern */}
         <div 
