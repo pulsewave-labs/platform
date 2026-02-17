@@ -198,7 +198,6 @@ export default function TradingChart({
         color: level.type === 'support' ? '#4ade80' : '#f87171',
         lineWidth: 2,
         lineStyle: LineStyle.Dashed,
-        axisLabelVisible: true,
         title: `${level.type.toUpperCase()} ${level.price}`,
       })
 
