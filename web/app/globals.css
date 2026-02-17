@@ -165,11 +165,11 @@ body {
   }
   
   .btn-success {
-    @apply btn bg-long-500 text-white hover:bg-long-600 focus:ring-long-500;
+    background: #16a34a; color: white;
   }
   
   .btn-error {
-    @apply btn bg-short-500 text-white hover:bg-short-600 focus:ring-short-500;
+    background: #dc2626; color: white;
   }
   
   /* Input components */
@@ -178,7 +178,7 @@ body {
   }
   
   .input-error {
-    @apply border-short-500 focus:border-short-500 focus:ring-short-500;
+    border-color: #dc2626;
   }
   
   /* Badge components */
@@ -191,7 +191,7 @@ body {
   }
   
   .badge-success {
-    @apply bg-long-500/20 text-long-400;
+    background: rgba(22,163,74,0.2); color: #4ade80;
   }
   
   .badge-warning {
@@ -199,7 +199,7 @@ body {
   }
   
   .badge-error {
-    @apply bg-short-500/20 text-short-400;
+    background: rgba(220,38,38,0.2); color: #f87171;
   }
   
   .badge-neutral {
@@ -208,11 +208,11 @@ body {
   
   /* Signal specific styles */
   .signal-long {
-    @apply bg-long-500/10 border border-long-500/30;
+    background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3);
   }
   
   .signal-short {
-    @apply bg-short-500/10 border border-short-500/30;
+    background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3);
   }
   
   .confidence-bar {
@@ -224,7 +224,7 @@ body {
   }
   
   .confidence-high {
-    @apply bg-gradient-to-r from-long-400 to-long-500;
+    background: linear-gradient(to right, #4ade80, #16a34a);
   }
   
   .confidence-medium {
@@ -232,7 +232,7 @@ body {
   }
   
   .confidence-low {
-    @apply bg-gradient-to-r from-short-400 to-short-500;
+    background: linear-gradient(to right, #f87171, #dc2626);
   }
   
   /* Chart styles */
@@ -344,11 +344,11 @@ body {
 }
 
 .toast-success {
-  @apply bg-long-500/20 text-long-400 border border-long-500/30;
+  background: rgba(22,163,74,0.2); color: #4ade80; border: 1px solid rgba(22,163,74,0.3);
 }
 
 .toast-error {
-  @apply bg-short-500/20 text-short-400 border border-short-500/30;
+  background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.3);
 }
 
 .toast-warning {
