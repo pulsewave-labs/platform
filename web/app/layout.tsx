@@ -1,8 +1,6 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { createServerClient } from '@/lib/supabase/server'
-import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -54,12 +52,6 @@ export const metadata: Metadata = {
     description: 'AI-powered trading platform with signals, auto-journaling, and risk management.',
     images: ['/twitter-image.png'],
   },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-  },
-  themeColor: '#58a6ff',
   manifest: '/manifest.json',
   icons: {
     icon: '/favicon.ico',
@@ -67,14 +59,18 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function RootLayout({
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#58a6ff',
+}
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Initialize Supabase on server side for SSR
-  const supabase = createServerClient()
-  
   return (
     <html lang="en" className={`${inter.variable} dark`}>
       <head>
@@ -141,40 +137,7 @@ export default async function RootLayout({
           {children}
         </main>
         
-        {/* Global toast notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            className: 'toast',
-            style: {
-              background: '#0d1117',
-              color: '#e1e4e8',
-              border: '1px solid #1b2332',
-            },
-            success: {
-              className: 'toast-success',
-              iconTheme: {
-                primary: '#4ade80',
-                secondary: '#0d1117',
-              },
-            },
-            error: {
-              className: 'toast-error',
-              iconTheme: {
-                primary: '#f87171',
-                secondary: '#0d1117',
-              },
-            },
-            loading: {
-              className: 'toast-info',
-              iconTheme: {
-                primary: '#58a6ff',
-                secondary: '#0d1117',
-              },
-            },
-          }}
-        />
+        {/* Toast notifications — enabled after Supabase/Stripe env vars are set */}
         
         {/* Performance monitoring script */}
         {process.env.NODE_ENV === 'production' && (
