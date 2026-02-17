@@ -1,75 +1,37 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient as createSSRClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-export const createClient = (cookieStore?: typeof cookies) => {
-  const store = cookieStore || cookies()
+// For Server Components and Server Actions
+export function createClient() {
+  const cookieStore = cookies()
   
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  return createSSRClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     {
       cookies: {
         get(name: string) {
-          return store.get(name)?.value
+          return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: CookieOptions) {
-          try {
-            store.set({ name, value, ...options })
-          } catch (error) {
-            // The `set` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
+          try { cookieStore.set({ name, value, ...options }) } catch {}
         },
         remove(name: string, options: CookieOptions) {
-          try {
-            store.set({ name, value: '', ...options })
-          } catch (error) {
-            // The `delete` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
+          try { cookieStore.set({ name, value: '', ...options }) } catch {}
         },
       },
     }
   )
 }
 
-export const createServerClient = createClient
+// For Middleware
+export function createMiddlewareClient(req: NextRequest) {
+  let res = NextResponse.next({ request: { headers: req.headers } })
 
-// For API routes
-export const createRouteHandlerClient = (req: NextRequest, res?: NextResponse) => {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return req.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          req.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          req.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
-}
-
-// For middleware
-export const createMiddlewareClient = (req: NextRequest) => {
-  let res = NextResponse.next({
-    request: {
-      headers: req.headers,
-    },
-  })
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  const supabase = createSSRClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
     {
       cookies: {
         get(name: string) {
