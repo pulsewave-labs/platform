@@ -80,4 +80,5 @@ docker-compose.override.yml
 .railway/
 
 # Local development
-.local/
+.local/*.tgz
+node_modules
