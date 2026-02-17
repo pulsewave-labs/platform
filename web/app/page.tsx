@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import { 
   Check, 
   ChevronDown, 
@@ -192,7 +193,7 @@ export default function LandingPage() {
           </motion.h1>
 
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.35 }} className="text-lg md:text-xl text-[#8b95a5] leading-relaxed max-w-2xl mx-auto mb-12">
-            AI-powered signals, automated risk management, and a trading journal — all in one platform. Replace 6 subscriptions with one.
+            AI-powered signals, automated risk management, and a trading journal — all in one platform. Replace multiple trading subscriptions with one.
           </motion.p>
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.5 }} id="cta" className="mb-6">
@@ -227,6 +228,7 @@ export default function LandingPage() {
               <span key={name} className="text-sm font-semibold tracking-wide">{name}</span>
             ))}
           </div>
+          <p className="text-center text-xs text-[#4b5563] mt-4">Not affiliated with or endorsed by any exchange listed above.</p>
         </div>
       </Section>
 
@@ -270,7 +272,7 @@ export default function LandingPage() {
               <br />
               <span className="grad-text">Everything you need.</span>
             </h2>
-            <p className="text-lg text-[#8b95a5] max-w-xl mx-auto">Replace $300/month in separate tools with one intelligent trading command center.</p>
+            <p className="text-lg text-[#8b95a5] max-w-xl mx-auto">Replace multiple trading subscriptions with one intelligent trading command center.</p>
           </div>
 
           {/* Dashboard Mockup - Hidden on mobile */}
@@ -328,6 +330,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
+              <p className="text-center text-xs text-[#4b5563] mt-3">Signals shown are simulated examples</p>
               {/* Chart placeholder */}
               <div className="bg-white/[0.02] border border-white/[0.06] rounded-xl p-6 flex items-center justify-center h-32">
                 <div className="flex items-center gap-3 text-[#4b5563]">
@@ -337,6 +340,8 @@ export default function LandingPage() {
               </div>
             </div>
           </motion.div>
+
+          <p className="text-center text-xs text-[#4b5563] mt-4">Simulated dashboard · For illustrative purposes only</p>
 
           {/* Feature Pills */}
           <div className="flex flex-wrap justify-center gap-3">
@@ -364,20 +369,20 @@ export default function LandingPage() {
             {
               tag: '01', title: 'Confluence Signals', subtitle: 'Not just lines on a chart.',
               desc: 'Every signal combines 12+ technical indicators, market regime analysis, volume profiling, and cross-timeframe confirmation. You get the full picture — entry, stop, target, and reasoning.',
-              stat: '73%', statLabel: 'Average win rate',
+              stat: 'High', statLabel: 'Signal confluence\n(results vary)',
               icon: Target, color: '#00F0B5',
               features: ['Multi-timeframe confluence', 'AI-powered reasoning', 'Risk-adjusted entries', 'Real-time alerts']
             },
             {
-              tag: '02', title: 'Risk Management', subtitle: 'Never blow your account again.',
+              tag: '02', title: 'Risk Management', subtitle: 'Built to protect your capital.',
               desc: 'Automated position sizing, portfolio heat mapping, correlation tracking, and emotional tilt detection. The platform enforces discipline so you don\'t have to rely on willpower.',
-              stat: '2.1:1', statLabel: 'Avg risk-to-reward',
+              stat: '2.1:1', statLabel: 'Avg risk-to-reward\n(backtested)',
               icon: Shield, color: '#0ea5e9',
               features: ['Auto position sizing', 'Portfolio heat map', 'Tilt detector', 'Daily loss limits']
             },
             {
               tag: '03', title: 'AI Trading Coach', subtitle: 'Like having a mentor 24/7.',
-              desc: 'Trained on 80+ trading books, your AI coach analyzes your journal, spots patterns in your mistakes, and gives personalized advice to level up your trading.',
+              desc: 'Built on insights from 80+ trading books, your AI coach analyzes your journal, spots patterns in your mistakes, and gives personalized advice to level up your trading.',
               stat: '80+', statLabel: 'Books analyzed',
               icon: Brain, color: '#a78bfa',
               features: ['Pattern recognition', 'Personalized tips', 'Performance reports', 'Behavioral alerts']
@@ -423,7 +428,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 text-center">
             {[
               { end: 80, suffix: '+', label: 'Books analyzed', color: '#a78bfa' },
-              { end: 73, suffix: '%', label: 'Signal accuracy', color: '#00F0B5' },
+              { end: 73, suffix: '%', label: 'Avg confluence score\n(backtested)', color: '#00F0B5' },
               { end: 2847, suffix: '+', label: 'Waitlist traders', color: '#0ea5e9' },
               { end: 6, suffix: '', label: 'Tools replaced', color: '#fbbf24' },
             ].map((s, i) => {
@@ -500,12 +505,12 @@ export default function LandingPage() {
           </div>
           <div className="space-y-3">
             {[
-              { q: 'How accurate are your signals?', a: 'Our AI signals achieve a 73% win rate through advanced confluence analysis combining 12+ indicators, market regime detection, volume profiling, and cross-timeframe confirmation.' },
+              { q: 'How accurate are your signals?', a: 'Our signals use advanced confluence analysis combining 12+ indicators, market regime detection, and cross-timeframe confirmation to identify high-probability setups. Performance varies by market conditions. Past results do not guarantee future performance.' },
               { q: 'Which exchanges do you support?', a: 'All major exchanges: Binance, Coinbase, OKX, Bybit, KuCoin. We use read-only API keys — your funds never leave your exchange.' },
-              { q: 'Do you guarantee profits?', a: 'No. Trading always involves risk. We provide institutional-grade tools and signals, but profitable trading requires discipline and risk management. Past performance doesn\'t guarantee future results.' },
+              { q: 'Do you guarantee profits?', a: 'No. Trading always involves risk. We provide professional-grade tools and signals, but profitable trading requires discipline and risk management. Past performance doesn\'t guarantee future results.' },
               { q: 'Can I cancel anytime?', a: 'Yes. Cancel with one click, no questions asked. 14-day free trial, 30-day money-back guarantee.' },
-              { q: 'What makes PulseWave different?', a: 'We replace your entire trading stack. Real AI (not repackaged TA), automated risk management, and institutional-grade analytics in one beautiful platform — not 6 separate subscriptions.' },
-              { q: 'Is my data secure?', a: 'Bank-grade encryption, read-only API keys, SOC2-compliant infrastructure. Your trading data is yours. We just help you analyze it.' },
+              { q: 'What makes PulseWave different?', a: 'We replace your entire trading stack. Advanced algorithms (not repackaged TA), automated risk management, and professional-grade analytics in one beautiful platform — not 6 separate subscriptions.' },
+              { q: 'Is my data secure?', a: 'Bank-grade encryption, read-only API keys, industry-standard encryption and security practices. Your trading data is yours. We just help you analyze it.' },
             ].map((item, i) => (
               <div key={i} className="bg-[#0d1117] border border-[#1b2332] rounded-xl overflow-hidden hover:border-[#2a3444] transition-colors">
                 <button onClick={() => setOpenFaq(openFaq === i ? null : i)} className="w-full px-6 py-5 text-left flex items-center justify-between gap-4">
@@ -557,19 +562,46 @@ export default function LandingPage() {
               <p className="text-sm text-[#6b7280] leading-relaxed">The complete trading platform for the modern trader.</p>
             </div>
             {[
-              { title: 'Product', links: ['Features', 'Pricing', 'API', 'Changelog'] },
-              { title: 'Company', links: ['About', 'Blog', 'Careers', 'Contact'] },
-              { title: 'Legal', links: ['Privacy', 'Terms', 'Disclaimer', 'Risk Notice'] },
+              { title: 'Product', links: [
+                { name: 'Features', href: '#features' },
+                { name: 'Pricing', href: '#pricing' },
+                { name: 'API', href: '#' },
+                { name: 'Changelog', href: '#' }
+              ] },
+              { title: 'Company', links: [
+                { name: 'About', href: '#' },
+                { name: 'Blog', href: '#' },
+                { name: 'Careers', href: '#' },
+                { name: 'Contact', href: '#' }
+              ] },
+              { title: 'Legal', links: [
+                { name: 'Privacy', href: '/privacy' },
+                { name: 'Terms', href: '/terms' },
+                { name: 'Disclaimer', href: '/disclaimer' },
+                { name: 'Risk Notice', href: '/disclaimer' }
+              ] },
             ].map((col, i) => (
               <div key={i}>
                 <h4 className="font-semibold text-sm mb-3">{col.title}</h4>
-                <div className="space-y-2">{col.links.map(l => <div key={l} className="text-sm text-[#6b7280] hover:text-white cursor-pointer transition-colors">{l}</div>)}</div>
+                <div className="space-y-2">
+                  {col.links.map(link => (
+                    col.title === 'Legal' && (link.name === 'Privacy' || link.name === 'Terms' || link.name === 'Disclaimer' || link.name === 'Risk Notice') ? (
+                      <Link key={link.name} href={link.href} className="block text-sm text-[#6b7280] hover:text-white transition-colors">{link.name}</Link>
+                    ) : link.href?.startsWith('#') ? (
+                      <button key={link.name} onClick={() => link.href === '#features' ? scrollTo('features') : link.href === '#pricing' ? scrollTo('pricing') : null} className="block text-sm text-[#6b7280] hover:text-white transition-colors">{link.name}</button>
+                    ) : (
+                      <div key={link.name} className="text-sm text-[#6b7280] hover:text-white cursor-pointer transition-colors">{link.name}</div>
+                    )
+                  ))}
+                </div>
               </div>
             ))}
           </div>
           <div className="border-t border-white/[0.06] pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-[#4b5563]">© 2026 PulseWave Labs. All rights reserved.</p>
-            <p className="text-xs text-[#4b5563]">Trading involves risk. Past performance ≠ future results.</p>
+            <p className="text-[#4b5563] text-xs max-w-2xl text-center md:text-right leading-relaxed">
+              Trading cryptocurrencies involves substantial risk of loss. PulseWave Labs provides tools and analysis for informational purposes only — not investment advice. Past performance does not guarantee future results. Never invest more than you can afford to lose.
+            </p>
           </div>
         </div>
       </footer>
