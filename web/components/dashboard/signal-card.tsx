@@ -10,12 +10,12 @@ interface Signal {
   pair: string
   direction: Direction
   entry: number
-  stopLoss: number
-  takeProfit: number
+  stop_loss: number
+  take_profit: number
   confidence: number
   timeframe: string
   status: Status
-  riskReward: number
+  risk_reward_ratio: number
 }
 
 interface SignalCardProps {
@@ -75,15 +75,15 @@ export default function SignalCard({ signal, compact = false }: SignalCardProps)
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-[#6b7280]">Stop Loss</span>
-            <span className="text-[#f87171] font-mono tabular-nums">${signal.stopLoss.toLocaleString()}</span>
+            <span className="text-[#f87171] font-mono tabular-nums">${signal.stop_loss.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-[#6b7280]">Take Profit</span>
-            <span className="text-[#4ade80] font-mono tabular-nums">${signal.takeProfit.toLocaleString()}</span>
+            <span className="text-[#4ade80] font-mono tabular-nums">${signal.take_profit.toLocaleString()}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-[#6b7280]">R:R</span>
-            <span className="text-white font-mono tabular-nums">{signal.riskReward}:1</span>
+            <span className="text-white font-mono tabular-nums">{signal.risk_reward_ratio}:1</span>
           </div>
         </div>
       )}
@@ -92,7 +92,7 @@ export default function SignalCard({ signal, compact = false }: SignalCardProps)
         <div className="flex items-center justify-between text-xs">
           <div className="flex gap-4">
             <span className="text-[#6b7280]">Entry: <span className="text-white font-mono">${signal.entry.toLocaleString()}</span></span>
-            <span className="text-[#6b7280]">R:R: <span className="text-white font-mono">{signal.riskReward}:1</span></span>
+            <span className="text-[#6b7280]">R:R: <span className="text-white font-mono">{signal.risk_reward_ratio}:1</span></span>
           </div>
         </div>
       )}

@@ -186,10 +186,10 @@ export function useRiskCalculation() {
   const [loading, setLoading] = useState(false)
 
   const calculateRisk = useCallback(async (params: {
-    account_size: number
-    risk_percent: number
-    entry_price: number
-    stop_loss: number
+    accountSize: number
+    riskPercent: number
+    entryPrice: number
+    stopLoss: number
   }) => {
     setLoading(true)
     try {

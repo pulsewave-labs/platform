@@ -52,36 +52,36 @@ const mockActiveSignals = [
     pair: 'BTC/USDT',
     direction: 'LONG' as const,
     entry: 69420,
-    stopLoss: 68200,
-    takeProfit: 72100,
+    stop_loss: 68200,
+    take_profit: 72100,
     confidence: 87,
     timeframe: '4H',
     status: 'active' as const,
-    riskReward: 2.2
+    risk_reward_ratio: 2.2
   },
   {
     id: '2',
     pair: 'ETH/USDT',
     direction: 'SHORT' as const,
     entry: 2742,
-    stopLoss: 2820,
-    takeProfit: 2586,
+    stop_loss: 2820,
+    take_profit: 2586,
     confidence: 73,
     timeframe: '1D',
     status: 'active' as const,
-    riskReward: 2.0
+    risk_reward_ratio: 2.0
   },
   {
     id: '3',
     pair: 'SOL/USDT',
     direction: 'LONG' as const,
     entry: 142.50,
-    stopLoss: 138.20,
-    takeProfit: 150.80,
+    stop_loss: 138.20,
+    take_profit: 150.80,
     confidence: 68,
     timeframe: '2H',
     status: 'pending' as const,
-    riskReward: 1.9
+    risk_reward_ratio: 1.9
   }
 ]
 
@@ -110,9 +110,45 @@ const mockRecentNews = [
 ]
 
 const mockRecentTrades = [
-  { pair: 'BTC/USDT', direction: 'LONG' as const, pnl: 1247.50, rMultiple: 2.1, date: 'Today' },
-  { pair: 'ETH/USDT', direction: 'SHORT' as const, pnl: -342.20, rMultiple: -0.8, date: 'Yesterday' },
-  { pair: 'SOL/USDT', direction: 'LONG' as const, pnl: 856.30, rMultiple: 1.9, date: 'Yesterday' }
+  { 
+    id: '1',
+    pair: 'BTC/USDT', 
+    direction: 'LONG' as const, 
+    pnl: 1247.50, 
+    entry_price: 68500,
+    exit_price: 70000,
+    stop_loss: 67200,
+    take_profit: 71500,
+    status: 'closed',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  },
+  { 
+    id: '2',
+    pair: 'ETH/USDT', 
+    direction: 'SHORT' as const, 
+    pnl: -342.20, 
+    entry_price: 2800,
+    exit_price: 2750,
+    stop_loss: 2850,
+    take_profit: 2700,
+    status: 'closed',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString()
+  },
+  { 
+    id: '3',
+    pair: 'SOL/USDT', 
+    direction: 'LONG' as const, 
+    pnl: 856.30, 
+    entry_price: 140,
+    exit_price: 145,
+    stop_loss: 137,
+    take_profit: 148,
+    status: 'closed',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 86400000).toISOString()
+  }
 ]
 
 const containerVariants = {
@@ -431,9 +467,9 @@ export default function Dashboard() {
                       {(trade.pnl || 0) > 0 ? '+' : ''}${(trade.pnl || 0).toFixed(2)}
                     </div>
                     <div className={`text-xs font-mono tabular-nums ${
-                      (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                      (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
                     }`}>
-                      {(trade.rMultiple || 0) > 0 ? '+' : ''}{(trade.rMultiple || 0).toFixed(1)}R
+                      {(trade.pnl || 0) > 0 ? '+' : ''}{((trade.pnl || 0) / 1000).toFixed(1)}R
                     </div>
                   </div>
                 </div>

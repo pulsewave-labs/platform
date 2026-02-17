@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/api'
+import { supabaseAdmin } from '../../../../lib/supabase/api'
 
 // Cache for news data
 const newsCache = new Map<string, { data: any, timestamp: number }>()

@@ -11,187 +11,247 @@ import { useSuccessToast, useErrorToast } from '../../../components/ui/toast'
 import { useJournal, useJournalStats, useJournalMutations } from '../../../lib/hooks'
 import { BookOpen, Calendar, TrendingUp, TrendingDown, Plus, Edit, Trash2 } from 'lucide-react'
 
-// Mock trades data
+// Mock trades data - using snake_case to match API
 const mockTrades = [
   {
     id: '1',
-    date: '2026-02-17',
+    user_id: 'user-1',
     pair: 'BTC/USDT',
     direction: 'LONG' as const,
-    entry: 69200,
-    exit: 70540,
+    entry_price: 69200,
+    exit_price: 70540,
+    stop_loss: 68000,
+    take_profit: 72000,
     pnl: 1287.40,
-    rMultiple: 2.1,
-    duration: '2h 15m',
-    notes: 'Perfect bounce from 4H support level'
+    status: 'closed' as const,
+    notes: 'Perfect bounce from 4H support level',
+    tags: ['support', 'bounce'],
+    created_at: '2026-02-17T10:00:00Z',
+    updated_at: '2026-02-17T12:15:00Z'
   },
   {
     id: '2',
-    date: '2026-02-16',
+    user_id: 'user-1',
     pair: 'ETH/USDT',
     direction: 'SHORT' as const,
-    entry: 2720,
-    exit: 2678,
+    entry_price: 2720,
+    exit_price: 2678,
+    stop_loss: 2780,
+    take_profit: 2620,
     pnl: -342.30,
-    rMultiple: -0.8,
-    duration: '1h 15m',
-    notes: 'Stopped out on false breakdown'
+    status: 'closed' as const,
+    notes: 'Stopped out on false breakdown',
+    tags: ['breakout', 'stop'],
+    created_at: '2026-02-16T08:00:00Z',
+    updated_at: '2026-02-16T09:15:00Z'
   },
   {
     id: '3',
-    date: '2026-02-16',
+    user_id: 'user-1',
     pair: 'SOL/USDT',
     direction: 'LONG' as const,
-    entry: 138.50,
-    exit: 142.80,
+    entry_price: 138.50,
+    exit_price: 142.80,
+    stop_loss: 135.00,
+    take_profit: 145.00,
     pnl: 856.30,
-    rMultiple: 1.9,
-    duration: '4h 32m',
-    notes: 'Strong breakout with volume confirmation'
+    status: 'closed' as const,
+    notes: 'Strong breakout with volume confirmation',
+    tags: ['breakout', 'volume'],
+    created_at: '2026-02-16T12:00:00Z',
+    updated_at: '2026-02-16T16:32:00Z'
   },
   {
     id: '4',
-    date: '2026-02-15',
+    user_id: 'user-1',
     pair: 'AVAX/USDT',
     direction: 'LONG' as const,
-    entry: 34.20,
-    exit: 35.95,
+    entry_price: 34.20,
+    exit_price: 35.95,
+    stop_loss: 33.00,
+    take_profit: 37.00,
     pnl: 675.25,
-    rMultiple: 2.3,
-    duration: '6h 18m',
-    notes: 'Bullish flag pattern completion'
+    status: 'closed' as const,
+    notes: 'Bullish flag pattern completion',
+    tags: ['flag', 'pattern'],
+    created_at: '2026-02-15T10:00:00Z',
+    updated_at: '2026-02-15T16:18:00Z'
   },
   {
     id: '5',
-    date: '2026-02-15',
+    user_id: 'user-1',
     pair: 'MATIC/USDT',
     direction: 'SHORT' as const,
-    entry: 0.8520,
-    exit: 0.8180,
+    entry_price: 0.8520,
+    exit_price: 0.8180,
+    stop_loss: 0.8700,
+    take_profit: 0.8000,
     pnl: 420.80,
-    rMultiple: 1.6,
-    duration: '3h 45m',
-    notes: 'Support breakdown with volume'
+    status: 'closed' as const,
+    notes: 'Support breakdown with volume',
+    tags: ['support', 'breakdown'],
+    created_at: '2026-02-15T14:00:00Z',
+    updated_at: '2026-02-15T17:45:00Z'
   },
   {
     id: '6',
-    date: '2026-02-14',
+    user_id: 'user-1',
     pair: 'BTC/USDT',
     direction: 'LONG' as const,
-    entry: 68500,
-    exit: 67820,
+    entry_price: 68500,
+    exit_price: 67820,
+    stop_loss: 67500,
+    take_profit: 70500,
     pnl: -523.50,
-    rMultiple: -1.2,
-    duration: '45m',
-    notes: 'Failed breakout, quick stop'
+    status: 'closed' as const,
+    notes: 'Failed breakout, quick stop',
+    tags: ['breakout', 'failed'],
+    created_at: '2026-02-14T15:00:00Z',
+    updated_at: '2026-02-14T15:45:00Z'
   },
   {
     id: '7',
-    date: '2026-02-14',
+    user_id: 'user-1',
     pair: 'LINK/USDT',
     direction: 'LONG' as const,
-    entry: 14.25,
-    exit: 15.48,
+    entry_price: 14.25,
+    exit_price: 15.48,
+    stop_loss: 13.50,
+    take_profit: 16.00,
     pnl: 892.15,
-    rMultiple: 2.8,
-    duration: '8h 22m',
-    notes: 'Triangle breakout with strong momentum'
+    status: 'closed' as const,
+    notes: 'Triangle breakout with strong momentum',
+    tags: ['triangle', 'breakout'],
+    created_at: '2026-02-14T09:00:00Z',
+    updated_at: '2026-02-14T17:22:00Z'
   },
   {
     id: '8',
-    date: '2026-02-13',
+    user_id: 'user-1',
     pair: 'ADA/USDT',
     direction: 'SHORT' as const,
-    entry: 0.4680,
-    exit: 0.4420,
+    entry_price: 0.4680,
+    exit_price: 0.4420,
+    stop_loss: 0.4800,
+    take_profit: 0.4300,
     pnl: 356.40,
-    rMultiple: 1.4,
-    duration: '2h 08m',
-    notes: 'Resistance rejection with bearish divergence'
+    status: 'closed' as const,
+    notes: 'Resistance rejection with bearish divergence',
+    tags: ['resistance', 'divergence'],
+    created_at: '2026-02-13T11:00:00Z',
+    updated_at: '2026-02-13T13:08:00Z'
   },
   {
     id: '9',
-    date: '2026-02-13',
+    user_id: 'user-1',
     pair: 'DOT/USDT',
     direction: 'LONG' as const,
-    entry: 6.85,
-    exit: 7.75,
+    entry_price: 6.85,
+    exit_price: 7.75,
+    stop_loss: 6.50,
+    take_profit: 8.00,
     pnl: 1124.70,
-    rMultiple: 3.2,
-    duration: '12h 45m',
-    notes: 'Double bottom pattern, excellent R:R'
+    status: 'closed' as const,
+    notes: 'Double bottom pattern, excellent R:R',
+    tags: ['double_bottom', 'pattern'],
+    created_at: '2026-02-13T06:00:00Z',
+    updated_at: '2026-02-13T18:45:00Z'
   },
   {
     id: '10',
-    date: '2026-02-12',
+    user_id: 'user-1',
     pair: 'ETH/USDT',
     direction: 'LONG' as const,
-    entry: 2645,
-    exit: 2698,
+    entry_price: 2645,
+    exit_price: 2698,
+    stop_loss: 2600,
+    take_profit: 2750,
     pnl: 742.90,
-    rMultiple: 1.8,
-    duration: '3h 12m',
-    notes: 'Support bounce with RSI oversold'
+    status: 'closed' as const,
+    notes: 'Support bounce with RSI oversold',
+    tags: ['support', 'oversold'],
+    created_at: '2026-02-12T14:00:00Z',
+    updated_at: '2026-02-12T17:12:00Z'
   },
   {
     id: '11',
-    date: '2026-02-12',
+    user_id: 'user-1',
     pair: 'SOL/USDT',
     direction: 'SHORT' as const,
-    entry: 145.80,
-    exit: 143.20,
+    entry_price: 145.80,
+    exit_price: 143.20,
+    stop_loss: 148.00,
+    take_profit: 140.00,
     pnl: 485.60,
-    rMultiple: 1.9,
-    duration: '2h 36m',
-    notes: 'Failed retest of resistance level'
+    status: 'closed' as const,
+    notes: 'Failed retest of resistance level',
+    tags: ['resistance', 'retest'],
+    created_at: '2026-02-12T10:00:00Z',
+    updated_at: '2026-02-12T12:36:00Z'
   },
   {
     id: '12',
-    date: '2026-02-11',
+    user_id: 'user-1',
     pair: 'BTC/USDT',
     direction: 'LONG' as const,
-    entry: 67200,
-    exit: 69420,
+    entry_price: 67200,
+    exit_price: 69420,
+    stop_loss: 66000,
+    take_profit: 70500,
     pnl: 1556.80,
-    rMultiple: 2.6,
-    duration: '16h 25m',
-    notes: 'Weekly support bounce, strong momentum'
+    status: 'closed' as const,
+    notes: 'Weekly support bounce, strong momentum',
+    tags: ['support', 'weekly'],
+    created_at: '2026-02-11T08:00:00Z',
+    updated_at: '2026-02-12T00:25:00Z'
   },
   {
     id: '13',
-    date: '2026-02-11',
+    user_id: 'user-1',
     pair: 'AVAX/USDT',
     direction: 'SHORT' as const,
-    entry: 36.40,
-    exit: 35.85,
+    entry_price: 36.40,
+    exit_price: 35.85,
+    stop_loss: 37.00,
+    take_profit: 35.00,
     pnl: -128.75,
-    rMultiple: -0.3,
-    duration: '25m',
-    notes: 'Quick scalp, cut short on reversal'
+    status: 'closed' as const,
+    notes: 'Quick scalp, cut short on reversal',
+    tags: ['scalp', 'reversal'],
+    created_at: '2026-02-11T15:00:00Z',
+    updated_at: '2026-02-11T15:25:00Z'
   },
   {
     id: '14',
-    date: '2026-02-10',
+    user_id: 'user-1',
     pair: 'MATIC/USDT',
     direction: 'LONG' as const,
-    entry: 0.8120,
-    exit: 0.8480,
+    entry_price: 0.8120,
+    exit_price: 0.8480,
+    stop_loss: 0.7900,
+    take_profit: 0.8600,
     pnl: 624.00,
-    rMultiple: 2.1,
-    duration: '5h 18m',
-    notes: 'Cup and handle breakout'
+    status: 'closed' as const,
+    notes: 'Cup and handle breakout',
+    tags: ['cup_handle', 'breakout'],
+    created_at: '2026-02-10T11:00:00Z',
+    updated_at: '2026-02-10T16:18:00Z'
   },
   {
     id: '15',
-    date: '2026-02-10',
+    user_id: 'user-1',
     pair: 'LINK/USDT',
     direction: 'SHORT' as const,
-    entry: 15.20,
-    exit: 14.85,
+    entry_price: 15.20,
+    exit_price: 14.85,
+    stop_loss: 15.50,
+    take_profit: 14.50,
     pnl: 287.50,
-    rMultiple: 1.2,
-    duration: '1h 42m',
-    notes: 'Resistance rejection, quick profits'
+    status: 'closed' as const,
+    notes: 'Resistance rejection, quick profits',
+    tags: ['resistance', 'rejection'],
+    created_at: '2026-02-10T13:00:00Z',
+    updated_at: '2026-02-10T14:42:00Z'
   }
 ]
 
@@ -424,7 +484,7 @@ export default function JournalPage() {
                 {/* Desktop Table Row */}
                 <div className="hidden md:grid grid-cols-9 gap-4 text-sm py-4">
                   <span className="text-[#9ca3af] font-mono tabular-nums">
-                    {new Date(trade.date || trade.entryTime || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    {new Date(trade.created_at || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
                   <span className="text-white font-medium">{trade.pair}</span>
                   <div>
@@ -434,9 +494,9 @@ export default function JournalPage() {
                       {trade.direction}
                     </span>
                   </div>
-                  <span className="text-white font-mono tabular-nums">${(trade.entry || trade.entryPrice || 0).toLocaleString()}</span>
+                  <span className="text-white font-mono tabular-nums">${(trade.entry_price || 0).toLocaleString()}</span>
                   <span className="text-white font-mono tabular-nums">
-                    {trade.exit || trade.exitPrice ? `$${(trade.exit || trade.exitPrice).toLocaleString()}` : '-'}
+                    {trade.exit_price ? `$${trade.exit_price.toLocaleString()}` : '-'}
                   </span>
                   <span className={`font-semibold font-mono tabular-nums ${
                     (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
@@ -444,9 +504,16 @@ export default function JournalPage() {
                     {trade.pnl ? `${trade.pnl > 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '-'}
                   </span>
                   <span className={`font-semibold font-mono tabular-nums ${
-                    (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                    (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
                   }`}>
-                    {trade.rMultiple ? `${trade.rMultiple > 0 ? '+' : ''}${trade.rMultiple.toFixed(1)}R` : '-'}
+                    {(() => {
+                      // Calculate R-Multiple from PnL and risk
+                      const risk = trade.direction === 'LONG' 
+                        ? (trade.entry_price || 0) - (trade.stop_loss || 0)
+                        : (trade.stop_loss || 0) - (trade.entry_price || 0);
+                      const rMultiple = risk > 0 ? (trade.pnl || 0) / (risk * 100) : 0; // Assuming position size of 100
+                      return rMultiple !== 0 ? `${rMultiple > 0 ? '+' : ''}${rMultiple.toFixed(1)}R` : '-';
+                    })()}
                   </span>
                   <span className={`text-xs px-2 py-1 rounded-md ${
                     trade.status === 'closed' ? 'bg-[#6b7280]/20 text-[#6b7280]' :
@@ -498,12 +565,12 @@ export default function JournalPage() {
                   <div className="grid grid-cols-2 gap-4 text-sm mb-3">
                     <div>
                       <span className="text-[#6b7280] text-xs">Entry</span>
-                      <div className="text-white font-mono">${(trade.entry || trade.entryPrice || 0).toLocaleString()}</div>
+                      <div className="text-white font-mono">${(trade.entry_price || 0).toLocaleString()}</div>
                     </div>
                     <div>
                       <span className="text-[#6b7280] text-xs">Exit</span>
                       <div className="text-white font-mono">
-                        {trade.exit || trade.exitPrice ? `$${(trade.exit || trade.exitPrice).toLocaleString()}` : '-'}
+                        {trade.exit_price ? `$${trade.exit_price.toLocaleString()}` : '-'}
                       </div>
                     </div>
                     <div>
@@ -517,15 +584,22 @@ export default function JournalPage() {
                     <div>
                       <span className="text-[#6b7280] text-xs">R-Multiple</span>
                       <div className={`font-semibold font-mono ${
-                        (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                        (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
                       }`}>
-                        {trade.rMultiple ? `${trade.rMultiple > 0 ? '+' : ''}${trade.rMultiple.toFixed(1)}R` : '-'}
+                        {(() => {
+                          // Calculate R-Multiple from PnL and risk
+                          const risk = trade.direction === 'LONG' 
+                            ? (trade.entry_price || 0) - (trade.stop_loss || 0)
+                            : (trade.stop_loss || 0) - (trade.entry_price || 0);
+                          const rMultiple = risk > 0 ? (trade.pnl || 0) / (risk * 100) : 0; // Assuming position size of 100
+                          return rMultiple !== 0 ? `${rMultiple > 0 ? '+' : ''}${rMultiple.toFixed(1)}R` : '-';
+                        })()}
                       </div>
                     </div>
                   </div>
 
                   <div className="text-xs text-[#6b7280]">
-                    {new Date(trade.date || trade.entryTime || Date.now()).toLocaleDateString('en-US', { 
+                    {new Date(trade.created_at || Date.now()).toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
                       year: 'numeric'

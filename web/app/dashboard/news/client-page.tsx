@@ -11,103 +11,151 @@ type Category = 'All' | 'Macro' | 'Whale' | 'Funding' | 'Regulatory'
 
 const categories: Category[] = ['All', 'Macro', 'Whale', 'Funding', 'Regulatory']
 
-// Mock news data
+// Mock news data - using snake_case to match API
 const mockNews = [
   {
     id: '1',
     title: 'Fed Minutes Preview: Markets brace for hawkish tone as inflation data remains sticky above 2% target',
-    impact: 'HIGH' as const,
-    timeAgo: '12m',
-    category: 'Macro' as const,
-    content: 'Federal Reserve officials expected to discuss aggressive monetary policy measures...'
+    summary: 'Federal Reserve officials expected to discuss aggressive monetary policy measures...',
+    source: 'Reuters',
+    url: 'https://reuters.com/markets/fed-minutes',
+    category: 'Macro',
+    image_url: null,
+    published_at: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 12 * 60 * 1000).toISOString(),
+    impact: 'HIGH' as const
   },
   {
     id: '2',
     title: 'BTC Whale Alert: 3,200 BTC ($220M) moved from Coinbase Pro to unknown cold storage wallet',
-    impact: 'MED' as const,
-    timeAgo: '28m',
-    category: 'Whale' as const,
-    content: 'Large institutional movement detected, potentially signaling long-term accumulation...'
+    summary: 'Large institutional movement detected, potentially signaling long-term accumulation...',
+    source: 'Whale Alert',
+    url: 'https://whale-alert.io/transaction/bitcoin',
+    category: 'Whale',
+    image_url: null,
+    published_at: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 28 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '3',
     title: 'Perpetual funding rates turn negative across major exchanges: Short squeeze potential builds',
-    impact: 'MED' as const,
-    timeAgo: '45m',
-    category: 'Funding' as const,
-    content: 'BTC perpetual funding at -0.008% suggests overleveraged short positions...'
+    summary: 'BTC perpetual funding at -0.008% suggests overleveraged short positions...',
+    source: 'CoinDesk',
+    url: 'https://coindesk.com/markets/funding-rates',
+    category: 'Funding',
+    image_url: null,
+    published_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '4',
     title: 'SEC Chairman signals stricter crypto enforcement ahead of presidential election cycle',
-    impact: 'HIGH' as const,
-    timeAgo: '1h',
-    category: 'Regulatory' as const,
-    content: 'Regulatory uncertainty continues to weigh on institutional adoption...'
+    summary: 'Regulatory uncertainty continues to weigh on institutional adoption...',
+    source: 'Bloomberg',
+    url: 'https://bloomberg.com/news/sec-crypto-enforcement',
+    category: 'Regulatory',
+    image_url: null,
+    published_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+    impact: 'HIGH' as const
   },
   {
     id: '5',
     title: 'Ethereum L2 TVL hits all-time high of $45B as scaling solutions gain traction',
-    impact: 'MED' as const,
-    timeAgo: '1h 15m',
-    category: 'Macro' as const,
-    content: 'Layer 2 ecosystems showing strong growth with Arbitrum leading at $18B TVL...'
+    summary: 'Layer 2 ecosystems showing strong growth with Arbitrum leading at $18B TVL...',
+    source: 'DeFiPulse',
+    url: 'https://defipulse.com/ethereum-l2-tvl',
+    category: 'Macro',
+    image_url: null,
+    published_at: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 75 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '6',
     title: 'Whale accumulation: 8,450 ETH ($23M) purchased during morning dip by top 100 holder',
-    impact: 'MED' as const,
-    timeAgo: '1h 32m',
-    category: 'Whale' as const,
-    content: 'Smart money continues buying weakness as retail sentiment remains bearish...'
+    summary: 'Smart money continues buying weakness as retail sentiment remains bearish...',
+    source: 'Etherscan',
+    url: 'https://etherscan.io/whale-tracking',
+    category: 'Whale',
+    image_url: null,
+    published_at: new Date(Date.now() - 92 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 92 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '7',
     title: 'Binance perpetual funding hits -0.02%: Highest negative rate since October 2023 crash',
-    impact: 'HIGH' as const,
-    timeAgo: '2h',
-    category: 'Funding' as const,
-    content: 'Extreme negative funding suggests potential short squeeze setup...'
+    summary: 'Extreme negative funding suggests potential short squeeze setup...',
+    source: 'The Block',
+    url: 'https://theblock.co/binance-funding-rates',
+    category: 'Funding',
+    image_url: null,
+    published_at: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 120 * 60 * 1000).toISOString(),
+    impact: 'HIGH' as const
   },
   {
     id: '8',
     title: 'European Central Bank exploring digital euro pilot program with major banks',
-    impact: 'LOW' as const,
-    timeAgo: '2h 20m',
-    category: 'Regulatory' as const,
-    content: 'CBDC development accelerating across major economies...'
+    summary: 'CBDC development accelerating across major economies...',
+    source: 'Financial Times',
+    url: 'https://ft.com/ecb-digital-euro',
+    category: 'Regulatory',
+    image_url: null,
+    published_at: new Date(Date.now() - 140 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 140 * 60 * 1000).toISOString(),
+    impact: 'LOW' as const
   },
   {
     id: '9',
     title: 'DXY strengthens to 106.8 as Treasury yields surge on inflation concerns',
-    impact: 'HIGH' as const,
-    timeAgo: '2h 45m',
-    category: 'Macro' as const,
-    content: 'Dollar strength putting pressure on risk assets including crypto...'
+    summary: 'Dollar strength putting pressure on risk assets including crypto...',
+    source: 'MarketWatch',
+    url: 'https://marketwatch.com/dxy-treasury-yields',
+    category: 'Macro',
+    image_url: null,
+    published_at: new Date(Date.now() - 165 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 165 * 60 * 1000).toISOString(),
+    impact: 'HIGH' as const
   },
   {
     id: '10',
     title: 'MicroStrategy adds another 1,500 BTC to treasury: Total holdings now exceed 175,000 BTC',
-    impact: 'MED' as const,
-    timeAgo: '3h',
-    category: 'Whale' as const,
-    content: 'Corporate Bitcoin adoption continues despite market volatility...'
+    summary: 'Corporate Bitcoin adoption continues despite market volatility...',
+    source: 'MicroStrategy PR',
+    url: 'https://microstrategy.com/bitcoin-purchase',
+    category: 'Whale',
+    image_url: null,
+    published_at: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 180 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '11',
     title: 'Solana futures open interest spikes 340% ahead of major ecosystem upgrades',
-    impact: 'MED' as const,
-    timeAgo: '3h 15m',
-    category: 'Funding' as const,
-    content: 'Derivative markets pricing in significant volatility for SOL...'
+    summary: 'Derivative markets pricing in significant volatility for SOL...',
+    source: 'CoinGlass',
+    url: 'https://coinglass.com/solana-oi',
+    category: 'Funding',
+    image_url: null,
+    published_at: new Date(Date.now() - 195 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 195 * 60 * 1000).toISOString(),
+    impact: 'MED' as const
   },
   {
     id: '12',
     title: 'Hong Kong approves first batch of crypto ETFs for retail trading starting next month',
-    impact: 'HIGH' as const,
-    timeAgo: '4h',
-    category: 'Regulatory' as const,
-    content: 'Asian markets opening up to crypto investment products...'
+    summary: 'Asian markets opening up to crypto investment products...',
+    source: 'South China Morning Post',
+    url: 'https://scmp.com/hong-kong-crypto-etf',
+    category: 'Regulatory',
+    image_url: null,
+    published_at: new Date(Date.now() - 240 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 240 * 60 * 1000).toISOString(),
+    impact: 'HIGH' as const
   }
 ]
 

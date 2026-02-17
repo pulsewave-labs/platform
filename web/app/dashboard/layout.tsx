@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ToastProvider } from '../../components/ui/toast'
+import { ErrorBoundary } from '../../components/error-boundary'
 import { 
   LayoutDashboard,
   Target, 
@@ -247,7 +248,9 @@ export default function DashboardLayout({
                 </div>
               </motion.div>
               
-              {children}
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
             </div>
           </main>
         </ToastProvider>
