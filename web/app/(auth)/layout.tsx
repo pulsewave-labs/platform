@@ -1,5 +1,8 @@
+import { Suspense } from 'react'
 import { Inter, JetBrains_Mono } from 'next/font/google'
 import './auth-globals.css'
+
+export const dynamic = 'force-dynamic'
 
 const inter = Inter({ 
   subsets: ['latin'],
