@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+    process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+  )
+}
 
 export async function POST(request: Request) {
   try {
@@ -14,20 +16,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
     }
 
-    const { data, error } = await supabase
+    const supabase = getSupabase()
+
+    const { error } = await supabase
       .from('waitlist')
       .upsert(
         { email: email.toLowerCase().trim(), source, utm_source, utm_medium, utm_campaign },
         { onConflict: 'email' }
       )
-      .select()
 
     if (error) {
       console.error('Waitlist insert error:', error)
       return NextResponse.json({ error: 'Failed to join waitlist' }, { status: 500 })
     }
 
-    // Get total count for social proof
     const { count } = await supabase
       .from('waitlist')
       .select('*', { count: 'exact', head: true })
@@ -41,6 +43,7 @@ export async function POST(request: Request) {
 
 export async function GET() {
   try {
+    const supabase = getSupabase()
     const { count } = await supabase
       .from('waitlist')
       .select('*', { count: 'exact', head: true })
