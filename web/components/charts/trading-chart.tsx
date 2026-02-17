@@ -101,13 +101,11 @@ export default function TradingChart({
       },
       rightPriceScale: {
         borderColor: '#1b2332',
-        textColor: '#9ca3af',
         mode: PriceScaleMode.Normal,
         autoScale: true,
       },
       timeScale: {
         borderColor: '#1b2332',
-        textColor: '#9ca3af',
         rightOffset: 20,
         barSpacing: 8,
         minBarSpacing: 4,
