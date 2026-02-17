@@ -1,283 +1,191 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import AIBriefing from '../../components/dashboard/ai-briefing'
 import StatCard from '../../components/dashboard/stat-card'
 import SignalCard from '../../components/dashboard/signal-card'
 import NewsItem from '../../components/dashboard/news-item'
 import RiskGauge from '../../components/dashboard/risk-gauge'
-import AIBriefing from '../../components/dashboard/ai-briefing'
-import { Signal, NewsItem as NewsItemType, Trade } from '../../types'
+import EquityCurve from '../../components/dashboard/equity-curve'
+import Link from 'next/link'
+import { ArrowRight, TrendingUp, Target } from 'lucide-react'
 
-// Mock data for the dashboard
+// Mock data
 const mockStats = [
   {
     title: 'Portfolio Value',
-    value: '$12,847',
-    change: { value: '▼ 2.1% today', type: 'negative' as const },
-    sparkline: [12500, 12800, 13100, 12900, 13200, 12950, 12847]
+    value: '$142,847',
+    change: '+2.3%',
+    trend: 'up' as const,
+    icon: 'dollar' as const
   },
   {
     title: 'Win Rate (30d)',
-    value: '67%',
-    change: { value: '▲ 4% vs last month', type: 'positive' as const },
-    sparkline: [63, 65, 64, 66, 67, 68, 67]
+    value: '73%',
+    change: '+5%',
+    trend: 'up' as const,
+    icon: 'percent' as const
   },
   {
-    title: 'Profit Factor (30d)',
-    value: '1.84',
-    change: { value: '▲ 0.3', type: 'positive' as const },
-    sparkline: [1.5, 1.6, 1.7, 1.8, 1.85, 1.82, 1.84]
+    title: 'Profit Factor',
+    value: '2.14',
+    change: '+0.18',
+    trend: 'up' as const,
+    icon: 'chart' as const
   },
   {
-    title: 'Trades This Month',
-    value: 23,
-    change: { value: 'Avg 1.1/day', type: 'neutral' as const },
-    sparkline: [18, 19, 20, 21, 22, 23, 23]
+    title: 'Open Trades',
+    value: '3',
+    change: '2 winning',
+    trend: 'neutral' as const,
+    icon: 'trades' as const
   }
 ]
 
-const mockSignals: Signal[] = [
+const activeSignals = [
   {
     id: '1',
     pair: 'BTC/USDT',
-    direction: 'LONG',
-    entry: 68840,
-    stopLoss: 67920,
-    takeProfit: 70680,
-    confidence: 82,
-    regime: 'VOLATILE',
-    reasoning: '4H S/R bounce + RSI oversold + volume spike',
-    factors: [
-      { name: 'Support/Resistance', score: 85, weight: 0.3 },
-      { name: 'RSI Oversold', score: 75, weight: 0.2 },
-      { name: 'Volume Spike', score: 90, weight: 0.25 },
-      { name: 'Market Structure', score: 70, weight: 0.25 }
-    ],
-    timeframe: '4h',
-    createdAt: '2026-02-17T16:30:00Z',
-    updatedAt: '2026-02-17T16:30:00Z',
-    status: 'active',
-    riskReward: 2.0
+    direction: 'LONG' as const,
+    entry: 69420,
+    stopLoss: 68200,
+    takeProfit: 72100,
+    confidence: 87,
+    timeframe: '4H',
+    status: 'active' as const,
+    riskReward: 2.2
   },
   {
     id: '2',
     pair: 'ETH/USDT',
-    direction: 'SHORT',
-    entry: 2685,
-    stopLoss: 2740,
-    takeProfit: 2575,
-    confidence: 68,
-    regime: 'TRENDING_DOWN',
-    reasoning: 'Daily resistance rejection + bearish divergence',
-    factors: [
-      { name: 'Resistance Level', score: 80, weight: 0.4 },
-      { name: 'Bearish Divergence', score: 65, weight: 0.3 },
-      { name: 'Volume Profile', score: 60, weight: 0.3 }
-    ],
-    timeframe: '1d',
-    createdAt: '2026-02-17T15:45:00Z',
-    updatedAt: '2026-02-17T15:45:00Z',
-    status: 'active',
+    direction: 'SHORT' as const,
+    entry: 2742,
+    stopLoss: 2820,
+    takeProfit: 2586,
+    confidence: 73,
+    timeframe: '1D',
+    status: 'active' as const,
     riskReward: 2.0
   },
   {
     id: '3',
     pair: 'SOL/USDT',
-    direction: 'LONG',
-    entry: 138.50,
-    stopLoss: 135.20,
-    takeProfit: 145.80,
-    confidence: 45,
-    regime: 'RANGING',
-    reasoning: 'Signal pending — needs volume confirmation',
-    factors: [],
-    timeframe: '1h',
-    createdAt: '2026-02-17T16:45:00Z',
-    updatedAt: '2026-02-17T16:45:00Z',
-    status: 'pending',
-    riskReward: 2.2
+    direction: 'LONG' as const,
+    entry: 142.50,
+    stopLoss: 138.20,
+    takeProfit: 150.80,
+    confidence: 68,
+    timeframe: '2H',
+    status: 'pending' as const,
+    riskReward: 1.9
   }
 ]
 
-const mockNews: NewsItemType[] = [
+const recentNews = [
   {
     id: '1',
-    title: 'Fed Minutes Preview: Markets brace for hawkish tone as inflation data remains sticky',
-    content: 'Federal Reserve officials are expected to discuss the path forward for monetary policy amid persistent inflationary pressures.',
-    source: 'Reuters',
-    impact: 'high',
-    publishedAt: '2026-02-17T17:49:00Z',
-    url: 'https://example.com/news/1',
-    pairs: ['BTC/USDT', 'ETH/USDT'],
-    sentiment: -0.3,
-    relevanceScore: 0.9,
-    category: 'Macro'
+    title: 'Fed Minutes: Hawkish tone as inflation remains sticky above target',
+    impact: 'HIGH' as const,
+    timeAgo: '12m',
+    category: 'Macro' as const
   },
   {
     id: '2',
-    title: 'BTC Whale Alert: 2,400 BTC ($165M) moved from Coinbase to unknown wallet',
-    content: 'Large institutional movement detected on the Bitcoin network, potentially signaling accumulation.',
-    source: 'Whale Alert',
-    impact: 'medium',
-    publishedAt: '2026-02-17T17:33:00Z',
-    url: 'https://example.com/news/2',
-    pairs: ['BTC/USDT'],
-    sentiment: 0.2,
-    relevanceScore: 0.8,
-    category: 'Whale Alerts'
+    title: 'BTC Whale Alert: 3,200 BTC ($220M) moved from Coinbase',
+    impact: 'MED' as const,
+    timeAgo: '28m',
+    category: 'Whale' as const
   },
   {
     id: '3',
-    title: 'Funding Rates: BTC perp funding turned negative (-0.01%) — short squeeze potential',
-    content: 'Negative funding rates suggest overleveraged short positions, creating potential for upward price movement.',
-    source: 'Coinglass',
-    impact: 'medium',
-    publishedAt: '2026-02-17T17:16:00Z',
-    url: 'https://example.com/news/3',
-    pairs: ['BTC/USDT'],
-    sentiment: 0.4,
-    relevanceScore: 0.7,
-    category: 'Funding Rates'
-  },
-  {
-    id: '4',
-    title: 'Options Expiry: $2.1B in BTC options expire Friday — max pain at $71,000',
-    content: 'Significant options expiry could drive price action as market makers adjust hedging positions.',
-    source: 'Deribit',
-    impact: 'high',
-    publishedAt: '2026-02-17T15:30:00Z',
-    url: 'https://example.com/news/4',
-    pairs: ['BTC/USDT'],
-    sentiment: 0.1,
-    relevanceScore: 0.85,
-    category: 'Macro'
+    title: 'Funding rates turn negative: Short squeeze potential builds',
+    impact: 'MED' as const,
+    timeAgo: '45m',
+    category: 'Funding' as const
   }
 ]
 
-const mockTrades: Trade[] = [
-  {
-    id: '1',
-    userId: 'user1',
-    pair: 'BTC/USDT',
-    direction: 'LONG',
-    orderType: 'market',
-    entryPrice: 69200,
-    exitPrice: 70540,
-    quantity: 0.2,
-    realizedPnL: 287.40,
-    fees: 12.60,
-    status: 'closed',
-    openedAt: '2026-02-16T14:30:00Z',
-    closedAt: '2026-02-16T16:45:00Z',
-    rMultiple: 2.1
-  },
-  {
-    id: '2',
-    userId: 'user1',
-    pair: 'ETH/USDT',
-    direction: 'SHORT',
-    orderType: 'limit',
-    entryPrice: 2720,
-    exitPrice: 2678,
-    quantity: 2.5,
-    realizedPnL: -142.30,
-    fees: 18.20,
-    status: 'closed',
-    openedAt: '2026-02-16T10:15:00Z',
-    closedAt: '2026-02-16T11:30:00Z',
-    rMultiple: -1.0
-  },
-  {
-    id: '3',
-    userId: 'user1',
-    pair: 'BTC/USDT',
-    direction: 'LONG',
-    orderType: 'market',
-    entryPrice: 68500,
-    exitPrice: 69912,
-    quantity: 0.15,
-    realizedPnL: 412.80,
-    fees: 15.30,
-    status: 'closed',
-    openedAt: '2026-02-15T09:20:00Z',
-    closedAt: '2026-02-15T15:10:00Z',
-    rMultiple: 2.8
-  }
+const recentTrades = [
+  { pair: 'BTC/USDT', direction: 'LONG' as const, pnl: 1247.50, rMultiple: 2.1, date: 'Today' },
+  { pair: 'ETH/USDT', direction: 'SHORT' as const, pnl: -342.20, rMultiple: -0.8, date: 'Yesterday' },
+  { pair: 'SOL/USDT', direction: 'LONG' as const, pnl: 856.30, rMultiple: 1.9, date: 'Yesterday' }
 ]
 
-const briefingData = [
-  {
-    type: 'trend' as const,
-    title: 'Market Overview',
-    content: '**BTC** dropped 3.2% overnight on macro fears — **4H regime shifted to VOLATILE**. Key support at **$68,961** is being tested now. Funding rates turned negative (-0.01%) suggesting overleveraged shorts building. **Fed minutes release tomorrow 2:00 PM EST** — expect volatility. Your portfolio heat is healthy at 45%. **2 active signals today** — both high confluence.'
-  },
-  {
-    type: 'signal' as const,
-    title: 'Active Signals',
-    content: 'Two high-confidence signals are currently active: **BTC/USDT LONG** at 82% confidence and **ETH/USDT SHORT** at 68% confidence. Both signals show strong R:R ratios above 2:1.',
-    time: '16:30'
-  },
-  {
-    type: 'event' as const,
-    title: 'Economic Calendar',
-    content: '**FOMC Minutes** release scheduled for tomorrow at 2:00 PM EST. Historical volatility suggests **±4-6%** price movement. Consider reducing position sizes.',
-    time: 'Tomorrow 2:00 PM',
-    priority: 'high' as const
-  },
-  {
-    type: 'warning' as const,
-    title: 'Risk Alert',
-    content: 'Options max pain at **$71,000** could create resistance. Large options expiry this Friday with **$2.1B** notional value.',
-    priority: 'medium' as const
+const briefingText = `**BTC** testing key support at **$69,420** — 4H regime shows **VOLATILE** with strong volume. Fed minutes released **hawkish tone** causing macro fear. However, **funding rates turned negative** suggesting overleveraged shorts. Your portfolio heat at **42%** remains healthy. **3 active signals** with strong confluence factors.`
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.1
+    }
   }
-]
+}
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      ease: [0.25, 0.1, 0.25, 1]
+    }
+  }
+}
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6">
-      {/* AI Daily Briefing */}
-      <AIBriefing briefingItems={briefingData} delay={0} />
+    <motion.div 
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* AI Briefing */}
+      <motion.div variants={itemVariants}>
+        <AIBriefing content={briefingText} />
+      </motion.div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div 
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        variants={itemVariants}
+      >
         {mockStats.map((stat, index) => (
           <StatCard
             key={index}
             title={stat.title}
             value={stat.value}
             change={stat.change}
-            sparkline={stat.sparkline}
-            delay={index * 0.1}
+            trend={stat.trend}
+            icon={stat.icon}
           />
         ))}
-      </div>
+      </motion.div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Chart Area - Takes 2/3 width on xl screens */}
-        <div className="xl:col-span-2">
-          <motion.div
-            className="bg-gray-900/50 border border-gray-800 rounded-xl p-5"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-          >
+      {/* Main Content - Two Column */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+        {/* Chart Area - 60% */}
+        <motion.div 
+          className="xl:col-span-3"
+          variants={itemVariants}
+        >
+          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6">
             {/* Chart Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-4">
-                <h3 className="text-xl font-bold text-white">BTC/USDT</h3>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 border border-red-500/20 rounded-lg">
-                  <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse" />
-                  <span className="text-red-400 text-sm font-semibold">VOLATILE</span>
-                </div>
+                <h3 className="text-xl font-semibold text-white">BTC/USDT</h3>
                 <div className="flex gap-1">
-                  {['15m', '30m', '1H', '4H', '1D'].map((timeframe, index) => (
+                  {['15m', '30m', '1H', '4H', '1D'].map((timeframe) => (
                     <button
                       key={timeframe}
-                      className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                        timeframe === '30m'
-                          ? 'bg-blue-500/20 text-blue-400'
-                          : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                        timeframe === '4H'
+                          ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
+                          : 'text-[#6b7280] hover:text-[#9ca3af]'
                       }`}
                     >
                       {timeframe}
@@ -285,235 +193,191 @@ export default function Dashboard() {
                   ))}
                 </div>
               </div>
+              
               <div className="text-right">
-                <div className="text-2xl font-bold text-white">$68,961</div>
-                <div className="text-sm text-red-400 font-medium">-3.2%</div>
+                <div className="text-2xl font-mono text-white tabular-nums">$69,420</div>
+                <div className="flex items-center gap-1 text-sm font-medium text-[#4ade80]">
+                  <TrendingUp size={16} />
+                  +2.3%
+                </div>
               </div>
             </div>
 
-            {/* Chart Placeholder */}
-            <div className="bg-slate-950 rounded-lg h-80 flex items-center justify-center relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-t from-emerald-500/5 via-transparent to-transparent" />
-              
+            {/* Chart Placeholder with Price Action */}
+            <div className="bg-[#0a0e17] rounded-xl h-80 flex items-center justify-center relative overflow-hidden">
               {/* Simulated candlestick chart */}
-              <div className="absolute bottom-6 left-6 right-6 h-48 flex items-end justify-between">
-                {Array.from({ length: 20 }, (_, i) => {
-                  const isGreen = Math.random() > 0.5
-                  const height = Math.random() * 80 + 20
-                  const wickTop = Math.random() * 20 + 5
-                  const wickBottom = Math.random() * 15 + 5
+              <div className="absolute bottom-8 left-8 right-8 h-48 flex items-end justify-between">
+                {Array.from({ length: 24 }, (_, i) => {
+                  const isGreen = Math.random() > 0.45
+                  const height = Math.random() * 60 + 20
                   
                   return (
-                    <div key={i} className="flex flex-col items-center">
-                      <div
-                        className={`w-0.5 ${isGreen ? 'bg-emerald-400' : 'bg-red-400'} opacity-60`}
-                        style={{ height: `${wickTop}px` }}
-                      />
-                      <div
-                        className={`w-2 ${isGreen ? 'bg-emerald-400' : 'bg-red-400'} rounded-sm`}
-                        style={{ height: `${height}px` }}
-                      />
-                      <div
-                        className={`w-0.5 ${isGreen ? 'bg-emerald-400' : 'bg-red-400'} opacity-60`}
-                        style={{ height: `${wickBottom}px` }}
-                      />
-                    </div>
+                    <motion.div
+                      key={i}
+                      className={`w-1.5 rounded-sm ${isGreen ? 'bg-[#4ade80]' : 'bg-[#f87171]'}`}
+                      style={{ height: `${height}px` }}
+                      initial={{ height: 0 }}
+                      animate={{ height: `${height}px` }}
+                      transition={{ delay: i * 0.05, duration: 0.8 }}
+                    />
                   )
                 })}
               </div>
               
               {/* Support/Resistance Lines */}
-              <div className="absolute top-16 left-6 right-6 border-t border-dashed border-red-400/40" />
-              <div className="absolute top-16 right-6 text-xs text-red-400 font-semibold">R1 $70,235</div>
+              <div className="absolute top-16 left-8 right-8 border-t border-dashed border-[#f87171]/40" />
+              <div className="absolute top-14 right-8 text-xs text-[#f87171] font-mono">$71,200</div>
               
-              <div className="absolute top-32 left-6 right-6 border-t border-dashed border-red-400/40" />
-              <div className="absolute top-32 right-6 text-xs text-red-400 font-semibold">R2 $69,500</div>
+              <div className="absolute bottom-24 left-8 right-8 border-t border-dashed border-[#4ade80]/40" />
+              <div className="absolute bottom-20 right-8 text-xs text-[#4ade80] font-mono">$68,200</div>
               
-              <div className="absolute bottom-20 left-6 right-6 border-t border-dashed border-emerald-400/40" />
-              <div className="absolute bottom-20 right-6 text-xs text-emerald-400 font-semibold">S1 $68,200</div>
-              
-              {/* Signal Marker */}
-              <div className="absolute bottom-24 left-1/3 px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded-md">
-                ▲ LONG 82%
-              </div>
-              
-              <div className="text-gray-500 text-sm">TradingView Chart Integration</div>
+              <div className="text-[#6b7280] text-sm font-medium">Live Chart Integration</div>
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
 
-        {/* Right Sidebar - Signals */}
-        <div className="space-y-6">
+        {/* Right Column - 40% */}
+        <motion.div 
+          className="xl:col-span-2 space-y-6"
+          variants={itemVariants}
+        >
           {/* Active Signals */}
-          <motion.div
-            className="bg-gray-900/50 border border-gray-800 rounded-xl p-5"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6, duration: 0.6 }}
-          >
+          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                🎯 Active Signals
-              </h3>
-              <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-md">
-                2 Live
-              </span>
+              <div>
+                <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Active Signals</div>
+                <div className="flex items-center gap-2 mt-1">
+                  <Target size={16} className="text-[#00F0B5]" />
+                  <span className="text-sm font-semibold text-white">3 Live</span>
+                </div>
+              </div>
+              <Link 
+                href="/dashboard/signals"
+                className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
+              >
+                View all
+                <ArrowRight size={14} />
+              </Link>
             </div>
             
-            <div className="space-y-3 max-h-96 overflow-y-auto">
-              {mockSignals.map((signal, index) => (
-                <SignalCard
-                  key={signal.id}
-                  signal={signal}
-                  showDetails={false}
-                  delay={index * 0.1}
-                />
+            <div className="space-y-3">
+              {activeSignals.map((signal) => (
+                <SignalCard key={signal.id} signal={signal} compact />
               ))}
             </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
 
-      {/* Bottom Row */}
+      {/* Bottom Row - Three Columns */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* News Feed */}
+        {/* Recent News */}
         <motion.div
-          className="bg-gray-900/50 border border-gray-800 rounded-xl p-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.6 }}
+          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+          variants={itemVariants}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-              📰 News Feed
-            </h3>
-            <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs font-medium rounded-md">
-              AI Filtered
-            </span>
+            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Recent News</div>
+            <Link 
+              href="/dashboard/news"
+              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
+            >
+              View all
+              <ArrowRight size={14} />
+            </Link>
           </div>
           
-          <div className="space-y-1 max-h-80 overflow-y-auto">
-            {mockNews.map((news, index) => (
-              <NewsItem
-                key={news.id}
-                news={news}
-                delay={index * 0.1}
-              />
+          <div className="space-y-3">
+            {recentNews.map((news) => (
+              <NewsItem key={news.id} news={news} />
             ))}
           </div>
         </motion.div>
 
-        {/* Recent Trades */}
+        {/* Latest Trades */}
         <motion.div
-          className="bg-gray-900/50 border border-gray-800 rounded-xl p-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.6 }}
+          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+          variants={itemVariants}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-              📓 Recent Trades
-            </h3>
-            <span className="px-2 py-1 bg-gray-800 text-gray-300 text-xs font-medium rounded-md">
-              Auto-logged
-            </span>
+            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Latest Trades</div>
+            <Link 
+              href="/dashboard/journal"
+              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
+            >
+              View all
+              <ArrowRight size={14} />
+            </Link>
           </div>
           
-          <div className="space-y-1">
-            {/* Header */}
-            <div className="grid grid-cols-5 gap-2 text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-800 pb-2">
-              <span>Date</span>
-              <span>Pair</span>
-              <span>Dir</span>
-              <span>P&L</span>
-              <span>R-Mult</span>
-            </div>
-            
-            {/* Trades */}
-            {mockTrades.map((trade, index) => (
-              <motion.div
-                key={trade.id}
-                className="grid grid-cols-5 gap-2 text-sm py-2 border-b border-gray-800/50 last:border-b-0 hover:bg-gray-800/20 transition-colors"
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.9 + index * 0.1 }}
-              >
-                <span className="text-gray-400 text-xs">
-                  {new Date(trade.openedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-                <span className="text-white font-medium">{trade.pair}</span>
-                <span className={`px-2 py-1 rounded text-xs font-bold ${
-                  trade.direction === 'LONG' 
-                    ? 'bg-emerald-500 text-white' 
-                    : 'bg-red-500 text-white'
-                }`}>
-                  {trade.direction}
-                </span>
-                <span className={`font-semibold ${
-                  trade.realizedPnL && trade.realizedPnL > 0 ? 'text-emerald-400' : 'text-red-400'
-                }`}>
-                  {trade.realizedPnL && trade.realizedPnL > 0 ? '+' : ''}${trade.realizedPnL?.toFixed(2)}
-                </span>
-                <span className={`font-semibold ${
-                  trade.rMultiple && trade.rMultiple > 0 ? 'text-emerald-400' : 'text-red-400'
-                }`}>
-                  {trade.rMultiple && trade.rMultiple > 0 ? '+' : ''}{trade.rMultiple}R
-                </span>
-              </motion.div>
+          <div className="space-y-3">
+            {recentTrades.map((trade, index) => (
+              <div key={index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
+                <div>
+                  <div className="text-sm font-medium text-white">{trade.pair}</div>
+                  <div className="flex items-center gap-2 text-xs text-[#6b7280]">
+                    <span className={`px-2 py-0.5 rounded text-white font-medium ${
+                      trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+                    }`}>
+                      {trade.direction}
+                    </span>
+                    <span>{trade.date}</span>
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className={`text-sm font-mono tabular-nums font-semibold ${
+                    trade.pnl > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                  }`}>
+                    {trade.pnl > 0 ? '+' : ''}${trade.pnl}
+                  </div>
+                  <div className={`text-xs font-mono tabular-nums ${
+                    trade.rMultiple > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                  }`}>
+                    {trade.rMultiple > 0 ? '+' : ''}{trade.rMultiple}R
+                  </div>
+                </div>
+              </div>
             ))}
-          </div>
-          
-          <div className="mt-4 text-center">
-            <button className="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">
-              View all trades →
-            </button>
           </div>
         </motion.div>
 
-        {/* Risk Manager */}
+        {/* Risk Overview */}
         <motion.div
-          className="bg-gray-900/50 border border-gray-800 rounded-xl p-5"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.9, duration: 0.6 }}
+          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+          variants={itemVariants}
         >
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-              🛡️ Risk Manager
-            </h3>
-            <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 text-xs font-semibold rounded-md">
-              HEALTHY
-            </span>
+            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Risk Overview</div>
+            <Link 
+              href="/dashboard/risk"
+              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
+            >
+              View all
+              <ArrowRight size={14} />
+            </Link>
           </div>
           
-          <div className="flex justify-center mb-4">
-            <RiskGauge percentage={45} delay={1} />
+          <div className="flex justify-center mb-6">
+            <RiskGauge percentage={42} />
           </div>
           
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-800/50">
-              <span className="text-gray-400">Open Positions</span>
-              <span className="text-white">2 of 5 max</span>
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-[#6b7280]">Daily P&L</span>
+              <span className="text-[#4ade80] font-semibold font-mono">+$1,247.50</span>
             </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-800/50">
-              <span className="text-gray-400">Daily P&L</span>
-              <span className="text-red-400 font-semibold">-$142.30</span>
+            <div className="flex justify-between">
+              <span className="text-[#6b7280]">Loss Limit Left</span>
+              <span className="text-white font-mono">$1,200</span>
             </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-800/50">
-              <span className="text-gray-400">Daily Loss Limit</span>
-              <span className="text-white">$500 remaining</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5 border-b border-gray-800/50">
-              <span className="text-gray-400">Correlation Risk</span>
-              <span className="text-emerald-400 font-semibold">Low</span>
-            </div>
-            <div className="flex justify-between items-center py-1.5">
-              <span className="text-gray-400">Tilt Score</span>
-              <span className="text-emerald-400 font-semibold">😎 Cool</span>
+            <div className="flex justify-between">
+              <span className="text-[#6b7280]">Max Positions</span>
+              <span className="text-white">3 of 5</span>
             </div>
           </div>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   )
 }
