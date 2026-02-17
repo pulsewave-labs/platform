@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseWave — Trading Command Center</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0e17; color: #e1e4e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  
+  /* Sidebar */
+  .sidebar { position: fixed; left: 0; top: 0; bottom: 0; width: 64px; background: #0d1117; border-right: 1px solid #1b2332; display: flex; flex-direction: column; align-items: center; padding: 16px 0; z-index: 100; }
+  .sidebar .logo { font-size: 24px; margin-bottom: 32px; cursor: pointer; }
+  .sidebar .nav-item { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 12px; margin-bottom: 8px; cursor: pointer; font-size: 20px; transition: all 0.2s; color: #6b7280; }
+  .sidebar .nav-item:hover { background: #1b2332; color: #e1e4e8; }
+  .sidebar .nav-item.active { background: #1f6feb22; color: #58a6ff; }
+  .sidebar .spacer { flex: 1; }
+  .sidebar .nav-item.bottom { margin-top: auto; }
+  
+  /* Main content */
+  .main { margin-left: 64px; padding: 20px 24px; min-height: 100vh; }
+  
+  /* Top bar */
+  .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+  .topbar h1 { font-size: 22px; font-weight: 600; }
+  .topbar h1 span { color: #58a6ff; }
+  .topbar .time { color: #6b7280; font-size: 14px; }
+  .topbar .profile { display: flex; align-items: center; gap: 12px; }
+  .topbar .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #58a6ff, #a855f7); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  .topbar .risk-badge { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+  .risk-low { background: #16a34a22; color: #4ade80; border: 1px solid #16a34a44; }
+  .risk-med { background: #eab30822; color: #fbbf24; border: 1px solid #eab30844; }
+  .risk-high { background: #dc262622; color: #f87171; border: 1px solid #dc262644; }
+  
+  /* Grid layout */
+  .grid { display: grid; gap: 16px; }
+  .grid-main { grid-template-columns: 1fr 340px; }
+  .grid-2 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+  
+  /* Cards */
+  .card { background: #0d1117; border: 1px solid #1b2332; border-radius: 12px; padding: 18px; }
+  .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+  .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
+  .card-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+  
+  /* Regime indicator */
+  .regime { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; }
+  .regime-trending { background: #16a34a22; color: #4ade80; }
+  .regime-ranging { background: #eab30822; color: #fbbf24; }
+  .regime-volatile { background: #dc262622; color: #f87171; }
+  .regime-dot { width: 6px; height: 6px; border-radius: 50%; animation: pulse 2s infinite; }
+  .regime-trending .regime-dot { background: #4ade80; }
+  .regime-ranging .regime-dot { background: #fbbf24; }
+  .regime-volatile .regime-dot { background: #f87171; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  
+  /* Stat cards */
+  .stat-card { text-align: center; padding: 20px 16px; }
+  .stat-value { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+  .stat-label { font-size: 12px; color: #6b7280; }
+  .stat-change { font-size: 12px; margin-top: 4px; }
+  .positive { color: #4ade80; }
+  .negative { color: #f87171; }
+  .neutral { color: #fbbf24; }
+  
+  /* Signal cards */
+  .signal { padding: 14px; border-radius: 10px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; }
+  .signal:hover { transform: translateX(4px); }
+  .signal-long { background: #16a34a11; border: 1px solid #16a34a33; }
+  .signal-short { background: #dc262611; border: 1px solid #dc262633; }
+  .signal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .signal-pair { font-weight: 700; font-size: 15px; }
+  .signal-direction { padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+  .signal-direction.long { background: #16a34a; color: #fff; }
+  .signal-direction.short { background: #dc2626; color: #fff; }
+  .signal-meta { display: flex; gap: 16px; font-size: 12px; color: #9ca3af; }
+  .signal-confidence { display: flex; align-items: center; gap: 6px; margin-top: 8px; }
+  .confidence-bar { flex: 1; height: 4px; background: #1b2332; border-radius: 2px; overflow: hidden; }
+  .confidence-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+  .confidence-high { background: linear-gradient(90deg, #4ade80, #16a34a); }
+  .confidence-med { background: linear-gradient(90deg, #fbbf24, #eab308); }
+  .confidence-text { font-size: 13px; font-weight: 700; min-width: 36px; text-align: right; }
+  
+  /* Levels */
+  .level-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1b233244; font-size: 13px; }
+  .level-row:last-child { border-bottom: none; }
+  .level-type { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+  .level-resistance { background: #dc262622; color: #f87171; }
+  .level-support { background: #16a34a22; color: #4ade80; }
+  .level-price { font-weight: 600; font-family: 'SF Mono', monospace; }
+  .level-strength { color: #6b7280; }
+  
+  /* Chart placeholder */
+  .chart-area { background: #080b12; border-radius: 10px; height: 340px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+  .chart-area::before { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: linear-gradient(180deg, transparent, #16a34a08); }
+  .chart-label { color: #6b728088; font-size: 14px; z-index: 1; }
+  .chart-candles { position: absolute; bottom: 40px; left: 20px; right: 20px; height: 200px; display: flex; align-items: flex-end; gap: 3px; }
+  .candle { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .candle-body { width: 60%; border-radius: 1px; min-height: 4px; }
+  .candle-wick { width: 1px; }
+  .candle-green .candle-body { background: #4ade80; }
+  .candle-green .candle-wick { background: #4ade80; }
+  .candle-red .candle-body { background: #f87171; }
+  .candle-red .candle-wick { background: #f87171; }
+  .signal-marker { position: absolute; bottom: 20px; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+  .chart-price { position: absolute; right: 12px; top: 12px; font-family: 'SF Mono', monospace; font-size: 24px; font-weight: 700; }
+  .chart-change { font-size: 13px; font-weight: 600; }
+  
+  /* News feed */
+  .news-item { padding: 10px 0; border-bottom: 1px solid #1b233233; cursor: pointer; transition: all 0.15s; }
+  .news-item:hover { padding-left: 8px; }
+  .news-item:last-child { border-bottom: none; }
+  .news-time { font-size: 11px; color: #6b7280; }
+  .news-title { font-size: 13px; margin: 3px 0; line-height: 1.4; }
+  .news-impact { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: 700; }
+  .impact-high { background: #dc262633; color: #f87171; }
+  .impact-med { background: #eab30833; color: #fbbf24; }
+  .impact-low { background: #6b728033; color: #9ca3af; }
+  
+  /* Journal entries */
+  .journal-row { display: grid; grid-template-columns: 80px 1fr 70px 80px 60px; align-items: center; padding: 10px 0; border-bottom: 1px solid #1b233233; font-size: 13px; }
+  .journal-header { color: #6b7280; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* Risk gauge */
+  .risk-gauge { text-align: center; padding: 16px; }
+  .gauge-circle { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#4ade80 0deg 162deg, #1b2332 162deg 360deg); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+  .gauge-inner { width: 96px; height: 96px; border-radius: 50%; background: #0d1117; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .gauge-value { font-size: 28px; font-weight: 700; color: #4ade80; }
+  .gauge-label { font-size: 11px; color: #6b7280; }
+  
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+  .tab { padding: 6px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; color: #6b7280; transition: all 0.2s; }
+  .tab:hover { color: #e1e4e8; }
+  .tab.active { background: #1f6feb22; color: #58a6ff; }
+  
+  /* Morning briefing */
+  .briefing { background: linear-gradient(135deg, #1f6feb11, #a855f711); border: 1px solid #1f6feb33; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  .briefing-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .briefing-text { font-size: 13px; color: #9ca3af; line-height: 1.6; }
+  .briefing-text strong { color: #e1e4e8; }
+  
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #1b2332; border-radius: 3px; }
+  .scroll-area { max-height: 400px; overflow-y: auto; }
+  
+  /* Responsive */
+  @media (max-width: 1200px) { .grid-main { grid-template-columns: 1fr; } }
+  @media (max-width: 768px) { 
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .sidebar { width: 48px; }
+    .main { margin-left: 48px; padding: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Sidebar Navigation -->
+<nav class="sidebar">
+  <div class="logo">⚡</div>
+  <div class="nav-item active" title="Dashboard">📊</div>
+  <div class="nav-item" title="Signals">🎯</div>
+  <div class="nav-item" title="Charts">📈</div>
+  <div class="nav-item" title="News">📰</div>
+  <div class="nav-item" title="Journal">📓</div>
+  <div class="nav-item" title="Analytics">📉</div>
+  <div class="nav-item" title="Risk Manager">🛡️</div>
+  <div class="nav-item" title="Education">🎓</div>
+  <div class="spacer"></div>
+  <div class="nav-item" title="AI Assistant">🤖</div>
+  <div class="nav-item" title="Settings">⚙️</div>
+</nav>
+
+<!-- Main Content -->
+<div class="main">
+  
+  <!-- Top Bar -->
+  <div class="topbar">
+    <div>
+      <h1>Good evening, <span>Mason</span></h1>
+      <div class="time">Monday, Feb 17 2026 • 7:10 PM PST</div>
+    </div>
+    <div class="profile">
+      <span class="risk-badge risk-low">🛡️ Risk Budget: 45% Used</span>
+      <div class="avatar">M</div>
+    </div>
+  </div>
+  
+  <!-- Morning Briefing -->
+  <div class="briefing">
+    <div class="briefing-title">🧠 AI Daily Briefing</div>
+    <div class="briefing-text">
+      <strong>BTC</strong> dropped 3.2% overnight on macro fears — <strong>4H regime shifted to VOLATILE</strong>. Key support at <strong>$68,961</strong> is being tested now. 
+      Funding rates turned negative (-0.01%) suggesting overleveraged shorts building. 
+      <strong>Fed minutes release tomorrow 2:00 PM EST</strong> — expect volatility. 
+      Your portfolio heat is healthy at 45%. <strong>2 active signals today</strong> — both high confluence.
+    </div>
+  </div>
+
+  <!-- Stat Cards Row -->
+  <div class="grid grid-4" style="margin-bottom: 16px;">
+    <div class="card stat-card">
+      <div class="stat-value">$12,847</div>
+      <div class="stat-label">Portfolio Value</div>
+      <div class="stat-change negative">▼ 2.1% today</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value positive">67%</div>
+      <div class="stat-label">Win Rate (30d)</div>
+      <div class="stat-change positive">▲ 4% vs last month</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value">1.84</div>
+      <div class="stat-label">Profit Factor (30d)</div>
+      <div class="stat-change positive">▲ 0.3</div>
+    </div>
+    <div class="card stat-card">
+      <div class="stat-value neutral">23</div>
+      <div class="stat-label">Trades This Month</div>
+      <div class="stat-change neutral">Avg 1.1/day</div>
+    </div>
+  </div>
+
+  <!-- Main Grid: Chart + Signals -->
+  <div class="grid grid-main" style="margin-bottom: 16px;">
+    
+    <!-- Chart Area -->
+    <div class="card" style="padding: 14px;">
+      <div class="card-header">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: 700; font-size: 16px;">BTC/USDT</span>
+          <span class="regime regime-volatile"><span class="regime-dot"></span> VOLATILE</span>
+          <div class="tabs" style="margin: 0;">
+            <div class="tab">15m</div>
+            <div class="tab active">30m</div>
+            <div class="tab">1H</div>
+            <div class="tab">4H</div>
+            <div class="tab">1D</div>
+          </div>
+        </div>
+        <div>
+          <span class="chart-price">$68,961<span class="chart-change negative" style="margin-left: 8px;">-3.2%</span></span>
+        </div>
+      </div>
+      <div class="chart-area">
+        <div class="chart-candles">
+          <!-- Simulated candles -->
+          <div class="candle candle-green"><div class="candle-wick" style="height:30px"></div><div class="candle-body" style="height:20px"></div><div class="candle-wick" style="height:10px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:15px"></div><div class="candle-body" style="height:35px"></div><div class="candle-wick" style="height:8px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:20px"></div><div class="candle-body" style="height:25px"></div><div class="candle-wick" style="height:18px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:12px"></div><div class="candle-body" style="height:40px"></div><div class="candle-wick" style="height:5px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:8px"></div><div class="candle-body" style="height:28px"></div><div class="candle-wick" style="height:12px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:25px"></div><div class="candle-body" style="height:18px"></div><div class="candle-wick" style="height:30px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:10px"></div><div class="candle-body" style="height:45px"></div><div class="candle-wick" style="height:8px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:20px"></div><div class="candle-body" style="height:15px"></div><div class="candle-wick" style="height:22px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:18px"></div><div class="candle-body" style="height:30px"></div><div class="candle-wick" style="height:5px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:8px"></div><div class="candle-body" style="height:50px"></div><div class="candle-wick" style="height:12px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:35px"></div><div class="candle-body" style="height:12px"></div><div class="candle-wick" style="height:15px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:12px"></div><div class="candle-body" style="height:22px"></div><div class="candle-wick" style="height:28px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:6px"></div><div class="candle-body" style="height:38px"></div><div class="candle-wick" style="height:15px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:25px"></div><div class="candle-body" style="height:18px"></div><div class="candle-wick" style="height:20px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:15px"></div><div class="candle-body" style="height:28px"></div><div class="candle-wick" style="height:10px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:10px"></div><div class="candle-body" style="height:42px"></div><div class="candle-wick" style="height:18px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:20px"></div><div class="candle-body" style="height:10px"></div><div class="candle-wick" style="height:35px"></div></div>
+          <div class="candle candle-red"><div class="candle-wick" style="height:8px"></div><div class="candle-body" style="height:32px"></div><div class="candle-wick" style="height:20px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:30px"></div><div class="candle-body" style="height:14px"></div><div class="candle-wick" style="height:8px"></div></div>
+          <div class="candle candle-green"><div class="candle-wick" style="height:10px"></div><div class="candle-body" style="height:22px"></div><div class="candle-wick" style="height:12px"></div></div>
+        </div>
+        <!-- S/R Lines -->
+        <div style="position:absolute;left:0;right:0;top:60px;border-top:1px dashed #f8717144;"></div>
+        <div style="position:absolute;right:12px;top:52px;font-size:11px;color:#f87171;font-weight:600;">R1 $70,235</div>
+        <div style="position:absolute;left:0;right:0;top:140px;border-top:1px dashed #f8717144;"></div>
+        <div style="position:absolute;right:12px;top:132px;font-size:11px;color:#f87171;font-weight:600;">R2 $69,500</div>
+        <div style="position:absolute;left:0;right:0;bottom:70px;border-top:1px dashed #4ade8044;"></div>
+        <div style="position:absolute;right:12px;bottom:72px;font-size:11px;color:#4ade80;font-weight:600;">S1 $68,200</div>
+        <div style="position:absolute;left:0;right:0;bottom:30px;border-top:1px dashed #4ade8044;"></div>
+        <div style="position:absolute;right:12px;bottom:32px;font-size:11px;color:#4ade80;font-weight:600;">S2 $66,945</div>
+        <!-- Signal marker on chart -->
+        <div class="signal-marker" style="left: 72%; background: #16a34a; color: white; bottom: 75px;">▲ LONG 82%</div>
+      </div>
+    </div>
+    
+    <!-- Right Panel: Signals + Levels -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+      
+      <!-- Active Signals -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🎯 Active Signals</span>
+          <span class="card-badge" style="background: #16a34a33; color: #4ade80;">2 Live</span>
+        </div>
+        <div class="scroll-area">
+          <div class="signal signal-long">
+            <div class="signal-header">
+              <span class="signal-pair">BTC/USDT</span>
+              <span class="signal-direction long">LONG</span>
+            </div>
+            <div class="signal-meta">
+              <span>Entry: $68,840</span>
+              <span>SL: $67,920</span>
+              <span>TP: $70,680</span>
+            </div>
+            <div class="signal-confidence">
+              <div class="confidence-bar"><div class="confidence-fill confidence-high" style="width: 82%"></div></div>
+              <span class="confidence-text positive">82%</span>
+            </div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 6px;">4H S/R bounce + RSI oversold + volume spike • RR 2.0:1</div>
+          </div>
+          
+          <div class="signal signal-short">
+            <div class="signal-header">
+              <span class="signal-pair">ETH/USDT</span>
+              <span class="signal-direction short">SHORT</span>
+            </div>
+            <div class="signal-meta">
+              <span>Entry: $2,685</span>
+              <span>SL: $2,740</span>
+              <span>TP: $2,575</span>
+            </div>
+            <div class="signal-confidence">
+              <div class="confidence-bar"><div class="confidence-fill confidence-med" style="width: 68%"></div></div>
+              <span class="confidence-text neutral">68%</span>
+            </div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 6px;">Daily resistance rejection + bearish divergence • RR 2.0:1</div>
+          </div>
+          
+          <div class="signal signal-long" style="opacity: 0.5;">
+            <div class="signal-header">
+              <span class="signal-pair">SOL/USDT</span>
+              <span class="signal-direction long" style="background: #6b7280;">PENDING</span>
+            </div>
+            <div class="signal-meta">
+              <span>Watching $138.50 support</span>
+            </div>
+            <div style="font-size: 11px; color: #6b7280; margin-top: 6px;">Signal pending — needs volume confirmation</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Key Levels -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📍 Key Levels — BTC</span>
+          <span class="card-badge" style="background: #1f6feb22; color: #58a6ff;">4H + Daily</span>
+        </div>
+        <div class="level-row">
+          <span class="level-type level-resistance">R3</span>
+          <span class="level-price">$72,400</span>
+          <span class="level-strength">★★★★</span>
+        </div>
+        <div class="level-row">
+          <span class="level-type level-resistance">R2</span>
+          <span class="level-price">$70,235</span>
+          <span class="level-strength">★★★★★</span>
+        </div>
+        <div class="level-row">
+          <span class="level-type level-resistance">R1</span>
+          <span class="level-price">$69,500</span>
+          <span class="level-strength">★★★</span>
+        </div>
+        <div class="level-row" style="background: #58a6ff11; border-radius: 6px; padding: 8px; border: none;">
+          <span style="font-size: 11px; color: #58a6ff; font-weight: 600;">PRICE</span>
+          <span class="level-price" style="color: #58a6ff;">$68,961</span>
+          <span></span>
+        </div>
+        <div class="level-row">
+          <span class="level-type level-support">S1</span>
+          <span class="level-price">$68,200</span>
+          <span class="level-strength">★★★★</span>
+        </div>
+        <div class="level-row">
+          <span class="level-type level-support">S2</span>
+          <span class="level-price">$66,945</span>
+          <span class="level-strength">★★★★★</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Row: News + Journal + Risk -->
+  <div class="grid grid-3">
+    
+    <!-- News Feed -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📰 News Feed</span>
+        <span class="card-badge" style="background: #1b2332; color: #9ca3af;">AI Filtered</span>
+      </div>
+      <div class="scroll-area" style="max-height: 280px;">
+        <div class="news-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="news-time">2 min ago</span>
+            <span class="news-impact impact-high">HIGH</span>
+          </div>
+          <div class="news-title"><strong>Fed Minutes Preview:</strong> Markets brace for hawkish tone as inflation data remains sticky</div>
+        </div>
+        <div class="news-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="news-time">18 min ago</span>
+            <span class="news-impact impact-med">MEDIUM</span>
+          </div>
+          <div class="news-title"><strong>BTC Whale Alert:</strong> 2,400 BTC ($165M) moved from Coinbase to unknown wallet</div>
+        </div>
+        <div class="news-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="news-time">45 min ago</span>
+            <span class="news-impact impact-med">MEDIUM</span>
+          </div>
+          <div class="news-title"><strong>Funding Rates:</strong> BTC perp funding turned negative (-0.01%) — short squeeze potential</div>
+        </div>
+        <div class="news-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="news-time">1h ago</span>
+            <span class="news-impact impact-low">LOW</span>
+          </div>
+          <div class="news-title">Ethereum Foundation sells 100 ETH from treasury wallet</div>
+        </div>
+        <div class="news-item">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="news-time">2h ago</span>
+            <span class="news-impact impact-high">HIGH</span>
+          </div>
+          <div class="news-title"><strong>Options Expiry:</strong> $2.1B in BTC options expire Friday — max pain at $71,000</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Recent Trades Journal -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">📓 Recent Trades</span>
+        <span class="card-badge" style="background: #1b2332; color: #9ca3af;">Auto-logged</span>
+      </div>
+      <div class="journal-row journal-header">
+        <span>Date</span>
+        <span>Pair</span>
+        <span>Direction</span>
+        <span>P&L</span>
+        <span>R-Mult</span>
+      </div>
+      <div class="journal-row">
+        <span style="color: #6b7280;">Feb 16</span>
+        <span>BTC/USDT</span>
+        <span><span class="signal-direction long" style="font-size: 10px; padding: 2px 6px;">LONG</span></span>
+        <span class="positive">+$287.40</span>
+        <span class="positive">+2.1R</span>
+      </div>
+      <div class="journal-row">
+        <span style="color: #6b7280;">Feb 16</span>
+        <span>ETH/USDT</span>
+        <span><span class="signal-direction short" style="font-size: 10px; padding: 2px 6px;">SHORT</span></span>
+        <span class="negative">-$142.30</span>
+        <span class="negative">-1.0R</span>
+      </div>
+      <div class="journal-row">
+        <span style="color: #6b7280;">Feb 15</span>
+        <span>BTC/USDT</span>
+        <span><span class="signal-direction long" style="font-size: 10px; padding: 2px 6px;">LONG</span></span>
+        <span class="positive">+$412.80</span>
+        <span class="positive">+2.8R</span>
+      </div>
+      <div class="journal-row">
+        <span style="color: #6b7280;">Feb 15</span>
+        <span>SOL/USDT</span>
+        <span><span class="signal-direction long" style="font-size: 10px; padding: 2px 6px;">LONG</span></span>
+        <span class="positive">+$89.20</span>
+        <span class="positive">+1.2R</span>
+      </div>
+      <div class="journal-row">
+        <span style="color: #6b7280;">Feb 14</span>
+        <span>BTC/USDT</span>
+        <span><span class="signal-direction short" style="font-size: 10px; padding: 2px 6px;">SHORT</span></span>
+        <span class="negative">-$198.50</span>
+        <span class="negative">-1.0R</span>
+      </div>
+      <div style="text-align: center; padding: 10px; font-size: 12px; color: #58a6ff; cursor: pointer;">View all trades →</div>
+    </div>
+    
+    <!-- Risk Manager -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">🛡️ Risk Manager</span>
+        <span class="card-badge risk-low">HEALTHY</span>
+      </div>
+      <div class="risk-gauge">
+        <div class="gauge-circle">
+          <div class="gauge-inner">
+            <div class="gauge-value">45%</div>
+            <div class="gauge-label">Risk Used</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size: 12px;">
+        <div class="level-row">
+          <span style="color: #6b7280;">Open Positions</span>
+          <span>2 of 5 max</span>
+        </div>
+        <div class="level-row">
+          <span style="color: #6b7280;">Daily P&L</span>
+          <span class="negative">-$142.30</span>
+        </div>
+        <div class="level-row">
+          <span style="color: #6b7280;">Daily Loss Limit</span>
+          <span>$500 remaining</span>
+        </div>
+        <div class="level-row">
+          <span style="color: #6b7280;">Correlation Risk</span>
+          <span class="positive">Low</span>
+        </div>
+        <div class="level-row">
+          <span style="color: #6b7280;">Tilt Score</span>
+          <span class="positive">😎 Cool</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

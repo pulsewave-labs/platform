@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PulseWave — Your Complete Trading Command Center</title>
+<meta name="description" content="Stop juggling 5 trading apps. PulseWave combines AI-powered signals, auto-journaling, risk management, and real-time news in one platform. Join the waitlist.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0e17; color: #e1e4e8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, sans-serif; line-height: 1.6; overflow-x: hidden; }
+  a { color: #58a6ff; text-decoration: none; }
+  
+  /* Nav */
+  nav { position: fixed; top: 0; width: 100%; padding: 16px 40px; display: flex; justify-content: space-between; align-items: center; z-index: 100; background: #0a0e17ee; backdrop-filter: blur(20px); border-bottom: 1px solid #1b233244; }
+  .nav-logo { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .nav-logo span { color: #58a6ff; }
+  .nav-cta { padding: 10px 24px; background: #58a6ff; color: #0a0e17; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; }
+  .nav-cta:hover { background: #79b8ff; transform: translateY(-1px); }
+  
+  /* Hero */
+  .hero { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 120px 24px 80px; position: relative; }
+  .hero::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 800px; height: 800px; background: radial-gradient(ellipse, #58a6ff08, transparent 70%); pointer-events: none; }
+  .hero-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; background: #1f6feb15; border: 1px solid #1f6feb33; border-radius: 20px; font-size: 13px; color: #58a6ff; margin-bottom: 24px; font-weight: 600; }
+  .hero-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+  .hero h1 { font-size: clamp(36px, 6vw, 72px); font-weight: 800; line-height: 1.1; letter-spacing: -2px; max-width: 900px; margin-bottom: 20px; }
+  .hero h1 .gradient { background: linear-gradient(135deg, #58a6ff, #a855f7, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { font-size: 18px; color: #9ca3af; max-width: 600px; margin-bottom: 36px; line-height: 1.7; }
+  .hero-form { display: flex; gap: 10px; max-width: 480px; width: 100%; }
+  .hero-form input { flex: 1; padding: 14px 20px; background: #0d1117; border: 1px solid #1b2332; border-radius: 10px; color: #e1e4e8; font-size: 15px; outline: none; transition: border 0.2s; }
+  .hero-form input:focus { border-color: #58a6ff; }
+  .hero-form input::placeholder { color: #6b7280; }
+  .hero-form button { padding: 14px 28px; background: linear-gradient(135deg, #58a6ff, #a855f7); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .hero-form button:hover { transform: translateY(-2px); box-shadow: 0 8px 30px #58a6ff33; }
+  .hero-sub { margin-top: 14px; font-size: 13px; color: #6b7280; }
+  .hero-sub strong { color: #fbbf24; }
+  
+  /* Social proof bar */
+  .proof-bar { display: flex; justify-content: center; gap: 40px; padding: 32px 24px; border-top: 1px solid #1b233244; border-bottom: 1px solid #1b233244; background: #0d111788; }
+  .proof-item { text-align: center; }
+  .proof-num { font-size: 28px; font-weight: 800; color: #58a6ff; }
+  .proof-label { font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* Problem section */
+  .section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+  .section-label { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #58a6ff; margin-bottom: 12px; }
+  .section h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 20px; line-height: 1.2; }
+  .section p.subtitle { font-size: 17px; color: #9ca3af; max-width: 700px; margin-bottom: 48px; }
+  
+  /* Problem cards */
+  .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .problem-card { background: #0d1117; border: 1px solid #1b2332; border-radius: 14px; padding: 28px; transition: all 0.2s; }
+  .problem-card:hover { border-color: #dc262644; transform: translateY(-2px); }
+  .problem-icon { font-size: 32px; margin-bottom: 14px; }
+  .problem-card h3 { font-size: 17px; margin-bottom: 8px; }
+  .problem-card p { font-size: 14px; color: #9ca3af; line-height: 1.6; }
+  
+  /* Features */
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .feature-card { background: #0d1117; border: 1px solid #1b2332; border-radius: 14px; padding: 32px; transition: all 0.3s; }
+  .feature-card:hover { border-color: #58a6ff33; transform: translateY(-4px); box-shadow: 0 12px 40px #58a6ff11; }
+  .feature-icon { font-size: 36px; margin-bottom: 16px; }
+  .feature-card h3 { font-size: 19px; margin-bottom: 10px; font-weight: 700; }
+  .feature-card p { font-size: 14px; color: #9ca3af; line-height: 1.7; }
+  .feature-tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-top: 12px; }
+  .tag-core { background: #16a34a22; color: #4ade80; }
+  .tag-new { background: #a855f722; color: #c084fc; }
+  .tag-ai { background: #1f6feb22; color: #58a6ff; }
+  
+  /* Comparison */
+  .compare-table { width: 100%; border-collapse: separate; border-spacing: 0; background: #0d1117; border: 1px solid #1b2332; border-radius: 14px; overflow: hidden; }
+  .compare-table th, .compare-table td { padding: 14px 20px; text-align: left; font-size: 14px; border-bottom: 1px solid #1b233244; }
+  .compare-table th { background: #0d1117; color: #6b7280; font-weight: 600; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+  .compare-table th:last-child { color: #58a6ff; }
+  .compare-table td:last-child { color: #4ade80; font-weight: 600; }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .check { color: #4ade80; }
+  .cross { color: #f87171; }
+  
+  /* Pricing */
+  .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .price-card { background: #0d1117; border: 1px solid #1b2332; border-radius: 14px; padding: 32px; text-align: center; transition: all 0.3s; }
+  .price-card.featured { border-color: #58a6ff55; background: linear-gradient(180deg, #1f6feb08, #0d1117); position: relative; }
+  .price-card.featured::before { content: 'MOST POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); padding: 4px 16px; background: linear-gradient(135deg, #58a6ff, #a855f7); border-radius: 20px; font-size: 11px; font-weight: 700; color: white; }
+  .price-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .price-amount { font-size: 48px; font-weight: 800; margin: 16px 0 4px; }
+  .price-amount span { font-size: 16px; color: #6b7280; font-weight: 400; }
+  .price-annual { font-size: 13px; color: #6b7280; margin-bottom: 24px; }
+  .price-features { text-align: left; margin-bottom: 24px; }
+  .price-features li { padding: 6px 0; font-size: 14px; list-style: none; display: flex; align-items: center; gap: 8px; }
+  .price-features li::before { content: '✓'; color: #4ade80; font-weight: 700; }
+  .price-btn { display: block; width: 100%; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; border: none; transition: all 0.2s; }
+  .price-btn-primary { background: linear-gradient(135deg, #58a6ff, #a855f7); color: white; }
+  .price-btn-secondary { background: #1b2332; color: #e1e4e8; }
+  .price-btn:hover { transform: translateY(-2px); }
+  
+  /* CTA Section */
+  .cta-section { text-align: center; padding: 100px 24px; background: linear-gradient(180deg, transparent, #1f6feb08); }
+  .cta-section h2 { font-size: clamp(28px, 4vw, 44px); font-weight: 800; letter-spacing: -1px; margin-bottom: 16px; }
+  .cta-section p { font-size: 17px; color: #9ca3af; max-width: 600px; margin: 0 auto 36px; }
+  
+  /* Footer */
+  footer { padding: 40px 24px; border-top: 1px solid #1b233244; text-align: center; font-size: 13px; color: #6b7280; }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    nav { padding: 12px 16px; }
+    .hero-form { flex-direction: column; }
+    .proof-bar { flex-wrap: wrap; gap: 24px; }
+    .compare-table { font-size: 12px; }
+    .compare-table th, .compare-table td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav>
+  <div class="nav-logo">Pulse<span>Wave</span> ⚡</div>
+  <button class="nav-cta" onclick="document.getElementById('waitlist').scrollIntoView({behavior:'smooth'})">Join the Waitlist</button>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge"><span class="dot"></span> Beta launching soon — limited spots</div>
+  <h1>Stop juggling 5 apps.<br>Start <span class="gradient">actually trading.</span></h1>
+  <p>PulseWave is the all-in-one trading command center. AI-powered signals, auto-journaling, real-time news, and risk management — in a single platform built for humans, not robots.</p>
+  <form class="hero-form" id="waitlist" onsubmit="handleSubmit(event)">
+    <input type="email" placeholder="Enter your email" required id="email-input">
+    <button type="submit">Join the Waitlist →</button>
+  </form>
+  <p class="hero-sub"><strong>847 traders</strong> already on the waitlist • 14-day free trial at launch • No credit card required</p>
+</section>
+
+<!-- Social Proof Bar -->
+<div class="proof-bar">
+  <div class="proof-item">
+    <div class="proof-num">80+</div>
+    <div class="proof-label">Trading books analyzed</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-num">6</div>
+    <div class="proof-label">Tools replaced</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-num">73%</div>
+    <div class="proof-label">Avg signal accuracy</div>
+  </div>
+  <div class="proof-item">
+    <div class="proof-num">$0</div>
+    <div class="proof-label">To get started</div>
+  </div>
+</div>
+
+<!-- Problem Section -->
+<section class="section">
+  <div class="section-label">The Problem</div>
+  <h2>Trading shouldn't require 12 browser tabs.</h2>
+  <p class="subtitle">You're not a bad trader. You're just drowning in tools that don't talk to each other.</p>
+  
+  <div class="problem-grid">
+    <div class="problem-card">
+      <div class="problem-icon">😵</div>
+      <h3>Information Overload</h3>
+      <p>TradingView for charts. CoinGlass for data. Telegram for signals. TraderSync for journaling. Twitter for news. By the time you find the trade, it's gone.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">🎯</div>
+      <h3>Signals Without Context</h3>
+      <p>Every indicator says "buy here." None of them tell you WHY, how confident they are, or whether the market even supports the trade right now.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">💸</div>
+      <h3>Paying for 5 Subscriptions</h3>
+      <p>$60/mo for indicators. $50/mo for journaling. $30/mo for data. $50/mo for signals. You're spending $200+/mo before you even make a trade.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">🧠</div>
+      <h3>No One Manages Your Risk</h3>
+      <p>Tools help you get IN trades. Nothing helps you size them properly, avoid revenge trading, or tell you when to stop for the day.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">📊</div>
+      <h3>No Idea Why You're Losing</h3>
+      <p>You lost money this week. Was it the signals? Your timing? Your emotions? Without data, you're just guessing.</p>
+    </div>
+    <div class="problem-card">
+      <div class="problem-icon">🤖</div>
+      <h3>"AI" That Isn't</h3>
+      <p>Every indicator slaps "AI-Powered" on their landing page. Under the hood, it's the same RSI + moving average combo from 1978.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="section">
+  <div class="section-label">The Solution</div>
+  <h2>Everything you need. Nothing you don't.</h2>
+  <p class="subtitle">One platform. One subscription. One tab. Built by traders who got tired of the same BS.</p>
+  
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon">🎯</div>
+      <h3>Confluence-Scored Signals</h3>
+      <p>Not just "buy" or "sell." Every signal comes with a confidence score, entry/SL/TP levels, and the exact reasoning. You see the WHY, not just the WHAT.</p>
+      <span class="feature-tag tag-core">Core</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌊</div>
+      <h3>Regime Detection</h3>
+      <p>Is the market trending, ranging, or volatile? PulseWave knows — and pauses signals in choppy markets so you don't get chopped up.</p>
+      <span class="feature-tag tag-new">Game-Changer</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📈</div>
+      <h3>Embedded Charts</h3>
+      <p>Full interactive charts with S/R levels and signals overlaid — right inside the platform. No more switching to TradingView.</p>
+      <span class="feature-tag tag-core">Core</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📰</div>
+      <h3>AI-Filtered News</h3>
+      <p>Real-time news, whale alerts, funding rates, and macro events — filtered to show only what matters to YOUR trades. Morning briefings included.</p>
+      <span class="feature-tag tag-ai">AI-Powered</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📓</div>
+      <h3>Auto Trade Journal</h3>
+      <p>Connect your exchange and every trade logs automatically. R-multiples, win rates, equity curves, and AI analysis of your patterns.</p>
+      <span class="feature-tag tag-core">Core</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🛡️</div>
+      <h3>Risk Management Suite</h3>
+      <p>Position sizing on every signal. Portfolio heat monitoring. Tilt detection. Daily loss limits. The stuff that actually determines if you make money.</p>
+      <span class="feature-tag tag-new">Unique</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤖</div>
+      <h3>AI Trading Coach</h3>
+      <p>"Why did I lose money this week?" Ask anything about your trading and get personalized insights based on YOUR journal data. Gets smarter over time.</p>
+      <span class="feature-tag tag-ai">AI-Powered</span>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎓</div>
+      <h3>Built-In Education</h3>
+      <p>Not a course. Personalized lessons based on YOUR actual trades. "You tend to hold losers 3x longer than winners — here's how to fix it."</p>
+      <span class="feature-tag tag-ai">Personalized</span>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison Section -->
+<section class="section">
+  <div class="section-label">Why PulseWave</div>
+  <h2>Replace your entire trading stack.</h2>
+  <p class="subtitle">What used to take 5 subscriptions now takes one.</p>
+  
+  <table class="compare-table">
+    <thead>
+      <tr>
+        <th>Feature</th>
+        <th>LuxAlgo ($60/mo)</th>
+        <th>TraderSync ($50/mo)</th>
+        <th>Signal Groups ($100/mo)</th>
+        <th>PulseWave ⚡</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Confluence-scored signals</td><td class="cross">✗ Basic arrows</td><td class="cross">✗</td><td class="cross">✗ "Trust me"</td><td class="check">✓ 0-100 score</td></tr>
+      <tr><td>Regime detection</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓ Auto-adapts</td></tr>
+      <tr><td>Auto trade journal</td><td class="cross">✗</td><td class="check">✓</td><td class="cross">✗</td><td class="check">✓ + AI analysis</td></tr>
+      <tr><td>Risk management</td><td class="cross">✗</td><td>Partial</td><td class="cross">✗</td><td class="check">✓ Full suite</td></tr>
+      <tr><td>AI-filtered news</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓ Real-time</td></tr>
+      <tr><td>Embedded charts</td><td>TV only</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓ Built-in</td></tr>
+      <tr><td>AI coaching</td><td class="cross">✗</td><td class="cross">✗</td><td class="cross">✗</td><td class="check">✓ Personalized</td></tr>
+      <tr><td>Beginner-friendly</td><td class="cross">✗ "Overwhelming"</td><td>Moderate</td><td>Varies</td><td class="check">✓ Stupid simple</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- Pricing -->
+<section class="section">
+  <div class="section-label">Pricing</div>
+  <h2>One platform. One price. Everything included.</h2>
+  <p class="subtitle">Start free. Upgrade when you're ready. Cancel anytime — no sneaky auto-renewals.</p>
+  
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name">Pulse</div>
+      <div style="color: #6b7280; font-size: 13px;">For getting started</div>
+      <div class="price-amount">$97<span>/mo</span></div>
+      <div class="price-annual">or $970/year (save $194)</div>
+      <ul class="price-features">
+        <li>BTC + ETH signals</li>
+        <li>Basic dashboard</li>
+        <li>Manual trade journal</li>
+        <li>Position size calculator</li>
+        <li>News feed</li>
+        <li>Email + Telegram alerts</li>
+      </ul>
+      <button class="price-btn price-btn-secondary">Join Waitlist</button>
+    </div>
+    <div class="price-card featured">
+      <div class="price-name">Wave</div>
+      <div style="color: #6b7280; font-size: 13px;">For serious traders</div>
+      <div class="price-amount">$147<span>/mo</span></div>
+      <div class="price-annual">or $1,470/year (save $294)</div>
+      <ul class="price-features">
+        <li>Top 20 crypto + forex signals</li>
+        <li>Full dashboard + regime detection</li>
+        <li>Auto-journal via exchange API</li>
+        <li>Full risk management suite</li>
+        <li>AI-filtered news + whale alerts</li>
+        <li>AI trading coach (weekly)</li>
+        <li>Community access</li>
+      </ul>
+      <button class="price-btn price-btn-primary">Join Waitlist</button>
+    </div>
+    <div class="price-card">
+      <div class="price-name">Tsunami</div>
+      <div style="color: #6b7280; font-size: 13px;">For power users</div>
+      <div class="price-amount">$197<span>/mo</span></div>
+      <div class="price-annual">or $1,970/year (save $394)</div>
+      <ul class="price-features">
+        <li>Everything in Wave</li>
+        <li>Multi-exchange support</li>
+        <li>AI coach (real-time)</li>
+        <li>Custom signal parameters</li>
+        <li>API access</li>
+        <li>Priority support</li>
+        <li>Monthly strategy calls</li>
+      </ul>
+      <button class="price-btn price-btn-secondary">Join Waitlist</button>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-section">
+  <h2>Ready to trade smarter?</h2>
+  <p>Join the waitlist and be first to access PulseWave when we launch. 14-day free trial. No credit card required. No BS.</p>
+  <form class="hero-form" style="max-width: 480px; margin: 0 auto;" onsubmit="handleSubmit(event)">
+    <input type="email" placeholder="Enter your email" required>
+    <button type="submit">Get Early Access →</button>
+  </form>
+  <p class="hero-sub" style="margin-top: 14px;"><strong>847 traders</strong> on the waitlist • Launching Q2 2026</p>
+</section>
+
+<!-- Footer -->
+<footer>
+  <p>© 2026 PulseWave Labs. All rights reserved. Trading involves risk. Past performance does not guarantee future results.</p>
+  <p style="margin-top: 8px;">PulseWave is a trading tool, not financial advice. Always do your own research.</p>
+</footer>
+
+<script>
+function handleSubmit(e) {
+  e.preventDefault();
+  const input = e.target.querySelector('input');
+  const btn = e.target.querySelector('button');
+  const email = input.value;
+  // TODO: Connect to email service (ConvertKit, Mailchimp, etc.)
+  btn.textContent = '✓ You\'re on the list!';
+  btn.style.background = '#16a34a';
+  input.value = '';
+  setTimeout(() => { btn.textContent = 'Join the Waitlist →'; btn.style.background = ''; }, 3000);
+}
+</script>
+
+</body>
+</html>

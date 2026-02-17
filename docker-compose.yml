@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: pulsewave
+      POSTGRES_PASSWORD: localdev123
+      POSTGRES_DB: pulsewave
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pulsewave"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Local signal engine (Python)
+  # signal-engine:
+  #   build: ./signal-engine
+  #   restart: unless-stopped
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #     - DATABASE_URL=postgresql://pulsewave:localdev123@postgres:5432/pulsewave
+  #   ports:
+  #     - "5000:5000"
+  #   depends_on:
+  #     - postgres
+  #     - redis
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  default:
+    name: pulsewave-network
