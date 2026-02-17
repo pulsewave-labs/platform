@@ -89,8 +89,8 @@ export default function LoginPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#00D4AA] to-[#7c3aed] rounded-2xl mb-4 animate-float">
-            <span className="text-2xl font-bold text-white font-mono">PW</span>
+          <div className="mb-4">
+            <img src="/logo.webp" alt="PulseWave" className="h-10 w-auto mx-auto" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Welcome back to PulseWave</h1>
           <p className="text-[#7d8590]">Sign in to access your trading dashboard</p>
@@ -125,7 +125,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
+                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00F0B5] transition-colors"
                 placeholder="Enter your email"
                 disabled={loading}
               />
@@ -148,7 +148,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
+                className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00F0B5] transition-colors"
                 placeholder="Enter your password"
                 disabled={loading}
               />
@@ -171,7 +171,7 @@ export default function LoginPage() {
           >
             <Link
               href="/forgot-password"
-              className="text-sm text-[#00D4AA] hover:text-[#1f6feb] transition-colors"
+              className="text-sm text-[#00F0B5] hover:text-[#1f6feb] transition-colors"
             >
               Forgot password?
             </Link>
@@ -252,7 +252,7 @@ export default function LoginPage() {
             Don't have an account?{' '}
             <Link
               href="/signup"
-              className="text-[#00D4AA] hover:text-[#1f6feb] font-semibold transition-colors"
+              className="text-[#00F0B5] hover:text-[#1f6feb] font-semibold transition-colors"
             >
               Start free trial
             </Link>

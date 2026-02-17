@@ -12,16 +12,16 @@ module.exports = {
         // PulseWave brand colors
         primary: {
           50: '#edfff9',
-          100: '#d5fff1',
-          200: '#aeffe4',
-          300: '#70ffd1',
-          400: '#33E6C0',
-          500: '#00D4AA',
-          600: '#00D4AA', // Main brand teal
-          700: '#00A888',
-          800: '#008A70',
-          900: '#006B57',
-          950: '#003D32',
+          100: '#d5fff2',
+          200: '#aeffe6',
+          300: '#70ffd4',
+          400: '#4DFFD0',
+          500: '#00F0B5',
+          600: '#00F0B5', // PulseWave brand green
+          700: '#00C79A',
+          800: '#009A78',
+          900: '#007D60',
+          950: '#004D3A',
         },
         // Dark theme colors matching the design
         dark: {

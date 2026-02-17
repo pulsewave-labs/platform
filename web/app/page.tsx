@@ -147,8 +147,8 @@ export default function LandingPage() {
       <div className="min-h-screen bg-black text-white overflow-hidden">
         <style jsx global>{`
           :root {
-            --electric-blue: #00D4AA;
-            --purple-accent: #00A888;
+            --electric-blue: #00F0B5;
+            --purple-accent: #00C79A;
             --dark-surface: #0a0a0a;
             --dark-border: #1a1a1a;
             --dark-text: #e6e6e6;
@@ -235,9 +235,7 @@ export default function LandingPage() {
           className="fixed top-0 left-0 right-0 z-50 sticky-nav px-6 lg:px-10 py-4"
         >
           <div className="flex justify-between items-center max-w-7xl mx-auto">
-            <div className="font-bold text-2xl tracking-tight">
-              <span className="text-gradient">Pulse</span>Wave
-            </div>
+            <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto" />
             
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
@@ -1120,9 +1118,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-5 gap-12 mb-12">
               <div className="md:col-span-2">
-                <div className="font-bold text-2xl tracking-tight mb-4">
-                  <span className="text-gradient">Pulse</span>Wave
-                </div>
+                <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto mb-4" />
                 <p className="text-[var(--dark-muted)] leading-relaxed mb-6 max-w-sm">
                   The complete trading command center. Built by traders, for traders who want to actually make money.
                 </p>

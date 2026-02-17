@@ -104,25 +104,12 @@ function Sidebar() {
       >
         {/* Logo */}
         <Link href="/dashboard" className="mb-8 flex items-center justify-center">
-          <motion.div 
-            className="w-11 h-11 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg"
+          <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Zap size={24} />
+            <img src="/logo.webp" alt="PulseWave" className={isExpanded ? "h-8 w-auto" : "h-8 w-8 object-contain object-left"} />
           </motion.div>
-          <AnimatePresence>
-            {isExpanded && (
-              <motion.span
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                className="ml-3 font-bold text-white text-lg"
-              >
-                PulseWave
-              </motion.span>
-            )}
-          </AnimatePresence>
         </Link>
         
         {/* Navigation Items */}

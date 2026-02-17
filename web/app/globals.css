@@ -12,16 +12,16 @@
   --color-text: #e1e4e8;
   --color-text-muted: #6b7280;
   --color-text-accent: #9ca3af;
-  --color-primary: #00D4AA;
-  --color-primary-hover: #33E6C0;
-  --color-purple: #00A888;
+  --color-primary: #00F0B5;
+  --color-primary-hover: #4DFFD0;
+  --color-purple: #00C79A;
   --color-success: #4ade80;
   --color-success-dark: #16a34a;
   --color-warning: #fbbf24;
   --color-error: #f87171;
   --color-error-dark: #dc2626;
   
-  --gradient-primary: linear-gradient(135deg, #00D4AA, #00A888);
+  --gradient-primary: linear-gradient(135deg, #00F0B5, #00C79A);
   --gradient-success: linear-gradient(135deg, #4ade80, #16a34a);
   --gradient-error: linear-gradient(135deg, #f87171, #dc2626);
   
@@ -121,7 +121,7 @@ body {
 .badge-success { background: rgba(22,163,74,0.2); color: #4ade80; }
 .badge-error { background: rgba(220,38,38,0.2); color: #f87171; }
 .badge-warning { background: rgba(234,179,8,0.2); color: #fbbf24; }
-.badge-primary { background: rgba(88,166,255,0.2); color: #00D4AA; }
+.badge-primary { background: rgba(88,166,255,0.2); color: #00F0B5; }
 
 .signal-long { background: rgba(22,163,74,0.1); border: 1px solid rgba(22,163,74,0.3); }
 .signal-short { background: rgba(220,38,38,0.1); border: 1px solid rgba(220,38,38,0.3); }
@@ -138,7 +138,7 @@ body {
 .toast-success { background: rgba(22,163,74,0.2); color: #4ade80; border: 1px solid rgba(22,163,74,0.3); }
 .toast-error { background: rgba(220,38,38,0.2); color: #f87171; border: 1px solid rgba(220,38,38,0.3); }
 .toast-warning { background: rgba(234,179,8,0.2); color: #fbbf24; border: 1px solid rgba(234,179,8,0.3); }
-.toast-info { background: rgba(88,166,255,0.2); color: #00D4AA; border: 1px solid rgba(88,166,255,0.3); }
+.toast-info { background: rgba(88,166,255,0.2); color: #00F0B5; border: 1px solid rgba(88,166,255,0.3); }
 
 /* Animations */
 @keyframes glow {

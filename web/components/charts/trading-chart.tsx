@@ -89,12 +89,12 @@ export default function TradingChart({
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          color: '#00D4AA',
+          color: '#00F0B5',
           width: 1,
           style: LineStyle.Dashed,
         },
         horzLine: {
-          color: '#00D4AA',
+          color: '#00F0B5',
           width: 1,
           style: LineStyle.Dashed,
         },

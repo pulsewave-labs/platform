@@ -198,8 +198,8 @@ export default function SignupPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2, duration: 0.5 }}
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#00D4AA] to-[#7c3aed] rounded-2xl mb-4 animate-float">
-            <span className="text-2xl font-bold text-white font-mono">PW</span>
+          <div className="mb-4">
+            <img src="/logo.webp" alt="PulseWave" className="h-10 w-auto mx-auto" />
           </div>
           <h1 className="text-2xl font-bold text-white mb-2">Join PulseWave Labs</h1>
           <p className="text-[#7d8590]">Start your 14-day free trial today</p>
@@ -278,7 +278,7 @@ export default function SignupPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
+                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00F0B5] transition-colors"
                 placeholder="Enter your full name"
                 disabled={loading}
               />
@@ -301,7 +301,7 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
+                className="input-glow w-full pl-10 pr-4 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00F0B5] transition-colors"
                 placeholder="Enter your email"
                 disabled={loading}
               />
@@ -324,7 +324,7 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00D4AA] transition-colors"
+                className="input-glow w-full pl-10 pr-12 py-3 bg-[#0d1117] text-[#f0f6fc] rounded-lg border border-[#30363d] placeholder-[#7d8590] focus:border-[#00F0B5] transition-colors"
                 placeholder="Create a strong password"
                 disabled={loading}
               />
@@ -401,16 +401,16 @@ export default function SignupPage() {
               type="checkbox"
               checked={acceptTerms}
               onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="mt-1 h-4 w-4 rounded border-[#30363d] bg-[#0d1117] text-[#00D4AA] focus:ring-[#00D4AA] focus:ring-2"
+              className="mt-1 h-4 w-4 rounded border-[#30363d] bg-[#0d1117] text-[#00F0B5] focus:ring-[#00F0B5] focus:ring-2"
               disabled={loading}
             />
             <label htmlFor="terms" className="text-sm text-[#7d8590]">
               I agree to the{' '}
-              <Link href="/terms" className="text-[#00D4AA] hover:text-[#1f6feb] transition-colors">
+              <Link href="/terms" className="text-[#00F0B5] hover:text-[#1f6feb] transition-colors">
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-[#00D4AA] hover:text-[#1f6feb] transition-colors">
+              <Link href="/privacy" className="text-[#00F0B5] hover:text-[#1f6feb] transition-colors">
                 Privacy Policy
               </Link>
             </label>
@@ -444,7 +444,7 @@ export default function SignupPage() {
             Already have an account?{' '}
             <Link
               href="/login"
-              className="text-[#00D4AA] hover:text-[#1f6feb] font-semibold transition-colors"
+              className="text-[#00F0B5] hover:text-[#1f6feb] font-semibold transition-colors"
             >
               Sign in
             </Link>
