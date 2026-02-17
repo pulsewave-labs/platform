@@ -333,9 +333,10 @@ export default function JournalPage() {
             </div>
           </div>
           
+          {/* Desktop Add Trade Button */}
           <button
             onClick={() => setIsAddTradeOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 transition-colors"
+            className="hidden md:flex items-center gap-2 px-4 py-2 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 transition-colors"
           >
             <Plus size={16} />
             Add Trade
@@ -345,7 +346,7 @@ export default function JournalPage() {
 
       {/* Stats Bar */}
       <motion.div 
-        className="grid grid-cols-2 md:grid-cols-5 gap-4"
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
@@ -390,8 +391,8 @@ export default function JournalPage() {
           <span className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Trade History</span>
         </div>
         
-        {/* Table Header */}
-        <div className="grid grid-cols-9 gap-4 text-xs font-medium text-[#6b7280] uppercase tracking-wide pb-4 border-b border-[#1b2332]">
+        {/* Desktop Table Header */}
+        <div className="hidden md:grid grid-cols-9 gap-4 text-xs font-medium text-[#6b7280] uppercase tracking-wide pb-4 border-b border-[#1b2332]">
           <span>Date</span>
           <span>Pair</span>
           <span>Direction</span>
@@ -403,7 +404,7 @@ export default function JournalPage() {
           <span>Actions</span>
         </div>
         
-        {/* Table Rows */}
+        {/* Mobile/Desktop Trade List */}
         <div className="space-y-0">
           {tradesLoading ? (
             Array.from({ length: 8 }).map((_, index) => (
@@ -413,58 +414,128 @@ export default function JournalPage() {
             tradesData.map((trade, index) => (
               <motion.div
                 key={trade.id}
-                className={`grid grid-cols-9 gap-4 text-sm py-4 border-b border-[#1b2332]/50 last:border-b-0 transition-colors hover:bg-[#1b2332]/20 -mx-2 px-2 rounded-lg ${
+                className={`border-b border-[#1b2332]/50 last:border-b-0 transition-colors hover:bg-[#1b2332]/20 -mx-2 px-2 rounded-lg ${
                   (trade.pnl || 0) > 0 ? 'bg-[#4ade80]/5' : (trade.pnl || 0) < 0 ? 'bg-[#f87171]/5' : ''
                 }`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.5 + index * 0.02, duration: 0.4 }}
               >
-                <span className="text-[#9ca3af] font-mono tabular-nums">
-                  {new Date(trade.date || trade.entryTime || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </span>
-                <span className="text-white font-medium">{trade.pair}</span>
-                <div>
-                  <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
-                    trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
-                  }`}>
-                    {trade.direction}
+                {/* Desktop Table Row */}
+                <div className="hidden md:grid grid-cols-9 gap-4 text-sm py-4">
+                  <span className="text-[#9ca3af] font-mono tabular-nums">
+                    {new Date(trade.date || trade.entryTime || Date.now()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                   </span>
+                  <span className="text-white font-medium">{trade.pair}</span>
+                  <div>
+                    <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
+                      trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+                    }`}>
+                      {trade.direction}
+                    </span>
+                  </div>
+                  <span className="text-white font-mono tabular-nums">${(trade.entry || trade.entryPrice || 0).toLocaleString()}</span>
+                  <span className="text-white font-mono tabular-nums">
+                    {trade.exit || trade.exitPrice ? `$${(trade.exit || trade.exitPrice).toLocaleString()}` : '-'}
+                  </span>
+                  <span className={`font-semibold font-mono tabular-nums ${
+                    (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                  }`}>
+                    {trade.pnl ? `${trade.pnl > 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '-'}
+                  </span>
+                  <span className={`font-semibold font-mono tabular-nums ${
+                    (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                  }`}>
+                    {trade.rMultiple ? `${trade.rMultiple > 0 ? '+' : ''}${trade.rMultiple.toFixed(1)}R` : '-'}
+                  </span>
+                  <span className={`text-xs px-2 py-1 rounded-md ${
+                    trade.status === 'closed' ? 'bg-[#6b7280]/20 text-[#6b7280]' :
+                    trade.status === 'open' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                    'bg-[#fbbf24]/20 text-[#fbbf24]'
+                  }`}>
+                    {(trade.status || 'closed').toUpperCase()}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setDeleteTradeId(trade.id)}
+                      className="text-[#6b7280] hover:text-[#f87171] transition-colors"
+                      disabled={deleteLoading}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
-                <span className="text-white font-mono tabular-nums">${(trade.entry || trade.entryPrice || 0).toLocaleString()}</span>
-                <span className="text-white font-mono tabular-nums">
-                  {trade.exit || trade.exitPrice ? `$${(trade.exit || trade.exitPrice).toLocaleString()}` : '-'}
-                </span>
-                <span className={`font-semibold font-mono tabular-nums ${
-                  (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                }`}>
-                  {trade.pnl ? `${trade.pnl > 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '-'}
-                </span>
-                <span className={`font-semibold font-mono tabular-nums ${
-                  (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                }`}>
-                  {trade.rMultiple ? `${trade.rMultiple > 0 ? '+' : ''}${trade.rMultiple.toFixed(1)}R` : '-'}
-                </span>
-                <span className={`text-xs px-2 py-1 rounded-md ${
-                  trade.status === 'closed' ? 'bg-[#6b7280]/20 text-[#6b7280]' :
-                  trade.status === 'open' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
-                  'bg-[#fbbf24]/20 text-[#fbbf24]'
-                }`}>
-                  {(trade.status || 'closed').toUpperCase()}
-                </span>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setDeleteTradeId(trade.id)}
-                    className="text-[#6b7280] hover:text-[#f87171] transition-colors"
-                    disabled={deleteLoading}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+
+                {/* Mobile Card */}
+                <div className="md:hidden py-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-white font-medium text-base">{trade.pair}</span>
+                      <span className={`px-2 py-1 rounded text-xs font-bold text-white ${
+                        trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+                      }`}>
+                        {trade.direction}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className={`text-sm px-2 py-1 rounded-md ${
+                        trade.status === 'closed' ? 'bg-[#6b7280]/20 text-[#6b7280]' :
+                        trade.status === 'open' ? 'bg-[#4ade80]/20 text-[#4ade80]' :
+                        'bg-[#fbbf24]/20 text-[#fbbf24]'
+                      }`}>
+                        {(trade.status || 'closed').toUpperCase()}
+                      </span>
+                      <button
+                        onClick={() => setDeleteTradeId(trade.id)}
+                        className="text-[#6b7280] hover:text-[#f87171] transition-colors p-2"
+                        disabled={deleteLoading}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm mb-3">
+                    <div>
+                      <span className="text-[#6b7280] text-xs">Entry</span>
+                      <div className="text-white font-mono">${(trade.entry || trade.entryPrice || 0).toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span className="text-[#6b7280] text-xs">Exit</span>
+                      <div className="text-white font-mono">
+                        {trade.exit || trade.exitPrice ? `$${(trade.exit || trade.exitPrice).toLocaleString()}` : '-'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[#6b7280] text-xs">P&L</span>
+                      <div className={`font-semibold font-mono ${
+                        (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                      }`}>
+                        {trade.pnl ? `${trade.pnl > 0 ? '+' : ''}$${trade.pnl.toFixed(2)}` : '-'}
+                      </div>
+                    </div>
+                    <div>
+                      <span className="text-[#6b7280] text-xs">R-Multiple</span>
+                      <div className={`font-semibold font-mono ${
+                        (trade.rMultiple || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
+                      }`}>
+                        {trade.rMultiple ? `${trade.rMultiple > 0 ? '+' : ''}${trade.rMultiple.toFixed(1)}R` : '-'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="text-xs text-[#6b7280]">
+                    {new Date(trade.date || trade.entryTime || Date.now()).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </div>
                 </div>
               </motion.div>
             ))
           ) : (
-            <div className="col-span-9 py-12">
+            <div className="py-12">
               <EmptyState
                 icon={BookOpen}
                 title="No trades yet"
@@ -485,6 +556,14 @@ export default function JournalPage() {
       >
         <AddTradeForm onSuccess={handleAddTradeSuccess} />
       </Modal>
+
+      {/* Mobile FAB (Floating Action Button) */}
+      <button
+        onClick={() => setIsAddTradeOpen(true)}
+        className="md:hidden fixed bottom-20 right-4 w-14 h-14 bg-[#00F0B5] rounded-full flex items-center justify-center shadow-lg hover:bg-[#00F0B5]/90 transition-colors z-40"
+      >
+        <Plus size={24} className="text-white" />
+      </button>
 
       {/* Delete Confirmation Modal */}
       <ConfirmModal

@@ -175,7 +175,7 @@ export default function SignalsPage() {
       
       {/* Filters */}
       <motion.div
-        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-4 md:p-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
@@ -185,13 +185,13 @@ export default function SignalsPage() {
           <span className="text-sm font-medium text-[#6b7280] uppercase tracking-wide">Filters</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="space-y-4 md:space-y-0 md:grid md:grid-cols-3 md:gap-4">
           {/* Pair Filter */}
           <div className="relative">
             <select
               value={selectedPair}
               onChange={(e) => setSelectedPair(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-sm text-white appearance-none cursor-pointer hover:border-[#1b2332]/80 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white appearance-none cursor-pointer hover:border-[#1b2332]/80 transition-colors min-h-[48px]"
             >
               {pairs.map(pair => (
                 <option key={pair} value={pair}>{pair === 'ALL' ? 'All Pairs' : pair}</option>
@@ -201,12 +201,12 @@ export default function SignalsPage() {
           </div>
           
           {/* Direction Filter */}
-          <div className="flex bg-[#0a0e17] border border-[#1b2332] rounded-xl p-1">
+          <div className="flex bg-[#0a0e17] border border-[#1b2332] rounded-xl p-1 min-h-[48px]">
             {directions.map(direction => (
               <button
                 key={direction}
                 onClick={() => setSelectedDirection(direction)}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors min-h-[44px] ${
                   selectedDirection === direction
                     ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
                     : 'text-[#6b7280] hover:text-[#9ca3af]'
@@ -222,7 +222,7 @@ export default function SignalsPage() {
             <select
               value={selectedTimeframe}
               onChange={(e) => setSelectedTimeframe(e.target.value as Timeframe)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-sm text-white appearance-none cursor-pointer hover:border-[#1b2332]/80 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white appearance-none cursor-pointer hover:border-[#1b2332]/80 transition-colors min-h-[48px]"
             >
               {timeframes.map(tf => (
                 <option key={tf} value={tf}>{tf === 'ALL' ? 'All Timeframes' : tf}</option>

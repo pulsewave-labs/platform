@@ -180,12 +180,12 @@ export default function NewsPage() {
       
       {/* Category Tabs */}
       <motion.div
-        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-2"
+        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-2 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
       >
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
           {categories.map(category => {
             const IconComponent = categoryIcons[category]
             const isActive = selectedCategory === category
@@ -194,7 +194,7 @@ export default function NewsPage() {
               <button
                 key={category}
                 onClick={() => setSelectedCategory(category)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
                   isActive
                     ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
                     : 'text-[#6b7280] hover:text-[#9ca3af] hover:bg-[#1b2332]/50'
@@ -246,7 +246,7 @@ export default function NewsPage() {
       
       {/* News Stats */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5, duration: 0.6 }}

@@ -13,7 +13,8 @@ import {
   BookOpen, 
   Shield, 
   Settings,
-  User
+  User,
+  Bell
 } from 'lucide-react'
 
 interface NavItem {
@@ -33,7 +34,14 @@ const navItems: NavItem[] = [
   { id: 'settings', label: 'Settings', href: '/dashboard/settings', icon: Settings }
 ]
 
-const mobileNavItems = navItems.slice(0, 5) // Show first 5 items on mobile
+// Bottom tab bar shows first 5 items (Dashboard, Signals, Journal, News, Settings)
+const mobileNavItems: NavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { id: 'signals', label: 'Signals', href: '/dashboard/signals', icon: Target },
+  { id: 'journal', label: 'Journal', href: '/dashboard/journal', icon: BookOpen },
+  { id: 'news', label: 'News', href: '/dashboard/news', icon: Newspaper },
+  { id: 'settings', label: 'Settings', href: '/dashboard/settings', icon: Settings }
+]
 
 function Sidebar() {
   const pathname = usePathname()
@@ -139,21 +147,30 @@ function MobileNavigation() {
   const pathname = usePathname()
   
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0e17]/95 backdrop-blur border-t border-[#1b2332] md:hidden">
-      <div className="flex items-center justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0a0e17]/95 backdrop-blur-md border-t border-[#1b2332] md:hidden safe-bottom">
+      <div className="flex items-center justify-around h-14">
         {mobileNavItems.map((item) => {
           const isActive = pathname === item.href
           const Icon = item.icon
           
           return (
-            <Link key={item.id} href={item.href}>
+            <Link key={item.id} href={item.href} className="flex-1">
               <motion.div
-                className={`flex flex-col items-center p-3 rounded-xl transition-colors ${
-                  isActive ? 'text-white' : 'text-[#6b7280]'
+                className={`flex flex-col items-center justify-center h-14 min-w-[44px] transition-colors ${
+                  isActive ? 'text-[#00F0B5]' : 'text-[#6b7280]'
                 }`}
                 whileTap={{ scale: 0.9 }}
               >
-                <Icon size={20} />
+                <div className="relative">
+                  <Icon size={20} />
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute -top-1 left-1/2 w-1 h-1 bg-[#00F0B5] rounded-full -translate-x-1/2"
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  )}
+                </div>
                 <span className="text-xs mt-1 font-medium">{item.label}</span>
               </motion.div>
             </Link>
@@ -161,6 +178,26 @@ function MobileNavigation() {
         })}
       </div>
     </nav>
+  )
+}
+
+function MobileHeader() {
+  const pathname = usePathname()
+  
+  // Extract page title from pathname
+  const getPageTitle = () => {
+    const segment = pathname.split('/').pop()
+    if (segment === 'dashboard') return 'Dashboard'
+    return segment ? segment.charAt(0).toUpperCase() + segment.slice(1) : 'Dashboard'
+  }
+
+  return (
+    <div className="md:hidden flex items-center justify-between h-12 px-4 border-b border-[#1b2332] bg-[#0a0e17] safe-top">
+      <img src="/logo.webp" alt="PulseWave" className="h-6 w-auto" />
+      <button className="w-8 h-8 flex items-center justify-center">
+        <Bell size={18} className="text-[#6b7280]" />
+      </button>
+    </div>
   )
 }
 
@@ -189,13 +226,14 @@ export default function DashboardLayout({
       <body className="min-h-screen bg-[#0a0e17] text-white font-['Plus_Jakarta_Sans']">
         <ToastProvider>
           <Sidebar />
+          <MobileHeader />
           <MobileNavigation />
           
-          <main className="md:ml-16 mb-20 md:mb-0 min-h-screen">
-            <div className="p-6 md:p-8 max-w-[1600px] mx-auto">
-              {/* Top Bar */}
+          <main className="md:ml-16 pb-16 md:pb-0 pt-12 md:pt-0 min-h-screen">
+            <div className="p-4 md:p-6 lg:p-8 max-w-[1600px] mx-auto">
+              {/* Desktop Top Bar - Hidden on mobile */}
               <motion.div 
-                className="flex items-center justify-between mb-8"
+                className="hidden md:flex items-center justify-between mb-8"
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}

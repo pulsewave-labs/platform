@@ -190,12 +190,12 @@ export default function SettingsPage() {
 
       {/* Tab Navigation */}
       <motion.div
-        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-2"
+        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-2 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
       >
-        <div className="flex gap-1">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
           {tabs.map(tab => {
             const IconComponent = tabIcons[tab]
             const isActive = activeTab === tab
@@ -204,7 +204,7 @@ export default function SettingsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
                   isActive
                     ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
                     : 'text-[#6b7280] hover:text-[#9ca3af] hover:bg-[#1b2332]/50'
@@ -251,7 +251,7 @@ export default function SettingsPage() {
                       type="text"
                       value={userProfile.fullName}
                       onChange={(e) => setUserProfile(prev => ({ ...prev, fullName: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                       placeholder="Your full name"
                     />
                   </div>
@@ -264,7 +264,7 @@ export default function SettingsPage() {
                       type="email"
                       value={userProfile.email}
                       onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                       placeholder="your.email@example.com"
                       disabled
                     />
@@ -277,7 +277,7 @@ export default function SettingsPage() {
                     <select 
                       value={userProfile.timezone}
                       onChange={(e) => setUserProfile(prev => ({ ...prev, timezone: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                     >
                       <option value="UTC-8">UTC-8 (Pacific Time)</option>
                       <option value="UTC-5">UTC-5 (Eastern Time)</option>
@@ -293,7 +293,7 @@ export default function SettingsPage() {
                     <select 
                       value={userProfile.tradingStyle}
                       onChange={(e) => setUserProfile(prev => ({ ...prev, tradingStyle: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                     >
                       <option value="Swing Trader">Swing Trader</option>
                       <option value="Day Trader">Day Trader</option>
@@ -536,7 +536,7 @@ export default function SettingsPage() {
                     type="number"
                     value={riskParams.maxRiskPerTrade}
                     onChange={(e) => updateRiskParam('maxRiskPerTrade', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                     min="0.1"
                     max="10"
                     step="0.1"
@@ -551,7 +551,7 @@ export default function SettingsPage() {
                     type="number"
                     value={riskParams.maxDailyLoss}
                     onChange={(e) => updateRiskParam('maxDailyLoss', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                     min="1"
                     max="20"
                     step="0.5"
@@ -566,7 +566,7 @@ export default function SettingsPage() {
                     type="number"
                     value={riskParams.maxPositions}
                     onChange={(e) => updateRiskParam('maxPositions', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
                     min="1"
                     max="20"
                   />

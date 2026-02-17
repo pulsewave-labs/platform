@@ -183,7 +183,7 @@ export default function LandingPage() {
             Now in beta — {waitlistCount.toLocaleString()} traders on the waitlist
           </motion.div>
 
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.15 }} className="text-5xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-bold leading-[1.05] tracking-tight mb-8">
+          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.15 }} className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-[5.5rem] font-bold leading-[1.05] tracking-tight mb-8">
             Stop Guessing.
             <br />
             Start Trading With
@@ -197,9 +197,9 @@ export default function LandingPage() {
 
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease, delay: 0.5 }} id="cta" className="mb-6">
             {!isSubmitted ? (
-              <form onSubmit={submit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-                <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="flex-1 px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all" />
-                <button type="submit" disabled={isSubmitting} className="px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2">
+              <form onSubmit={submit} className="flex flex-col gap-3 max-w-lg mx-auto">
+                <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-base md:text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all min-h-[48px]" />
+                <button type="submit" disabled={isSubmitting} className="w-full px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50 flex items-center justify-center gap-2 min-h-[48px]">
                   {isSubmitting ? 'Joining...' : <><span>Get Early Access</span><ArrowRight size={16} /></>}
                 </button>
               </form>
@@ -273,8 +273,8 @@ export default function LandingPage() {
             <p className="text-lg text-[#8b95a5] max-w-xl mx-auto">Replace $300/month in separate tools with one intelligent trading command center.</p>
           </div>
 
-          {/* Dashboard Mockup */}
-          <motion.div initial={{ opacity: 0, y: 50, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} className="mockup-shadow rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-b from-[#111827] to-[#0d1117] border border-white/[0.08] max-w-5xl mx-auto mb-12">
+          {/* Dashboard Mockup - Hidden on mobile */}
+          <motion.div initial={{ opacity: 0, y: 50, scale: 0.97 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} className="hidden md:block mockup-shadow rounded-2xl md:rounded-3xl overflow-hidden bg-gradient-to-b from-[#111827] to-[#0d1117] border border-white/[0.08] max-w-5xl mx-auto mb-12">
             {/* Browser Chrome */}
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06]">
               <div className="flex gap-1.5">
@@ -456,7 +456,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {[
               { name: 'Pulse', monthly: 97, features: ['10 signals/week', 'Basic risk tools', 'Email alerts', 'Community access', 'Trade journal'], featured: false },
               { name: 'Wave', monthly: 147, features: ['Unlimited signals', 'Advanced analytics', 'Real-time alerts', 'AI trading coach', 'Priority support'], featured: true },
@@ -539,9 +539,9 @@ export default function LandingPage() {
             <span className="grad-text">smarter?</span>
           </h2>
           <p className="text-lg text-[#8b95a5] mb-10">Join {waitlistCount.toLocaleString()} traders building the future of intelligent trading.</p>
-          <form onSubmit={e => submit(e, 'bottom')} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto mb-6">
-            <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="flex-1 px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all" />
-            <button type="submit" disabled={isSubmitting} className="px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50">
+          <form onSubmit={e => submit(e, 'bottom')} className="flex flex-col gap-3 max-w-lg mx-auto mb-6">
+            <input type="email" placeholder="Enter your email" value={email} onChange={e => setEmail(e.target.value)} required className="w-full px-5 py-3.5 bg-white/[0.06] border border-white/10 rounded-xl text-white text-base md:text-sm placeholder-[#6b7280] focus:outline-none focus:border-[#00F0B5]/50 focus:ring-1 focus:ring-[#00F0B5]/30 transition-all min-h-[48px]" />
+            <button type="submit" disabled={isSubmitting} className="w-full px-8 py-3.5 bg-[#00F0B5] text-[#0a0e17] rounded-xl font-bold text-sm hover:bg-[#4DFFD0] hover:shadow-[0_0_30px_rgba(0,240,181,0.3)] transition-all disabled:opacity-50 min-h-[48px]">
               {isSubmitting ? 'Joining...' : 'Get Early Access'}
             </button>
           </form>

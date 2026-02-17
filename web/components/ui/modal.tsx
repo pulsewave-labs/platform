@@ -55,28 +55,40 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
           />
           
           {/* Modal */}
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
-              className={`bg-[#0d1117] border border-[#1b2332] rounded-xl shadow-xl w-full ${sizeClasses[size]} max-h-[90vh] overflow-hidden`}
+              initial={{ 
+                opacity: 0, 
+                scale: 0.95, 
+                y: '100%'
+              }}
+              animate={{ 
+                opacity: 1, 
+                scale: 1, 
+                y: 0 
+              }}
+              exit={{ 
+                opacity: 0, 
+                scale: 0.95, 
+                y: '100%'
+              }}
+              transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+              className={`bg-[#0d1117] border-0 md:border border-[#1b2332] rounded-t-xl md:rounded-xl shadow-xl w-full overflow-hidden h-[90vh] md:h-auto md:max-h-[90vh] ${sizeClasses[size]}`}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-6 border-b border-[#1b2332]">
+              <div className="flex items-center justify-between p-4 md:p-6 border-b border-[#1b2332]">
                 <h3 className="text-lg font-semibold text-white">{title}</h3>
                 <button
                   onClick={onClose}
-                  className="text-[#6b7280] hover:text-white transition-colors"
+                  className="text-[#6b7280] hover:text-white transition-colors w-11 h-11 flex items-center justify-center -mr-2 min-w-[44px] min-h-[44px]"
                 >
                   <X size={20} />
                 </button>
               </div>
               
               {/* Content */}
-              <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="p-4 md:p-6 overflow-y-auto flex-1 max-h-[calc(90vh-80px)]">
                 {children}
               </div>
             </motion.div>

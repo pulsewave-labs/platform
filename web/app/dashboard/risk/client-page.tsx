@@ -240,10 +240,10 @@ export default function RiskPage() {
       </motion.div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
         {/* Open Positions */}
         <motion.div
-          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-4 md:p-6"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3, duration: 0.6 }}
@@ -292,7 +292,7 @@ export default function RiskPage() {
 
         {/* Risk Metrics */}
         <motion.div
-          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
+          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-4 md:p-6"
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.4, duration: 0.6 }}
@@ -339,7 +339,7 @@ export default function RiskPage() {
           <span className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Position Size Calculator</span>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
           {/* Inputs */}
           <div>
             <label className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
@@ -349,7 +349,7 @@ export default function RiskPage() {
               type="number"
               value={accountSize}
               onChange={(e) => setAccountSize(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
               placeholder="50000"
             />
           </div>
@@ -362,7 +362,7 @@ export default function RiskPage() {
               type="number"
               value={riskPercent}
               onChange={(e) => setRiskPercent(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
               placeholder="2"
               step="0.1"
               max="10"
@@ -377,7 +377,7 @@ export default function RiskPage() {
               type="number"
               value={entryPrice}
               onChange={(e) => setEntryPrice(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
               placeholder="69420"
               step="0.01"
             />
@@ -391,7 +391,7 @@ export default function RiskPage() {
               type="number"
               value={stopLoss}
               onChange={(e) => setStopLoss(e.target.value)}
-              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors"
+              className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
               placeholder="68200"
               step="0.01"
             />
@@ -399,7 +399,7 @@ export default function RiskPage() {
         </div>
         
         {/* Results */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
           <div className="bg-[#0a0e17] rounded-xl p-4 border border-[#1b2332]">
             <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide mb-2">
               Risk Amount

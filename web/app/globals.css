@@ -56,6 +56,17 @@ body {
 .card-hover { transition: border-color 0.2s ease; }
 .card-hover:hover { border-color: #30363d; }
 
+/* Hide scrollbar for horizontal filter rows */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Safe area for iPhone notch/home bar */
+.safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.safe-top { padding-top: env(safe-area-inset-top, 0px); }
+
+/* Prevent iOS zoom on input focus */
+input, select, textarea { font-size: 16px; }
+
 @media (max-width: 768px) {
   html { font-size: 15px; }
 }

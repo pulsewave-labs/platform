@@ -218,7 +218,7 @@ export default function Dashboard() {
 
       {/* Stats Row */}
       <motion.div 
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
         variants={itemVariants}
       >
         {statsLoading ? (
@@ -240,22 +240,22 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Main Content - Two Column */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8">
         {/* Chart Area - 60% */}
         <motion.div 
           className="xl:col-span-3"
           variants={itemVariants}
         >
-          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6">
+          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-4 md:p-6">
             {/* Chart Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-4">
               <div className="flex items-center gap-4">
-                <h3 className="text-xl font-semibold text-white">BTC/USDT</h3>
-                <div className="flex gap-1">
+                <h3 className="text-lg md:text-xl font-semibold text-white">BTC/USDT</h3>
+                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
                   {['15m', '30m', '1H', '4H', '1D'].map((timeframe) => (
                     <button
                       key={timeframe}
-                      className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                      className={`flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors min-h-[44px] ${
                         timeframe === '4H'
                           ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
                           : 'text-[#6b7280] hover:text-[#9ca3af]'
@@ -268,8 +268,8 @@ export default function Dashboard() {
               </div>
               
               <div className="text-right">
-                <div className="text-2xl font-mono text-white tabular-nums">$69,420</div>
-                <div className="flex items-center gap-1 text-sm font-medium text-[#4ade80]">
+                <div className="text-xl md:text-2xl font-mono text-white tabular-nums">$69,420</div>
+                <div className="flex items-center justify-end gap-1 text-sm font-medium text-[#4ade80]">
                   <TrendingUp size={16} />
                   +2.3%
                 </div>
@@ -277,7 +277,7 @@ export default function Dashboard() {
             </div>
 
             {/* Chart Placeholder with Price Action */}
-            <div className="bg-[#0a0e17] rounded-xl h-80 flex items-center justify-center relative overflow-hidden">
+            <div className="bg-[#0a0e17] rounded-xl h-64 md:h-80 flex items-center justify-center relative overflow-hidden">
               {/* Simulated candlestick chart */}
               <div className="absolute bottom-8 left-8 right-8 h-48 flex items-end justify-between">
                 {Array.from({ length: 24 }, (_, i) => {
@@ -349,7 +349,7 @@ export default function Dashboard() {
       </div>
 
       {/* Bottom Row - Three Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Recent News */}
         <motion.div
           className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"

@@ -55,7 +55,7 @@ export default function LoginPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-surface border border-border rounded-xl text-white text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors"
+            className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
             placeholder="you@example.com"
             required
           />
@@ -72,7 +72,7 @@ export default function LoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3.5 py-2.5 bg-surface border border-border rounded-xl text-white text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors"
+            className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
             placeholder="••••••••"
             required
           />
@@ -81,7 +81,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-2.5 bg-accent text-[#0a0e17] font-semibold text-sm rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50"
+          className="w-full py-3 bg-accent text-[#0a0e17] font-semibold text-sm rounded-xl hover:bg-accent-hover transition-colors disabled:opacity-50 min-h-[48px]"
         >
           {loading ? 'Signing in...' : 'Sign in'}
         </button>
