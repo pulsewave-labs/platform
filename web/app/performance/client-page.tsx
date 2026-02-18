@@ -105,28 +105,28 @@ export default function PerformanceClientPage() {
 
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-[#08080a]/90 backdrop-blur-xl border-b border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-6 md:px-10 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-2">
+        <div className="max-w-6xl mx-auto px-4 md:px-10 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-2 shrink-0">
               <img src="/logo.webp" alt="PulseWave" className="h-7" />
             </Link>
-            <span className="text-white/10">|</span>
-            <span className="text-[11px] text-white/30 mono tracking-wider">PERFORMANCE</span>
+            <span className="hidden sm:inline text-white/10">|</span>
+            <span className="hidden sm:inline text-[11px] text-white/30 mono tracking-wider">PERFORMANCE</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
             <Link href="/auth/login" className="text-[13px] text-white/40 hover:text-white/60 transition-colors">Log In</Link>
-            <Link href="/checkout" className="text-[13px] px-5 py-2 bg-[#00e5a0] text-black rounded-lg font-bold hover:bg-[#00cc8e] transition-colors">Get Signals</Link>
+            <Link href="/checkout" className="text-[13px] px-4 py-2 bg-[#00e5a0] text-black rounded-lg font-bold hover:bg-[#00cc8e] transition-colors whitespace-nowrap">Get Signals</Link>
           </div>
         </div>
       </nav>
 
 
       {/* ═══ HERO ═══ */}
-      <section className="px-6 md:px-10 pt-16 pb-6">
+      <section className="px-4 md:px-10 pt-16 pb-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
             <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-4">FULLY TRANSPARENT. EVERY TRADE PUBLIC.</div>
-            <h1 className="text-3xl md:text-[48px] font-extrabold tracking-tight mb-4 leading-[1.1]">
+            <h1 className="text-2xl md:text-[48px] font-extrabold tracking-tight mb-4 leading-[1.1]">
               $10,000 <span className="text-white/30">→</span> <span className="text-[#00e5a0]">${s.finalBalance.toLocaleString()}</span>
             </h1>
             <p className="text-[14px] text-white/40 max-w-lg mx-auto mb-8">
@@ -176,7 +176,7 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ MONTHLY HEATMAP ═══ */}
-      <section className="px-6 md:px-10 py-10">
+      <section className="px-4 md:px-10 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-end justify-between mb-6">
             <div>
@@ -199,7 +199,7 @@ export default function PerformanceClientPage() {
                     <span className="text-[13px] text-white/50 mono font-bold">{year}</span>
                     <span className={'text-[13px] mono font-bold ' + (yearTotal >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{yearTotal >= 0 ? '+' : ''}${(yearTotal/1000).toFixed(1)}K</span>
                   </div>
-                  <div className="grid grid-cols-6 md:grid-cols-12 gap-1.5">
+                  <div className="grid grid-cols-4 md:grid-cols-12 gap-1">
                     {Array.from({length:12},(_,mi)=>{
                       const monthKey = `${year}-${String(mi+1).padStart(2,'0')}`
                       const md = byYear[year].find((x:any) => x.month === monthKey)
@@ -250,12 +250,12 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ PAIRS BREAKDOWN ═══ */}
-      <section className="px-6 md:px-10 py-10">
+      <section className="px-4 md:px-10 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-2">BY PAIR</div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-6">Every pair profitable.</h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
             {data.pairs.map((p: any, i: number) => {
               const maxPnl = Math.max(...data.pairs.map((x:any) => x.pnl))
               const barW = maxPnl > 0 ? (p.pnl / maxPnl * 100) : 0
@@ -284,7 +284,7 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ MID-PAGE CTA ═══ */}
-      <section className="px-6 md:px-10 py-10">
+      <section className="px-4 md:px-10 py-10">
         <div className="max-w-3xl mx-auto">
           <div className="bg-gradient-to-b from-[#00e5a0]/[0.03] to-transparent border border-[#00e5a0]/[0.08] rounded-xl p-8 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
@@ -307,7 +307,7 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ TRADE PARAMETERS ═══ */}
-      <section className="px-6 md:px-10 py-10">
+      <section className="px-4 md:px-10 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-2">METHODOLOGY</div>
           <h2 className="text-xl md:text-2xl font-bold tracking-tight mb-6">Exact settings. Nothing hidden.</h2>
@@ -357,7 +357,7 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ COMPLETE TRADE LOG ═══ */}
-      <section className="px-6 md:px-10 py-10">
+      <section className="px-4 md:px-10 py-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-end justify-between mb-6">
             <div>
@@ -488,9 +488,9 @@ export default function PerformanceClientPage() {
 
 
       {/* ═══ BOTTOM CTA ═══ */}
-      <section className="px-6 md:px-10 py-16">
+      <section className="px-4 md:px-10 py-16">
         <div className="max-w-3xl mx-auto text-center">
-          <div className="text-[48px] md:text-[56px] font-extrabold mono text-[#00e5a0] mb-4 leading-none" style={{textShadow:'0 0 60px rgba(0,229,160,.15)'}}>
+          <div className="text-[32px] md:text-[56px] font-extrabold mono text-[#00e5a0] mb-4 leading-none" style={{textShadow:'0 0 60px rgba(0,229,160,.15)'}}>
             +${Math.round(s.finalBalance - 10000).toLocaleString()}
           </div>
           <p className="text-[15px] text-white/50 mb-2 max-w-md mx-auto">
