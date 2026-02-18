@@ -341,7 +341,6 @@ export default function DashboardClientPage() {
   const [signals, setSignals] = useState([])
   const [performance, setPerformance] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [scanCountdown, setScanCountdown] = useState('')
 
   function fetchData() {
     return Promise.all([
@@ -358,16 +357,6 @@ export default function DashboardClientPage() {
     fetchData()
     // Auto-refresh every 60s for live data
     var iv = setInterval(fetchData, 60000)
-    return function() { clearInterval(iv) }
-  }, [])
-
-  useEffect(function() {
-    function calcNext() {
-      var secs = 60 - new Date().getSeconds()
-      setScanCountdown(secs + 's')
-    }
-    calcNext()
-    var iv = setInterval(calcNext, 1000)
     return function() { clearInterval(iv) }
   }, [])
 
@@ -453,9 +442,9 @@ export default function DashboardClientPage() {
           <div className="text-[9px] mono text-[#555] mt-1">{weekTrades.length} trades</div>
         </div>
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
-          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">NEXT SCAN</div>
-          <div className="text-[20px] mono font-bold text-white/80">{scanCountdown}</div>
-          <div className="text-[9px] mono text-[#555] mt-1">Continuous monitoring</div>
+          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">WIN RATE</div>
+          <div className="text-[20px] mono font-bold text-white/80">{stats ? stats.winRate + '%' : '—'}</div>
+          <div className="text-[9px] mono text-[#555] mt-1">{stats ? stats.wins + 'W / ' + stats.losses + 'L' : ''}</div>
         </div>
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
           <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST SIGNAL</div>
@@ -506,7 +495,7 @@ export default function DashboardClientPage() {
                 <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
               </div>
               <div className="text-[#888] mono text-[12px] font-medium mb-1">Scanning for setups</div>
-              <div className="text-[#444] text-[11px] mono mb-1">Next scan in {scanCountdown}</div>
+              <div className="text-[#444] text-[11px] mono mb-1">Scanning for setups...</div>
               <div className="text-[#333] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
             </div>
           </div>
