@@ -12,30 +12,28 @@ const PLANS = {
 }
 
 export default function CheckoutClientPage() {
-  const searchParams = useSearchParams()
-  const initialPlan = searchParams.get('plan') === 'annual' ? 'annual' : 'monthly'
-  const [selected, setSelected] = useState(initialPlan)
-  const [perf, setPerf] = useState(null)
+  var searchParams = useSearchParams()
+  var initialPlan = searchParams.get('plan') === 'annual' ? 'annual' : 'monthly'
+  var [selected, setSelected] = useState(initialPlan)
+  var [perf, setPerf] = useState(null)
 
-  // Account fields
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [accountReady, setAccountReady] = useState(false)
-  const [accountError, setAccountError] = useState('')
-  const [creating, setCreating] = useState(false)
+  var [email, setEmail] = useState('')
+  var [password, setPassword] = useState('')
+  var [confirmPassword, setConfirmPassword] = useState('')
+  var [accountReady, setAccountReady] = useState(false)
+  var [accountError, setAccountError] = useState('')
+  var [creating, setCreating] = useState(false)
 
-  const supabase = createBrowserClient(
+  var supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL || '',
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
   )
 
-  useEffect(() => {
-    fetch('/api/performance').then(r => r.json()).then(d => { if (d) setPerf(d) }).catch(() => {})
+  useEffect(function() {
+    fetch('/api/performance').then(function(r) { return r.json() }).then(function(d) { if (d) setPerf(d) }).catch(function() {})
   }, [])
 
-  // Check if already logged in
-  useEffect(() => {
+  useEffect(function() {
     supabase.auth.getUser().then(function(res) {
       if (res.data.user) {
         setAccountReady(true)
@@ -44,13 +42,12 @@ export default function CheckoutClientPage() {
     })
   }, [])
 
-  const plan = PLANS[selected]
-  const stats = perf?.stats
-  const returnUrl = typeof window !== 'undefined' ? window.location.origin + '/checkout/complete' : ''
+  var plan = PLANS[selected]
+  var stats = perf ? (perf as any).stats : null
+  var returnUrl = typeof window !== 'undefined' ? window.location.origin + '/checkout/complete' : ''
+  var formValid = email.trim() && password.length >= 8 && password === confirmPassword
 
-  const formValid = email.trim() && password.length >= 8 && password === confirmPassword
-
-  async function handleCreateAccount(e: any) {
+  function handleCreateAccount(e: any) {
     e.preventDefault()
     setAccountError('')
 
@@ -64,33 +61,35 @@ export default function CheckoutClientPage() {
     }
 
     setCreating(true)
-    var result = await supabase.auth.signUp({ email, password })
-
-    if (result.error) {
-      setAccountError(result.error.message)
-      setCreating(false)
-    } else {
-      setAccountReady(true)
-      setCreating(false)
-    }
+    supabase.auth.signUp({ email: email, password: password }).then(function(result) {
+      if (result.error) {
+        setAccountError(result.error.message)
+        setCreating(false)
+      } else {
+        setAccountReady(true)
+        setCreating(false)
+      }
+    })
   }
 
-  var inputClass = "w-full px-3.5 py-2.5 bg-[#0c0c0e] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors"
+  var inputClass = "w-full px-3.5 py-3 bg-[#0c0c0e] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
 
   return (
     <div className="min-h-screen bg-[#08080a] text-white antialiased">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: `
-        body{font-family:'Inter',-apple-system,sans-serif}
-        .mono{font-family:'JetBrains Mono',monospace}
-        @keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        .fu{animation:fadeUp .5s ease-out forwards}
-      `}} />
+      <style dangerouslySetInnerHTML={{ __html: [
+        "body{font-family:'Inter',-apple-system,sans-serif}",
+        ".mono{font-family:'JetBrains Mono',monospace}",
+        "@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}",
+        "@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}",
+        ".fu{animation:fadeUp .5s ease-out forwards}",
+        // Make Whop iframe never clip — full height, no internal scroll
+        "iframe[title='Whop Embedded Checkout']{min-height:400px;overflow:visible!important}",
+      ].join('\n') }} />
 
       {/* Nav */}
       <nav className="border-b border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-6 md:px-10 h-14 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 md:px-10 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <img src="/logo.webp" alt="PulseWave" className="h-7" />
           </Link>
@@ -101,26 +100,26 @@ export default function CheckoutClientPage() {
         </div>
       </nav>
 
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-10 md:py-14">
+      <div className="max-w-5xl mx-auto px-4 md:px-10 py-6 md:py-14">
 
         {/* Header */}
-        <div className="text-center mb-10 fu">
-          <h1 className="text-2xl md:text-[32px] font-bold tracking-tight mb-2 leading-tight">
+        <div className="text-center mb-6 md:mb-10 fu">
+          <h1 className="text-xl md:text-[32px] font-bold tracking-tight mb-1.5 md:mb-2 leading-tight">
             Start receiving signals.
           </h1>
-          <p className="text-[14px] text-white/35 max-w-md mx-auto">
+          <p className="text-[13px] md:text-[14px] text-white/35 max-w-md mx-auto">
             Create your account, choose your plan, and get instant access.
           </p>
         </div>
 
         {/* Plan selector */}
-        <div className="max-w-md mx-auto mb-10 fu" style={{animationDelay:'.1s'}}>
+        <div className="max-w-md mx-auto mb-6 md:mb-10 fu" style={{animationDelay:'.1s'}}>
           <div className="flex gap-2 p-1 bg-white/[0.02] border border-white/[0.04] rounded-xl">
-            {(['monthly', 'annual'] as const).map(p => {
+            {(['monthly', 'annual'] as const).map(function(p) {
               var active = selected === p
               var isAnnual = p === 'annual'
               return (
-                <button key={p} onClick={() => setSelected(p)}
+                <button key={p} onClick={function() { setSelected(p) }}
                   className={'flex-1 relative py-3 rounded-lg text-center transition-all duration-200 ' +
                     (active
                       ? (isAnnual ? 'bg-[#00e5a0]/[0.06] border border-[#00e5a0]/15' : 'bg-white/[0.04] border border-white/[0.06]')
@@ -138,25 +137,25 @@ export default function CheckoutClientPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-[1.1fr_1fr] gap-8 md:gap-12 items-start">
+        <div className="grid md:grid-cols-[1.1fr_1fr] gap-6 md:gap-12 items-start">
 
-          {/* LEFT: Account + Payment */}
+          {/* LEFT: Account + Payment (primary on mobile) */}
           <div className="fu order-1" style={{animationDelay:'.2s'}}>
 
             {/* Step 1: Account */}
             <div className={'bg-[#0a0a0c] border rounded-xl overflow-hidden mb-4 transition-all ' + (accountReady ? 'border-[#00e5a0]/15' : 'border-white/[0.06]')}>
-              <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
+              <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-[#00e5a0]/10 text-[#00e5a0]' : 'bg-white/[0.04] text-white/30')}>
                     {accountReady ? '✓' : '1'}
                   </div>
                   <span className="text-[11px] text-white/30 mono tracking-wider">ACCOUNT</span>
                 </div>
-                {accountReady && <span className="text-[11px] text-[#00e5a0]/50 mono">{email}</span>}
+                {accountReady && <span className="text-[11px] text-[#00e5a0]/50 mono truncate ml-2">{email}</span>}
               </div>
 
               {!accountReady ? (
-                <form onSubmit={handleCreateAccount} className="p-5 space-y-3">
+                <form onSubmit={handleCreateAccount} className="p-4 md:p-5 space-y-3">
                   {accountError && (
                     <div className="text-[12px] text-[#ff4d4d] bg-[#ff4d4d]/[0.05] border border-[#ff4d4d]/10 rounded-lg px-3 py-2">
                       {accountError}
@@ -164,20 +163,18 @@ export default function CheckoutClientPage() {
                   )}
                   <div>
                     <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">EMAIL</label>
-                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="you@example.com" required />
+                    <input type="email" value={email} onChange={function(e) { setEmail(e.target.value) }} className={inputClass} placeholder="you@example.com" required />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">PASSWORD</label>
-                      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="Min. 8 chars" minLength={8} required />
-                    </div>
-                    <div>
-                      <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">CONFIRM PASSWORD</label>
-                      <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} placeholder="Re-enter" minLength={8} required />
-                    </div>
+                  <div>
+                    <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">PASSWORD</label>
+                    <input type="password" value={password} onChange={function(e) { setPassword(e.target.value) }} className={inputClass} placeholder="Min. 8 characters" minLength={8} required />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">CONFIRM PASSWORD</label>
+                    <input type="password" value={confirmPassword} onChange={function(e) { setConfirmPassword(e.target.value) }} className={inputClass} placeholder="Re-enter password" minLength={8} required />
                   </div>
                   <button type="submit" disabled={creating || !formValid}
-                    className="w-full py-2.5 bg-[#00e5a0] text-black text-[13px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors disabled:opacity-30 disabled:cursor-not-allowed">
+                    className="w-full py-3 bg-[#00e5a0] text-black text-[14px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors disabled:opacity-30 disabled:cursor-not-allowed min-h-[48px]">
                     {creating ? 'Creating...' : 'Continue to Payment'}
                   </button>
 
@@ -187,17 +184,17 @@ export default function CheckoutClientPage() {
                   </p>
                 </form>
               ) : (
-                <div className="px-5 py-3 flex items-center gap-2 text-[13px] text-white/40">
+                <div className="px-4 md:px-5 py-3 flex items-center gap-2 text-[13px] text-white/40">
                   <span className="text-[#00e5a0]/40">✓</span> Signed in as {email}
                 </div>
               )}
             </div>
 
             {/* Step 2: Payment */}
-            <div className={'bg-[#0a0a0c] border rounded-xl overflow-hidden transition-all ' + (accountReady ? 'border-white/[0.06] opacity-100' : 'border-white/[0.03] opacity-30 pointer-events-none')}>
-              <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
+            <div className={'bg-[#0a0a0c] border rounded-xl transition-all ' + (accountReady ? 'border-white/[0.06] opacity-100' : 'border-white/[0.03] opacity-30 pointer-events-none')}>
+              <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-white/[0.04] flex items-center justify-center text-[10px] mono font-bold text-white/30">2</div>
+                  <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-white/[0.04] text-white/30' : 'bg-white/[0.04] text-white/15')}>2</div>
                   <span className="text-[11px] text-white/30 mono tracking-wider">PAYMENT</span>
                 </div>
                 <div className="flex items-center gap-1.5">
@@ -205,29 +202,30 @@ export default function CheckoutClientPage() {
                   <span className="text-[11px] text-white/25 mono">{plan.period}</span>
                 </div>
               </div>
-              {accountReady && (
-                <WhopCheckoutEmbed
-                  key={selected}
-                  planId={plan.id}
-                  theme="dark"
-                  returnUrl={returnUrl}
-                  hidePrice
-                  hideEmail
-                  prefill={{ email }}
-                  styles={{ container: { paddingX: 20, paddingY: 16 } }}
-                  fallback={
-                    <div className="flex items-center justify-center py-24">
-                      <div className="w-32 h-px bg-[#1a1a1a] rounded-full overflow-hidden">
-                        <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent animate-[scan_3s_ease-in-out_infinite]"></div>
+              {accountReady ? (
+                <div className="overflow-visible">
+                  <WhopCheckoutEmbed
+                    key={selected}
+                    planId={plan.id}
+                    theme="dark"
+                    returnUrl={returnUrl}
+                    hidePrice
+                    hideEmail
+                    prefill={{ email: email }}
+                    styles={{ container: { paddingX: 16, paddingY: 12 } }}
+                    fallback={
+                      <div className="flex items-center justify-center py-20">
+                        <div className="w-32 h-px bg-[#1a1a1a] rounded-full overflow-hidden">
+                          <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent animate-[scan_3s_ease-in-out_infinite]"></div>
+                        </div>
                       </div>
-                    </div>
-                  }
-                  onComplete={function(planId, receiptId) {
-                    window.location.href = '/checkout/complete?status=success&plan=' + selected + '&receipt=' + receiptId
-                  }}
-                />
-              )}
-              {!accountReady && (
+                    }
+                    onComplete={function(planId, receiptId) {
+                      window.location.href = '/checkout/complete?status=success&plan=' + selected + '&receipt=' + receiptId
+                    }}
+                  />
+                </div>
+              ) : (
                 <div className="flex items-center justify-center py-16 text-[13px] text-white/15 mono">
                   Create your account first
                 </div>
@@ -240,6 +238,7 @@ export default function CheckoutClientPage() {
                 SSL encrypted
               </span>
               <span>Powered by Whop</span>
+              <span>Cancel anytime</span>
             </div>
 
             <p className="text-[10px] text-white/10 text-center mt-2 leading-relaxed max-w-sm mx-auto">
@@ -248,10 +247,9 @@ export default function CheckoutClientPage() {
           </div>
 
 
-          {/* RIGHT: Order summary */}
-          <div className="fu order-2" style={{animationDelay:'.3s'}}>
+          {/* RIGHT: Order summary — hidden on mobile, shown on desktop */}
+          <div className="hidden md:block fu order-2" style={{animationDelay:'.3s'}}>
 
-            {/* What you get */}
             <div className="bg-[#0a0a0c] border border-white/[0.06] rounded-xl p-6 mb-4">
               <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
               <div className="space-y-3">
@@ -278,7 +276,6 @@ export default function CheckoutClientPage() {
               </div>
             </div>
 
-            {/* Stats */}
             {stats && (
               <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-xl overflow-hidden mb-4">
                 {[
@@ -296,7 +293,6 @@ export default function CheckoutClientPage() {
               </div>
             )}
 
-            {/* Social proof */}
             <div className="bg-white/[0.015] border border-white/[0.03] rounded-xl p-5">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#00e5a0]/[0.06] flex items-center justify-center">
@@ -317,6 +313,27 @@ export default function CheckoutClientPage() {
 
           </div>
         </div>
+
+        {/* Mobile-only: compact proof strip below checkout */}
+        <div className="md:hidden mt-6 fu" style={{animationDelay:'.3s'}}>
+          {stats && (
+            <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
+              {[
+                { l: 'RETURN', v: '+' + stats.totalReturn + '%', c: '#00e5a0' },
+                { l: 'PROFIT FACTOR', v: stats.profitFactor.toFixed(2), c: '#e0e0e0' },
+                { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
+              ].map(function(s, i) {
+                return (
+                  <div key={i} className="bg-[#0a0a0c] px-3 py-2.5 text-center">
+                    <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-0.5">{s.l}</div>
+                    <div className="text-[15px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
       </div>
     </div>
   )
