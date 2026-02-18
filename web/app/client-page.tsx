@@ -601,23 +601,32 @@ export default function LandingClientPage() {
           </div>
 
           {/* Price comparison anchor */}
-          <div className="t p-5 mb-6 max-w-2xl mx-auto">
-            <div className="text-[14px] text-white/55 mono tracking-wider mb-3">WHAT TRADERS TYPICALLY SPEND</div>
-            <div className="space-y-2">
+          <div className="max-w-2xl mx-auto mb-8">
+            <div className="text-[11px] text-white/30 mono tracking-[.2em] mb-5 text-center">WHAT TRADERS TYPICALLY SPEND</div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                {n:'Trading courses',v:'$500 – $5,000',s:'One-time. No ongoing signals.'},
-                {n:'Premium signal groups',v:'$200 – $500/mo',s:'Unverified. Cherry-picked results.'},
-                {n:'Algo trading bots',v:'$100 – $300/mo',s:'You configure. You manage. You debug.'},
-                {n:'Trading indicators',v:'$30 – $100/mo',s:'Still requires you to interpret and trade.'},
+                {n:'Trading Courses',v:'$500 – $5,000',s:'One-time purchase. No ongoing signals. You still trade alone.', icon:'📖'},
+                {n:'Signal Groups',v:'$200 – $500/mo',s:'Unverified win rates. Cherry-picked screenshots. No transparency.', icon:'📢'},
+                {n:'Algo Trading Bots',v:'$100 – $300/mo',s:'You configure. You manage. You debug. Breaks when markets shift.', icon:'🤖'},
+                {n:'Trading Indicators',v:'$30 – $100/mo',s:'Still requires you to interpret charts, find entries, and manage risk.', icon:'📊'},
               ].map((c,i)=>(
-                <div key={i} className="flex items-center justify-between text-[14px]">
-                  <div className="text-white/65">{c.n}</div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-white/55 text-[16px] hidden sm:inline">{c.s}</span>
-                    <span className="text-white/65 mono font-medium text-right min-w-[110px]">{c.v}</span>
+                <div key={i} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4 relative overflow-hidden group hover:border-white/[0.06] transition-colors">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff4d4d]/[0.02] rounded-bl-full"></div>
+                  <div className="flex items-start justify-between mb-2">
+                    <span className="text-[14px] text-white/70 font-medium">{c.n}</span>
+                    <span className="text-[14px] mono font-bold text-[#ff4d4d]/60 text-right leading-none">{c.v}</span>
                   </div>
+                  <p className="text-[13px] text-white/35 leading-relaxed">{c.s}</p>
+                  <div className="mt-3 h-px bg-gradient-to-r from-[#ff4d4d]/10 to-transparent"></div>
                 </div>
               ))}
+            </div>
+            <div className="mt-5 text-center">
+              <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2">
+                <span className="text-[14px] text-white/50">PulseWave Signals</span>
+                <span className="text-[16px] mono font-bold text-[#00e5a0]">$149/mo</span>
+                <span className="text-[13px] text-white/30">— verified results, zero guesswork</span>
+              </div>
             </div>
           </div>
 
