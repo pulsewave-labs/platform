@@ -298,7 +298,7 @@ export default function DashboardClientPage() {
   var stats = performance ? (performance as any).stats : null
   var monthly = performance ? (performance as any).monthly || [] : []
   var allTrades = performance ? (performance as any).trades || [] : []
-  var recentTrades = allTrades.slice(0, 20)
+  var recentTrades = allTrades.slice(0, 15)
   var activeSignals = signals.filter(function(s: any) { return s.status === 'active' })
 
   // Streak calc
@@ -313,10 +313,101 @@ export default function DashboardClientPage() {
     } else break
   }
 
+  // This month P&L
+  var now = new Date()
+  var thisMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
+  var thisMonthData = monthly.find(function(m: any) { return m.month === thisMonthKey })
+
+  // Last month
+  var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  var lastMonthKey = lastMonth.getFullYear() + '-' + String(lastMonth.getMonth() + 1).padStart(2, '0')
+  var lastMonthData = monthly.find(function(m: any) { return m.month === lastMonthKey })
+
+  // This week P&L (last 7 days)
+  var weekAgo = Date.now() - 7 * 86400000
+  var weekTrades = allTrades.filter(function(t: any) { return new Date(t.exit_time || t.entry_time).getTime() >= weekAgo })
+  var weekPnl = weekTrades.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
+
+  // Last signal time
+  var lastSignalTime = allTrades.length > 0 ? allTrades[0].entry_time : null
+
+  // Pair performance
+  var pairPerf: Record<string, { pnl: number, trades: number, wins: number }> = {}
+  allTrades.forEach(function(t: any) {
+    var p = t.pair || ''
+    if (!pairPerf[p]) pairPerf[p] = { pnl: 0, trades: 0, wins: 0 }
+    pairPerf[p].pnl += t.pnl
+    pairPerf[p].trades++
+    if (t.pnl > 0) pairPerf[p].wins++
+  })
+  var pairList = Object.entries(pairPerf).map(function(e) { return { pair: e[0], ...e[1] } }).sort(function(a, b) { return b.pnl - a.pnl })
+
+  // Next scan schedule — engine scans at 4h/6h/12h candle closes
+  var [scanCountdown, setScanCountdown] = useState('')
+  useEffect(function() {
+    function calcNext() {
+      var n = new Date()
+      var h = n.getUTCHours(), m = n.getUTCMinutes(), s = n.getUTCSeconds()
+      var totalSec = h * 3600 + m * 60 + s
+      // Scan times: every 4h (0,4,8,12,16,20), every 6h (0,6,12,18), every 12h (0,12) — all +30s
+      var scanHours = [0,4,6,8,12,16,18,20]
+      var nextSec = Infinity
+      for (var i = 0; i < scanHours.length; i++) {
+        var target = scanHours[i] * 3600 + 30
+        var diff = target - totalSec
+        if (diff < 0) diff += 86400
+        if (diff < nextSec) nextSec = diff
+      }
+      var hrs = Math.floor(nextSec / 3600)
+      var mins = Math.floor((nextSec % 3600) / 60)
+      var secs = nextSec % 60
+      setScanCountdown((hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's')
+    }
+    calcNext()
+    var iv = setInterval(calcNext, 1000)
+    return function() { clearInterval(iv) }
+  }, [])
+
   return (
     <div className="space-y-4">
 
-      {/* Stats strip */}
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
+          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">THIS MONTH</div>
+          {thisMonthData ? (
+            <>
+              <div className={'text-[20px] mono font-bold ' + (thisMonthData.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                {thisMonthData.pnl >= 0 ? '+' : ''}${thisMonthData.pnl.toLocaleString()}
+              </div>
+              <div className="text-[9px] mono text-[#555] mt-1">{thisMonthData.trades} trades · {thisMonthData.wins}W {thisMonthData.losses}L</div>
+            </>
+          ) : <div className="text-[16px] mono text-[#333]">No data yet</div>}
+        </div>
+        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
+          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST 7 DAYS</div>
+          <div className={'text-[20px] mono font-bold ' + (weekPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+            {weekPnl >= 0 ? '+' : ''}${Math.round(weekPnl).toLocaleString()}
+          </div>
+          <div className="text-[9px] mono text-[#555] mt-1">{weekTrades.length} trades</div>
+        </div>
+        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
+          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">NEXT SCAN</div>
+          <div className="text-[20px] mono font-bold text-white/80">{scanCountdown}</div>
+          <div className="text-[9px] mono text-[#555] mt-1">5 pairs monitored</div>
+        </div>
+        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
+          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST SIGNAL</div>
+          {lastSignalTime ? (
+            <>
+              <div className="text-[16px] mono font-bold text-white/80">{timeAgo(lastSignalTime)}</div>
+              <div className="text-[9px] mono text-[#555] mt-1">{allTrades[0].pair} · {allTrades[0].action}</div>
+            </>
+          ) : <div className="text-[16px] mono text-[#333]">—</div>}
+        </div>
+      </div>
+
+      {/* Lifetime stats */}
       {stats && (
         <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
           {[
@@ -329,7 +420,7 @@ export default function DashboardClientPage() {
           ].map(function(s, i) {
             return (
               <div key={i} className="bg-[#0c0c0c] px-4 py-3">
-                <div className="text-[8px] text-[#666] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
+                <div className="text-[8px] text-[#555] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
                 <div className="text-[17px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
               </div>
             )
@@ -348,12 +439,28 @@ export default function DashboardClientPage() {
         </div>
 
         {activeSignals.length === 0 ? (
-          <div className="border border-white/[0.04] rounded-lg py-12 flex flex-col items-center bg-[#0c0c0c]">
-            <div className="w-40 h-px bg-white/[0.04] rounded-full overflow-hidden mb-5">
-              <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
+          <div className="border border-white/[0.04] rounded-lg bg-[#0c0c0c] overflow-hidden">
+            <div className="py-10 flex flex-col items-center">
+              <div className="w-40 h-px bg-white/[0.04] rounded-full overflow-hidden mb-5">
+                <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
+              </div>
+              <div className="text-[#888] mono text-[12px] font-medium mb-1">Scanning for setups</div>
+              <div className="text-[#444] text-[11px] mono mb-1">Next scan in {scanCountdown}</div>
+              <div className="text-[#333] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
             </div>
-            <div className="text-[#888] mono text-[12px] font-medium mb-1">Scanning for setups</div>
-            <div className="text-[#444] text-[11px] mono">Signals fire instantly via Telegram when detected</div>
+            {/* Scan schedule */}
+            <div className="border-t border-white/[0.03] px-4 py-3">
+              <div className="text-[8px] mono text-[#444] tracking-[.12em] mb-2">SCAN SCHEDULE (UTC)</div>
+              <div className="flex flex-wrap gap-1.5">
+                {['00:00','04:00','06:00','08:00','12:00','16:00','18:00','20:00'].map(function(t) {
+                  var h = parseInt(t)
+                  var nowH = new Date().getUTCHours()
+                  var isPast = h < nowH || (h === nowH && new Date().getUTCMinutes() > 0)
+                  var isNext = !isPast && h >= nowH
+                  return <span key={t} className={'text-[9px] mono px-2 py-0.5 rounded ' + (isNext ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : isPast ? 'bg-white/[0.01] text-[#333]' : 'bg-white/[0.02] text-[#555]')}>{t}</span>
+                })}
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -517,6 +624,61 @@ export default function DashboardClientPage() {
                   <span>${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})} → ${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   <span className={'font-medium ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
                 </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Pair Performance */}
+      {pairList.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2.5 mb-3">
+            <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">PAIR PERFORMANCE</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+            {pairList.map(function(p) {
+              var wr = p.trades > 0 ? (p.wins / p.trades * 100).toFixed(0) : '0'
+              var best = pairList[0].pnl
+              var barW = best > 0 ? Math.max(5, (p.pnl / best) * 100) : 0
+              return (
+                <div key={p.pair} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3 hover:border-white/[0.06] transition-colors">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[12px] mono font-medium text-[#aaa]">{p.pair.replace('/USDT', '')}</span>
+                    <span className="text-[9px] mono text-[#555]">{p.trades} trades</span>
+                  </div>
+                  <div className={'text-[16px] mono font-bold mb-1.5 ' + (p.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                    {p.pnl >= 0 ? '+' : ''}${Math.round(p.pnl).toLocaleString()}
+                  </div>
+                  <div className="h-1 rounded-full bg-white/[0.02] overflow-hidden mb-1.5">
+                    <div className="h-full rounded-full bg-[#00e5a0]/20" style={{ width: barW + '%' }}></div>
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] mono">
+                    <span className="text-[#666]">{wr}% WR</span>
+                    <span className="text-[#555]">{p.wins}W / {p.trades - p.wins}L</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* Account Simulator */}
+      <section>
+        <div className="flex items-center gap-2.5 mb-3">
+          <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">IF YOU STARTED WITH</h2>
+        </div>
+        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
+          {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+            var multiplier = acct / 10000
+            var totalPnl = stats ? (stats.finalBalance - stats.startingCapital) * multiplier : 0
+            var monthlyAvg = stats ? stats.avgMonthlyPnl * multiplier : 0
+            return (
+              <div key={acct} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3 text-center">
+                <div className="text-[10px] mono text-[#555] mb-2">${(acct/1000).toFixed(0)}K ACCOUNT</div>
+                <div className="text-[16px] mono font-bold text-[#00e5a0]">+${Math.round(totalPnl).toLocaleString()}</div>
+                <div className="text-[9px] mono text-[#555] mt-1">${Math.round(monthlyAvg).toLocaleString()}/mo avg</div>
               </div>
             )
           })}
