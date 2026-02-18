@@ -35,7 +35,7 @@ export default function HistoryClientPage() {
   var monthly = (data as any).monthly || []
 
   // Group trades by month
-  var tradesByMonth: Record<string, any[]> = {}
+  var tradesByMonth: any = {}
   allTrades.forEach(function(t: any) {
     var d = new Date(t.entry_time)
     var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')

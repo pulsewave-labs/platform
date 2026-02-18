@@ -408,7 +408,7 @@ export default function DashboardClientPage() {
   var lastSignalTime = allTrades.length > 0 ? allTrades[0].entry_time : null
 
   // Pair performance
-  var pairPerf: Record<string, { pnl: number, trades: number, wins: number }> = {}
+  var pairPerf: any = {}
   allTrades.forEach(function(t: any) {
     var p = t.pair || ''
     if (!pairPerf[p]) pairPerf[p] = { pnl: 0, trades: 0, wins: 0 }
