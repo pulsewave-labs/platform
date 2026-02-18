@@ -503,7 +503,7 @@ export default function LandingClientPage() {
               </div>
               <div className="p-6">
                 <div className="flex items-baseline gap-1 mb-5">
-                  <span className="text-3xl font-bold mono">$197</span>
+                  <span className="text-3xl font-bold mono">$149</span>
                   <span className="text-white/25 text-[12px]">/mo</span>
                 </div>
                 <div className="space-y-2 text-[11px] text-white/35 mb-6">
@@ -523,10 +523,10 @@ export default function LandingClientPage() {
               </div>
               <div className="p-6">
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-3xl font-bold mono text-[#00e5a0]">$1,970</span>
+                  <span className="text-3xl font-bold mono text-[#00e5a0]">$1,490</span>
                   <span className="text-white/25 text-[12px]">/yr</span>
                 </div>
-                <div className="text-[10px] text-[#00e5a0]/40 mono mb-5">Save $394 vs monthly</div>
+                <div className="text-[10px] text-[#00e5a0]/40 mono mb-5">Save $298 vs monthly</div>
                 <div className="space-y-2 text-[11px] text-white/35 mb-6">
                   {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support channel','Early access to new features'].map((f,i)=>(
                     <div key={i} className="flex items-center gap-2"><span className="text-[#00e5a0]/50 mono text-[9px]">→</span>{f}</div>
@@ -540,7 +540,7 @@ export default function LandingClientPage() {
           {/* Justification */}
           <div className="mt-6 text-center">
             <p className="text-[11px] text-white/20 max-w-md mx-auto">
-              Think about it: $197/mo is less than what most traders lose on a single bad trade. One signal that hits TP covers your subscription for months.
+              Think about it: $149/mo is less than what most traders lose on a single bad trade. One signal that hits TP covers your subscription for months.
             </p>
           </div>
         </div>
