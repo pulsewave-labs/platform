@@ -8,7 +8,6 @@ import { createBrowserClient } from '@supabase/ssr'
 export default function SignupPage() {
   const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
@@ -34,7 +33,7 @@ export default function SignupPage() {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name: firstName, phone } }
+      options: { data: { first_name: firstName } }
     })
 
     if (error) {
@@ -84,17 +83,6 @@ export default function SignupPage() {
             className={inputClass}
             placeholder="you@example.com"
             required
-          />
-        </div>
-
-        <div>
-          <label className="block text-xs font-medium text-secondary mb-1.5">Phone</label>
-          <input
-            type="tel"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className={inputClass}
-            placeholder="+1 (555) 000-0000"
           />
         </div>
 
