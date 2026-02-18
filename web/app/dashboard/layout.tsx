@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         `}} />
 
         {/* Top bar */}
-        <header className="h-12 border-b border-white/[0.04] flex items-center justify-between px-4 md:px-6 bg-[#0c0c0c] sticky top-0 z-50">
+        <header className="h-14 border-b border-white/[0.04] flex items-center justify-between px-4 md:px-6 bg-[#0c0c0c] sticky top-0 z-50">
           <div className="flex items-center gap-5">
             <Link href="/" className="flex items-center gap-2 group">
               <img src="/logo.webp" alt="PulseWave" className="h-7" />
@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 var active = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href))
                 return (
                   <Link key={tab.href} href={tab.href}
-                    className={'relative px-3 py-1.5 text-[11px] font-medium tracking-wide transition-all duration-200 rounded-md ' + (active ? 'text-white bg-white/[0.04]' : 'text-[#666] hover:text-[#999] hover:bg-white/[0.02]')}
+                    className={'relative px-3 py-1.5 text-[17px] font-medium tracking-wide transition-all duration-200 rounded-md ' + (active ? 'text-white bg-white/[0.04]' : 'text-[#666] hover:text-[#999] hover:bg-white/[0.02]')}
                   >
                     {tab.label.toUpperCase()}
                     {active && <span className="absolute bottom-0 left-3 right-3 h-px bg-[#00e5a0]"></span>}
