@@ -422,7 +422,7 @@ export default function DashboardClientPage() {
     <div className="space-y-4">
 
       {/* Quick Stats Row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+      <div className="grid grid-cols-3 gap-2">
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
           <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">THIS MONTH</div>
           {thisMonthData ? (
@@ -440,11 +440,6 @@ export default function DashboardClientPage() {
             {weekPnl >= 0 ? '+' : ''}${Math.round(weekPnl).toLocaleString()}
           </div>
           <div className="text-[9px] mono text-[#555] mt-1">{weekTrades.length} trades</div>
-        </div>
-        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
-          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">WIN RATE</div>
-          <div className="text-[20px] mono font-bold text-white/80">{stats ? stats.winRate + '%' : '—'}</div>
-          <div className="text-[9px] mono text-[#555] mt-1">{stats ? stats.wins + 'W / ' + stats.losses + 'L' : ''}</div>
         </div>
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
           <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST SIGNAL</div>
