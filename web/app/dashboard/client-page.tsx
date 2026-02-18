@@ -460,8 +460,7 @@ export default function DashboardClientPage() {
               <div className="w-40 h-px bg-white/[0.04] rounded-full overflow-hidden mb-5">
                 <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
               </div>
-              <div className="text-[#888] mono text-[15px] font-medium mb-1">Scanning for setups</div>
-              <div className="text-[#444] text-[14px] mono mb-1">Scanning for setups...</div>
+              <div className="text-[#888] mono text-[14px] font-medium mb-1">Scanning for setups...</div>
               <div className="text-[#444] text-[16px] mono">Signals fire instantly via Telegram when detected</div>
             </div>
           </div>
