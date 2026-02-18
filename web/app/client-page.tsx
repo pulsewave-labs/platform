@@ -162,16 +162,19 @@ export default function LandingClientPage() {
             </Link>
           </div>
 
+          {/* Stats bar wrapper — refs for countUp observers */}
+          <div ref={equity.ref}><span ref={tradeCountUp.ref}></span><span ref={pfUp.ref}></span><span ref={winMoUp.ref}></span></div>
+
           {/* Stats bar — desktop */}
           <div className="fu4 t hidden md:block">
             <div className="grid grid-cols-4 gap-px">
               {[
-                { label:'STARTING BALANCE', ref:equity.ref, val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
-                { label:'TOTAL TRADES', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
-                { label:'PROFIT FACTOR', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
-                { label:'PROFITABLE MONTHS', ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
+                { label:'STARTING BALANCE', val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
+                { label:'TOTAL TRADES', val:tradeCountUp.display, c:'#e0e0e0' },
+                { label:'PROFIT FACTOR', val:pfUp.display, c:'#e0e0e0' },
+                { label:'PROFITABLE MONTHS', val:winMoUp.display+'%', c:'#e0e0e0' },
               ].map(function(s,i) { return (
-                <div key={i} ref={s.ref} className="px-5 py-4 border-r border-white/[0.02] last:border-r-0">
+                <div key={i} className="px-5 py-4 border-r border-white/[0.02] last:border-r-0">
                   <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">{s.label}</div>
                   <div className="text-[24px] font-bold mono" style={{color:s.c}}>{s.val}</div>
                 </div>
@@ -181,7 +184,7 @@ export default function LandingClientPage() {
 
           {/* Stats bar — mobile */}
           <div className="fu4 md:hidden">
-            <div className="t mb-3" ref={equity.ref}>
+            <div className="t mb-3">
               <div className="flex items-center justify-between px-5 py-4">
                 <div>
                   <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">BALANCE</div>
