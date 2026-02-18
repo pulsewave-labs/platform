@@ -162,20 +162,48 @@ export default function LandingClientPage() {
             </Link>
           </div>
 
-          {/* Stats bar */}
-          <div className="fu4 t">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
+          {/* Stats bar — desktop */}
+          <div className="fu4 t hidden md:block">
+            <div className="grid grid-cols-4 gap-px">
               {[
-                { label:'STARTING BALANCE', sub:'→ CURRENT', ref:equity.ref, val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
-                { label:'TOTAL TRADES', sub:'VERIFIED', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
-                { label:'PROFIT FACTOR', sub:'$'+profitFactor.toFixed(2)+' PER $1 LOST', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
-                { label:'PROFITABLE MONTHS', sub:greenMonths+' OF '+totalMonths, ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
-              ].map((s,i)=>(
-                <div key={i} ref={s.ref} className="px-5 py-4 border-r border-b border-white/[0.02] last:border-r-0 md:last:border-b-0 md:[&:nth-child(n+3)]:border-b-0">
-                  <div className="text-[14px] text-white/55 mono tracking-[.12em] mb-0.5">{s.label}</div>
+                { label:'STARTING BALANCE', ref:equity.ref, val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
+                { label:'TOTAL TRADES', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
+                { label:'PROFIT FACTOR', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
+                { label:'PROFITABLE MONTHS', ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
+              ].map(function(s,i) { return (
+                <div key={i} ref={s.ref} className="px-5 py-4 border-r border-white/[0.02] last:border-r-0">
+                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">{s.label}</div>
                   <div className="text-[24px] font-bold mono" style={{color:s.c}}>{s.val}</div>
                 </div>
-              ))}
+              )})}
+            </div>
+          </div>
+
+          {/* Stats bar — mobile */}
+          <div className="fu4 md:hidden">
+            <div className="t mb-3" ref={equity.ref}>
+              <div className="flex items-center justify-between px-5 py-4">
+                <div>
+                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">BALANCE</div>
+                  <div className="text-[28px] font-bold mono text-[#00e5a0]">$10K → ${Math.round(Number(equity.display.replace(/,/g,''))/1000)}K</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">RETURN</div>
+                  <div className="text-[22px] font-bold mono text-[#00e5a0]">+{totalProfit > 0 ? Math.round(totalProfit/100) : 0}%</div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[
+                { label:'TRADES', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
+                { label:'PROFIT FACTOR', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
+                { label:'WIN MONTHS', ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
+              ].map(function(s,i) { return (
+                <div key={i} ref={s.ref} className="t px-4 py-3 text-center">
+                  <div className="text-[10px] text-white/30 mono tracking-[.12em] mb-1">{s.label}</div>
+                  <div className="text-[20px] font-bold mono" style={{color:s.c}}>{s.val}</div>
+                </div>
+              )})}
             </div>
           </div>
 
