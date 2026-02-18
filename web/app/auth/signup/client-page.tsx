@@ -43,7 +43,7 @@ export default function SignupPage() {
       <div className="text-center mb-8">
         <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto mx-auto mb-6" />
         <h1 className="text-xl font-semibold text-white">Create your account</h1>
-        <p className="text-sm text-secondary mt-1">14 days free. No credit card required.</p>
+        <p className="text-sm text-secondary mt-1">Access signals, dashboard, and trade history.</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
