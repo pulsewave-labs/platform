@@ -43,8 +43,7 @@ export default function HistoryClientPage() {
     tradesByMonth[key].push(t)
   })
 
-  var pairSet = new Set(allTrades.map(function(t: any) { return t.pair }))
-  var pairs: string[] = Array.from(pairSet).sort()
+  var pairs = Array.from(new Set(allTrades.map(function(t: any) { return t.pair }))).sort()
 
   // Get trades for selected month
   var modalTrades = selectedMonth ? (tradesByMonth[selectedMonth.month] || []).slice().sort(function(a: any, b: any) {

@@ -151,7 +151,7 @@ function EquityChart({ trades }: { trades: any[] }) {
   xLabels = xLabels.filter(function(_, i) { return i % step === 0 })
 
   // Drawdown shading
-  var drawdownRegions: string[] = []
+  var drawdownRegions = []
   var ddPeak = points[0].balance
   var ddStart = -1
   for (var k = 0; k < points.length; k++) {
