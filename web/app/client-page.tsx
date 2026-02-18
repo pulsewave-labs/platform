@@ -758,8 +758,9 @@ export default function LandingClientPage() {
             </p>
           </div>
 
-          <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-x-auto">
-            <div className="grid grid-cols-5 gap-px bg-white/[0.02] min-w-[600px]">
+          {/* Desktop: 5-column grid */}
+          <div className="hidden md:block bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
               {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
                 var multiplier = acct / 10000
                 var tp = totalProfit * multiplier
@@ -779,6 +780,28 @@ export default function LandingClientPage() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Mobile: stacked rows */}
+          <div className="md:hidden space-y-2">
+            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+              var multiplier = acct / 10000
+              var tp = totalProfit * multiplier
+              var ma = avgMonthly * multiplier
+              var isBase = acct === 10000
+              return (
+                <div key={acct} className={'flex items-center justify-between rounded-xl px-5 py-4 border ' + (isBase ? 'bg-[#00e5a0]/[0.03] border-[#00e5a0]/[0.12]' : 'bg-[#0a0a0c] border-white/[0.04]')}>
+                  <div className="flex items-center gap-3">
+                    <div className={'text-[18px] mono font-bold ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
+                    {isBase && <span className="text-[10px] mono text-[#00e5a0]/60 tracking-wider font-bold bg-[#00e5a0]/[0.08] px-2 py-0.5 rounded">BASE</span>}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[18px] mono font-bold text-[#00e5a0]">+${Math.round(tp).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
 
           <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results. 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
