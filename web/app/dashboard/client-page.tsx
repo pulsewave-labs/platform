@@ -20,146 +20,121 @@ export default function DashboardClientPage() {
 
   if (loading) {
     return (
-      <div className="text-center py-12">
-        <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-        <p className="text-zinc-400">Loading dashboard...</p>
+      <div className="flex items-center justify-center py-20">
+        <div className="text-[#333] text-sm font-mono">Loading...</div>
       </div>
     )
   }
 
   var stats = performance ? (performance as any).stats : null
-  var recentTrades = performance ? (performance as any).trades.slice(0, 10) : []
-  var monthly = performance ? (performance as any).monthly : []
+  var recentTrades = performance ? (performance as any).trades.slice(0, 15) : []
   var activeSignals = signals.filter(function(s: any) { return s.status === 'active' })
-  var lastMonth = monthly.length > 0 ? monthly[monthly.length - 1] : null
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h1 className="text-3xl font-bold mb-2">Signal Dashboard</h1>
-        <p className="text-zinc-400">Real-time trading signals from the PulseWave bot</p>
-      </div>
+    <div className="space-y-6 pb-20 md:pb-0">
 
+      {/* Stats strip */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-            <div className="text-2xl font-bold text-green-400">+{stats.totalReturn.toFixed(1)}%</div>
-            <div className="text-sm text-zinc-400">Total Return</div>
-            <div className="text-xs text-zinc-500">${stats.startingCapital.toLocaleString()} → ${stats.finalBalance.toLocaleString()}</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-            <div className="text-2xl font-bold text-blue-400">{stats.winRate}%</div>
-            <div className="text-sm text-zinc-400">Win Rate</div>
-            <div className="text-xs text-zinc-500">{stats.wins}W / {stats.losses}L</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-            <div className="text-2xl font-bold text-purple-400">{stats.profitFactor}</div>
-            <div className="text-sm text-zinc-400">Profit Factor</div>
-            <div className="text-xs text-zinc-500">{stats.profitableMonths}/{stats.totalMonths} profitable months</div>
-          </div>
-          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-            <div className="text-2xl font-bold text-teal-400">${stats.avgMonthlyPnl.toLocaleString()}</div>
-            <div className="text-sm text-zinc-400">Avg Monthly P&L</div>
-            <div className="text-xs text-zinc-500">{lastMonth ? lastMonth.month + ': $' + lastMonth.pnl.toLocaleString() : ''}</div>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-[#1a1a1a] rounded-lg overflow-hidden">
+          {[
+            { label: 'TOTAL P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: 'text-green-400' },
+            { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: 'text-green-400' },
+            { label: 'WIN RATE', value: stats.winRate + '%', color: 'text-white' },
+            { label: 'PROFIT FACTOR', value: stats.profitFactor.toFixed(2), color: 'text-white' },
+            { label: 'TRADES', value: stats.totalTrades.toString(), color: 'text-white' },
+            { label: 'MAX DD', value: stats.maxDrawdown + '%', color: 'text-red-400' },
+          ].map(function(s, i) {
+            return (
+              <div key={i} className="bg-[#0d0d0d] p-4">
+                <div className="text-[10px] text-[#555] font-mono tracking-wider mb-1">{s.label}</div>
+                <div className={'text-lg font-mono font-semibold ' + s.color}>{s.value}</div>
+              </div>
+            )
+          })}
         </div>
       )}
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-        <h2 className="text-xl font-bold mb-4">Active Signals</h2>
+      {/* Active signals */}
+      <div>
+        <div className="flex items-center gap-3 mb-3">
+          <h2 className="text-xs font-mono text-[#555] tracking-wider">ACTIVE SIGNALS</h2>
+          <span className="text-[10px] font-mono text-[#333]">{activeSignals.length}</span>
+        </div>
+
         {activeSignals.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-4xl mb-3">📡</div>
-            <p className="text-zinc-400 mb-1">No active signals right now</p>
-            <p className="text-zinc-500 text-sm">The bot is actively scanning for setups. New signals are sent instantly via Telegram.</p>
+          <div className="border border-[#1a1a1a] rounded-lg p-8 text-center">
+            <div className="text-[#333] font-mono text-sm mb-1">NO ACTIVE SIGNALS</div>
+            <div className="text-[#222] text-xs">Bot is scanning for setups. Signals fire instantly via Telegram.</div>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {activeSignals.map(function(sig: any) {
               var isLong = sig.direction === 'LONG'
-              var entryPrice = Number(sig.entry)
-              var slPrice = Number(sig.stop_loss)
-              var tpPrice = Number(sig.take_profit)
-              var risk = Math.abs(entryPrice - slPrice)
-              var reward = Math.abs(tpPrice - entryPrice)
+              var entry = Number(sig.entry)
+              var sl = Number(sig.stop_loss)
+              var tp = Number(sig.take_profit)
+              var risk = Math.abs(entry - sl)
+              var reward = Math.abs(tp - entry)
               var rr = risk > 0 ? (reward / risk).toFixed(1) : '0'
-              var slPct = ((risk / entryPrice) * 100).toFixed(2)
-              var tpPct = ((reward / entryPrice) * 100).toFixed(2)
-
-              // Position sizing examples for different account sizes
-              var riskPct = 10 // 10% risk per trade
-              var examples = [1000, 5000, 10000, 25000, 50000]
+              var slPct = ((risk / entry) * 100).toFixed(2)
+              var tpPct = ((reward / entry) * 100).toFixed(2)
 
               return (
-                <div key={sig.id} className="bg-zinc-800/50 border border-zinc-700 rounded-lg p-5">
-                  <div className="flex items-center justify-between mb-4">
+                <div key={sig.id} className="border border-[#1a1a1a] rounded-lg overflow-hidden">
+                  {/* Signal header */}
+                  <div className="flex items-center justify-between px-4 py-3 bg-[#0d0d0d]">
                     <div className="flex items-center gap-3">
-                      <span className={isLong ? 'px-3 py-1.5 rounded-lg text-sm font-bold bg-green-500/20 text-green-400 border border-green-500/30' : 'px-3 py-1.5 rounded-lg text-sm font-bold bg-red-500/20 text-red-400 border border-red-500/30'}>
+                      <span className={'px-2 py-0.5 rounded text-[10px] font-mono font-bold ' + (isLong ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20')}>
                         {sig.direction}
                       </span>
-                      <span className="font-bold text-xl">{sig.pair}</span>
+                      <span className="font-mono font-semibold text-white">{sig.pair}</span>
                     </div>
-                    <div className="text-right">
-                      <div className="text-sm text-zinc-400">R:R</div>
-                      <div className="font-bold text-green-400">{rr}:1</div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4 mb-4">
-                    <div className="bg-zinc-900/50 rounded-lg p-3">
-                      <div className="text-xs text-zinc-500 mb-1">Entry Price</div>
-                      <div className="font-mono font-bold">${entryPrice.toLocaleString()}</div>
-                    </div>
-                    <div className="bg-zinc-900/50 rounded-lg p-3">
-                      <div className="text-xs text-zinc-500 mb-1">Stop Loss</div>
-                      <div className="font-mono font-bold text-red-400">${slPrice.toLocaleString()}</div>
-                      <div className="text-xs text-red-400/60">-{slPct}%</div>
-                    </div>
-                    <div className="bg-zinc-900/50 rounded-lg p-3">
-                      <div className="text-xs text-zinc-500 mb-1">Take Profit</div>
-                      <div className="font-mono font-bold text-green-400">${tpPrice.toLocaleString()}</div>
-                      <div className="text-xs text-green-400/60">+{tpPct}%</div>
+                    <div className="flex items-center gap-4 text-xs font-mono">
+                      <span className="text-[#555]">R:R</span>
+                      <span className="text-green-400 font-semibold">{rr}:1</span>
                     </div>
                   </div>
 
-                  <div className="border-t border-zinc-700 pt-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="text-sm font-semibold">Position Sizing</div>
-                      <div className="text-xs text-zinc-500">10% risk per trade • 20x leverage</div>
+                  {/* Levels */}
+                  <div className="grid grid-cols-3 gap-px bg-[#1a1a1a]">
+                    <div className="bg-[#0a0a0a] px-4 py-3">
+                      <div className="text-[10px] text-[#444] font-mono mb-1">ENTRY</div>
+                      <div className="font-mono text-sm text-white">${entry.toLocaleString()}</div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="text-zinc-500">
-                            <th className="text-left pb-2">Account Size</th>
-                            <th className="text-left pb-2">Risk ($)</th>
-                            <th className="text-left pb-2">Position Size</th>
-                            <th className="text-left pb-2">Margin Used</th>
-                            <th className="text-right pb-2">Potential Profit</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {examples.map(function(acctSize) {
-                            var riskAmt = acctSize * (riskPct / 100)
-                            var positionNotional = risk > 0 ? riskAmt / (risk / entryPrice) : 0
-                            var positionUnits = positionNotional / entryPrice
-                            var marginUsed = positionNotional / 20
-                            var potentialProfit = positionUnits * reward
-                            return (
-                              <tr key={acctSize} className="border-t border-zinc-800/50">
-                                <td className="py-2 font-mono text-zinc-300">${acctSize.toLocaleString()}</td>
-                                <td className="py-2 font-mono text-yellow-400">${riskAmt.toLocaleString()}</td>
-                                <td className="py-2 font-mono">${Math.round(positionNotional).toLocaleString()}</td>
-                                <td className="py-2 font-mono text-zinc-400">${Math.round(marginUsed).toLocaleString()}</td>
-                                <td className="py-2 font-mono text-green-400 text-right">+${Math.round(potentialProfit).toLocaleString()}</td>
-                              </tr>
-                            )
-                          })}
-                        </tbody>
-                      </table>
+                    <div className="bg-[#0a0a0a] px-4 py-3">
+                      <div className="text-[10px] text-[#444] font-mono mb-1">STOP LOSS</div>
+                      <div className="font-mono text-sm text-red-400">${sl.toLocaleString()}</div>
+                      <div className="text-[10px] font-mono text-red-400/50">-{slPct}%</div>
                     </div>
-                    <div className="mt-3 text-xs text-zinc-600">
-                      If stopped out, you lose the Risk ($) amount. If TP hits, you make the Potential Profit.
+                    <div className="bg-[#0a0a0a] px-4 py-3">
+                      <div className="text-[10px] text-[#444] font-mono mb-1">TAKE PROFIT</div>
+                      <div className="font-mono text-sm text-green-400">${tp.toLocaleString()}</div>
+                      <div className="text-[10px] font-mono text-green-400/50">+{tpPct}%</div>
+                    </div>
+                  </div>
+
+                  {/* Position sizing */}
+                  <div className="px-4 py-3 bg-[#0a0a0a] border-t border-[#1a1a1a]">
+                    <div className="text-[10px] text-[#444] font-mono mb-2">POSITION SIZING · 10% RISK · 20× LEVERAGE</div>
+                    <div className="grid grid-cols-5 gap-2 text-[10px] font-mono">
+                      <div className="text-[#444]">ACCOUNT</div>
+                      <div className="text-[#444]">RISK</div>
+                      <div className="text-[#444]">SIZE</div>
+                      <div className="text-[#444]">MARGIN</div>
+                      <div className="text-[#444] text-right">IF TP ↑</div>
+                      {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+                        var riskAmt = acct * 0.10
+                        var posSize = risk > 0 ? riskAmt / (risk / entry) : 0
+                        var margin = posSize / 20
+                        var profit = (posSize / entry) * reward
+                        return [
+                          <div key={acct + 'a'} className="text-[#888]">${acct.toLocaleString()}</div>,
+                          <div key={acct + 'r'} className="text-yellow-400/80">${riskAmt.toLocaleString()}</div>,
+                          <div key={acct + 's'} className="text-[#888]">${Math.round(posSize).toLocaleString()}</div>,
+                          <div key={acct + 'm'} className="text-[#555]">${Math.round(margin).toLocaleString()}</div>,
+                          <div key={acct + 'p'} className="text-green-400 text-right">+${Math.round(profit).toLocaleString()}</div>,
+                        ]
+                      })}
                     </div>
                   </div>
                 </div>
@@ -169,76 +144,51 @@ export default function DashboardClientPage() {
         )}
       </div>
 
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold">Recent Trades</h2>
-          <a href="/dashboard/history" className="text-green-400 text-sm hover:underline">View all →</a>
+      {/* Recent trades */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-xs font-mono text-[#555] tracking-wider">RECENT TRADES</h2>
+          <a href="/dashboard/history" className="text-[10px] font-mono text-[#444] hover:text-[#666] transition-colors">VIEW ALL →</a>
         </div>
-        {recentTrades.length === 0 ? (
-          <p className="text-zinc-500 text-center py-4">No trades yet</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-zinc-400 border-b border-zinc-800">
-                  <th className="pb-3 pr-4">Date</th>
-                  <th className="pb-3 pr-4">Pair</th>
-                  <th className="pb-3 pr-4">Direction</th>
-                  <th className="pb-3 pr-4">P&L</th>
-                  <th className="pb-3">Result</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentTrades.map(function(t: any, i: number) {
-                  return (
-                    <tr key={i} className="border-b border-zinc-800/50 last:border-0">
-                      <td className="py-3 pr-4 font-mono text-zinc-400">{new Date(t.entry_time).toLocaleDateString()}</td>
-                      <td className="py-3 pr-4 font-semibold">{t.pair}</td>
-                      <td className="py-3 pr-4">
-                        <span className={t.action === 'LONG' ? 'text-green-400' : 'text-red-400'}>{t.action}</span>
-                      </td>
-                      <td className={t.pnl >= 0 ? 'py-3 pr-4 font-mono font-bold text-green-400' : 'py-3 pr-4 font-mono font-bold text-red-400'}>
-                        {t.pnl >= 0 ? '+' : ''}${Number(t.pnl).toLocaleString()}
-                      </td>
-                      <td className="py-3">
-                        <span className={t.exit_reason === 'TP' ? 'text-green-400 font-bold' : 'text-red-400 font-bold'}>
-                          {t.exit_reason}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
 
-      {monthly.length > 0 && (
-        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-          <h2 className="text-xl font-bold mb-4">Monthly Performance</h2>
-          <div className="space-y-2">
-            {monthly.map(function(m: any) {
-              var maxPnl = Math.max(...monthly.map(function(x: any) { return Math.abs(x.pnl) }))
-              var width = maxPnl > 0 ? Math.abs(m.pnl) / maxPnl * 100 : 0
-              return (
-                <div key={m.month} className="flex items-center gap-4">
-                  <span className="text-zinc-400 text-sm w-20 font-mono">{m.month}</span>
-                  <div className="flex-1 h-6 bg-zinc-800 rounded overflow-hidden">
-                    <div
-                      className={m.pnl >= 0 ? 'h-full bg-green-500/40 rounded' : 'h-full bg-red-500/40 rounded'}
-                      style={{ width: width + '%' }}
-                    ></div>
-                  </div>
-                  <span className={m.pnl >= 0 ? 'text-green-400 font-mono text-sm w-24 text-right' : 'text-red-400 font-mono text-sm w-24 text-right'}>
-                    {m.pnl >= 0 ? '+' : ''}${m.pnl.toLocaleString()}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
+        <div className="border border-[#1a1a1a] rounded-lg overflow-hidden">
+          <table className="w-full text-xs font-mono">
+            <thead>
+              <tr className="bg-[#0d0d0d] text-[#444]">
+                <th className="text-left px-3 py-2.5 font-medium">DATE</th>
+                <th className="text-left px-3 py-2.5 font-medium">PAIR</th>
+                <th className="text-left px-3 py-2.5 font-medium">SIDE</th>
+                <th className="text-right px-3 py-2.5 font-medium">ENTRY</th>
+                <th className="text-right px-3 py-2.5 font-medium">EXIT</th>
+                <th className="text-right px-3 py-2.5 font-medium">P&L</th>
+                <th className="text-center px-3 py-2.5 font-medium">EXIT</th>
+              </tr>
+            </thead>
+            <tbody>
+              {recentTrades.map(function(t: any, i: number) {
+                var isWin = t.pnl >= 0
+                return (
+                  <tr key={i} className="border-t border-[#141414] hover:bg-[#0d0d0d] transition-colors">
+                    <td className="px-3 py-2.5 text-[#555]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                    <td className="px-3 py-2.5 text-[#ccc] font-medium">{t.pair}</td>
+                    <td className="px-3 py-2.5">
+                      <span className={t.action === 'LONG' ? 'text-green-400' : 'text-red-400'}>{t.action}</span>
+                    </td>
+                    <td className="px-3 py-2.5 text-right text-[#888]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                    <td className="px-3 py-2.5 text-right text-[#888]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                    <td className={'px-3 py-2.5 text-right font-medium ' + (isWin ? 'text-green-400' : 'text-red-400')}>
+                      {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                    </td>
+                    <td className="px-3 py-2.5 text-center">
+                      <span className={t.exit_reason === 'TP' ? 'text-green-400/60' : 'text-red-400/60'}>{t.exit_reason}</span>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
         </div>
-      )}
+      </div>
     </div>
   )
 }
