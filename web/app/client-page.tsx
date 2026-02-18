@@ -491,39 +491,57 @@ export default function LandingClientPage() {
       {/* ════════ 6. WHO THIS IS FOR ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <p className="text-[14px] text-white/65 mono tracking-[.15em] mb-2 text-center">FIT CHECK</p>
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-10 text-center leading-tight">This isn't for everyone.</h2>
+          <div className="text-center mb-14">
+            <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-3">HONEST TAKE</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Most people shouldn't<br className="hidden md:block" /> subscribe to this.</h2>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="t p-6">
-              <div className="text-[14px] mono text-[#00e5a0]/50 tracking-wider font-semibold mb-4">THIS IS FOR YOU IF</div>
-              <div className="space-y-3">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* NOT for you — listed first to disqualify */}
+            <div className="order-2 md:order-1 border border-white/[0.04] rounded-xl p-7 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#ff4d4d]/20 to-transparent"></div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-5 h-5 rounded-full border border-[#ff4d4d]/20 flex items-center justify-center">
+                  <span className="text-[#ff4d4d]/50 text-[12px] mono font-bold">X</span>
+                </div>
+                <span className="text-[13px] mono text-[#ff4d4d]/50 tracking-wider font-semibold">WALK AWAY IF</span>
+              </div>
+              <div className="space-y-4">
                 {[
-                  'You want to trade crypto but don\'t have time to watch charts',
-                  'You\'ve tried trading on your own and kept losing',
-                  'You\'re tired of signal groups that hide their losses',
-                  'You want a system with verified, auditable results',
-                  'You understand that risk management matters more than win rate',
-                ].map((t,i)=>(
-                  <div key={i} className="flex items-start gap-2.5 text-[16px] text-white/85 leading-relaxed">
-                    <span className="text-[#00e5a0]/50 mono text-[16px] mt-0.5 shrink-0">+</span>{t}
+                  {t:'You want guaranteed profits', s:'Nobody can promise that. Anyone who does is lying.'},
+                  {t:'You expect overnight riches', s:'This is a system, not a lottery ticket. $100 won\'t become $100K.'},
+                  {t:'You can\'t stomach red days', s:'40% of trades lose. The edge is in the math, not the win streak.'},
+                  {t:'You want 50 signals a day', s:'We average ~1 per day. Quality over quantity. Always.'},
+                  {t:'You won\'t follow the rules', s:'Position sizing and risk management aren\'t optional.'},
+                ].map((item,i)=>(
+                  <div key={i}>
+                    <div className="text-[14px] text-white/60 font-medium">{item.t}</div>
+                    <div className="text-[13px] text-white/30 mt-0.5">{item.s}</div>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="t p-6">
-              <div className="text-[14px] mono text-[#ff4d4d]/50 tracking-wider font-semibold mb-4">THIS IS NOT FOR YOU IF</div>
-              <div className="space-y-3">
+            {/* FOR you */}
+            <div className="order-1 md:order-2 bg-[#00e5a0]/[0.02] border border-[#00e5a0]/[0.08] rounded-xl p-7 relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-5 h-5 rounded-full border border-[#00e5a0]/20 flex items-center justify-center">
+                  <span className="text-[#00e5a0]/60 text-[12px] mono font-bold">✓</span>
+                </div>
+                <span className="text-[13px] mono text-[#00e5a0]/50 tracking-wider font-semibold">BUILT FOR YOU IF</span>
+              </div>
+              <div className="space-y-4">
                 {[
-                  'You\'re looking for guaranteed profits (nobody can guarantee that)',
-                  'You want 50 signals a day to "scalp" with',
-                  'You can\'t handle losing trades — they happen, even in profitable systems',
-                  'You expect to turn $100 into $100K overnight',
-                  'You won\'t follow the position sizing and risk rules',
-                ].map((t,i)=>(
-                  <div key={i} className="flex items-start gap-2.5 text-[16px] text-white/85 leading-relaxed">
-                    <span className="text-[#ff4d4d]/50 mono text-[16px] mt-0.5 shrink-0">−</span>{t}
+                  {t:'You trade crypto but can\'t watch charts all day', s:'Signals fire to Telegram. Open the trade. Done.'},
+                  {t:'You\'ve lost money trying to trade on your own', s:'Remove the emotions. Follow a system that\'s been verified over 624 trades.'},
+                  {t:'You\'re sick of unverified "gurus"', s:'Every single trade is public. Wins and losses. No screenshots — raw data.'},
+                  {t:'You respect risk management', s:'10% risk per trade, hard stops, defined targets. No YOLO.'},
+                  {t:'You have $5K+ to trade with', s:'The math works best with proper capital. Not a micro-account play.'},
+                ].map((item,i)=>(
+                  <div key={i}>
+                    <div className="text-[14px] text-white/70 font-medium">{item.t}</div>
+                    <div className="text-[13px] text-white/35 mt-0.5">{item.s}</div>
                   </div>
                 ))}
               </div>
