@@ -136,16 +136,27 @@ export async function GET(request: Request) {
       ? allTradesSorted
       : allTradesSorted.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
 
+    // For public users, recompute stats from delayed trades only
+    const statTrades = isAuthenticated ? trades : trades.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
+    const statFinalBalance = statTrades.length > 0 ? statTrades[statTrades.length - 1]?.balance_after : startingCapital
+    const statTotalReturn = ((statFinalBalance - startingCapital) / startingCapital) * 100
+    const statWins = statTrades.filter(t => t.pnl > 0).length
+    const statLosses = statTrades.length - statWins
+    const statWinRate = statTrades.length > 0 ? (statWins / statTrades.length) * 100 : 0
+    const statGrossProfit = statTrades.filter(t => t.pnl > 0).reduce((sum, t) => sum + t.pnl, 0)
+    const statGrossLoss = Math.abs(statTrades.filter(t => t.pnl < 0).reduce((sum, t) => sum + t.pnl, 0))
+    const statPF = statGrossLoss > 0 ? statGrossProfit / statGrossLoss : 0
+
     const response = {
       stats: {
         startingCapital,
-        finalBalance: Math.round(finalBalance),
-        totalReturn: parseFloat(totalReturn.toFixed(1)),
-        totalTrades,
-        wins,
-        losses,
-        winRate: parseFloat(winRate.toFixed(1)),
-        profitFactor: parseFloat(profitFactor.toFixed(2)),
+        finalBalance: Math.round(statFinalBalance),
+        totalReturn: parseFloat(statTotalReturn.toFixed(1)),
+        totalTrades: statTrades.length,
+        wins: statWins,
+        losses: statLosses,
+        winRate: parseFloat(statWinRate.toFixed(1)),
+        profitFactor: parseFloat(statPF.toFixed(2)),
         maxDrawdown: parseFloat(maxDrawdown.toFixed(1)),
         profitableMonths,
         totalMonths,
