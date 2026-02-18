@@ -154,11 +154,15 @@ export async function GET(request: Request) {
       monthly,
       pairs,
       trades: publicTrades,
-      delayed: true,
-      delayDays: 7
+      delayed: !isAuthenticated,
+      delayDays: isAuthenticated ? 0 : 7
     }
 
-    return NextResponse.json(response)
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': isAuthenticated ? 'private, no-cache' : 'public, s-maxage=300, stale-while-revalidate=600',
+      }
+    })
   } catch (error) {
     console.error('Error loading performance data:', error)
     return NextResponse.json(

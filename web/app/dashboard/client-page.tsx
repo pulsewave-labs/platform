@@ -274,8 +274,8 @@ export default function DashboardClientPage() {
   const [loading, setLoading] = useState(true)
   const [scanCountdown, setScanCountdown] = useState('')
 
-  useEffect(function init() {
-    Promise.all([
+  function fetchData() {
+    return Promise.all([
       fetch('/api/signals').then(function(r) { return r.json() }).catch(function() { return { signals: [] } }),
       fetch('/api/performance').then(function(r) { return r.json() }).catch(function() { return null }),
     ]).then(function(results) {
@@ -283,6 +283,13 @@ export default function DashboardClientPage() {
       setPerformance(results[1])
       setLoading(false)
     })
+  }
+
+  useEffect(function init() {
+    fetchData()
+    // Auto-refresh every 60s for live data
+    var iv = setInterval(fetchData, 60000)
+    return function() { clearInterval(iv) }
   }, [])
 
   useEffect(function() {
