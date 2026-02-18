@@ -18,7 +18,7 @@ function useCountUp(end: number, decimals = 0, duration = 2200) {
         const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
         requestAnimationFrame(step)
       }
-    }, { threshold: 0.3 })
+    }, { threshold: 0 })
     obs.observe(ref.current)
     return () => obs.disconnect()
   }, [end, duration])
@@ -163,7 +163,7 @@ export default function LandingClientPage() {
           </div>
 
           {/* Stats bar wrapper — refs for countUp observers */}
-          <div ref={equity.ref}><span ref={tradeCountUp.ref}></span><span ref={pfUp.ref}></span><span ref={winMoUp.ref}></span></div>
+          <div ref={equity.ref} style={{minHeight:'1px'}}><span ref={tradeCountUp.ref}></span><span ref={pfUp.ref}></span><span ref={winMoUp.ref}></span></div>
 
           {/* Stats bar — desktop */}
           <div className="fu4 t hidden md:block">
