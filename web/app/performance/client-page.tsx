@@ -375,6 +375,8 @@ export default function PerformanceClientPage() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold">Complete Trade Log</h3>
             <div className="flex items-center gap-4">
+              <span className="text-xs text-zinc-500">Trades delayed 7 days</span>
+              <span className="text-zinc-700">·</span>
               <span className="text-sm text-zinc-400">
                 Showing {paginatedTrades.length} of {filteredAndSortedTrades.length} trades
               </span>

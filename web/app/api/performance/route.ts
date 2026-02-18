@@ -125,6 +125,11 @@ export async function GET() {
       })
       .sort((a, b) => b.pnl - a.pnl)
 
+    // Public trades are delayed by 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const publicTrades = trades.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
+      .sort((a, b) => new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime())
+
     const response = {
       stats: {
         startingCapital,
@@ -142,7 +147,9 @@ export async function GET() {
       },
       monthly,
       pairs,
-      trades: trades.sort((a, b) => new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime())
+      trades: publicTrades,
+      delayed: true,
+      delayDays: 7
     }
 
     return NextResponse.json(response)

@@ -264,7 +264,7 @@ export default function LandingClientPage() {
               </h2>
             </div>
             <Link href="/performance" className="text-[11px] text-white/25 hover:text-white/40 transition-colors mono tracking-wide hidden md:block">
-              ALL 624 TRADES →
+              FULL TRADE LOG →
             </Link>
           </div>
 
@@ -273,7 +273,7 @@ export default function LandingClientPage() {
               <div className="terminal-dot bg-[#ff5f57]"></div>
               <div className="terminal-dot bg-[#febc2e]"></div>
               <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">recent executions</span>
+              <span className="text-[10px] text-white/15 mono ml-2">recent executions · 7-day delay</span>
               <span className="flex items-center gap-1.5 ml-auto">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pulse-dot"></span>
                 <span className="text-[9px] text-[#00e5a0]/50 mono">LIVE</span>
