@@ -661,17 +661,10 @@ export default function LandingClientPage() {
               {q:'How many signals per month?',a:'Roughly 25 signals per month on average across all pairs. Quality over quantity — we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
               {q:'Can I cancel anytime?',a:'Yes. Monthly subscribers cancel anytime, no questions asked. No lock-in, no cancellation fees. If the signals don\'t pay for themselves, you shouldn\'t be paying for them.'},
             ].map((faq,i)=>(
-              <button key={i} onClick={()=>setOpenFaq(openFaq===i?null:i)} className="w-full text-left t transition-all">
-                <div className="px-5 py-4 flex items-center justify-between gap-4">
-                  <h3 className="text-[13px] font-semibold text-white/85">{faq.q}</h3>
-                  <span className="text-white/55 mono text-[14px] shrink-0 transition-transform" style={{transform:openFaq===i?'rotate(45deg)':'rotate(0deg)'}}>+</span>
-                </div>
-                {openFaq===i&&(
-                  <div className="px-5 pb-4 -mt-1">
-                    <p className="text-[12px] text-white/65 leading-relaxed">{faq.a}</p>
-                  </div>
-                )}
-              </button>
+              <div key={i} className="t p-5">
+                <h3 className="text-[13px] font-semibold text-white/85 mb-2">{faq.q}</h3>
+                <p className="text-[12px] text-white/50 leading-relaxed">{faq.a}</p>
+              </div>
             ))}
           </div>
         </div>
