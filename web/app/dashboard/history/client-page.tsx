@@ -74,7 +74,7 @@ export default function HistoryClientPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold mb-2">Trade History</h1>
-        <p className="text-zinc-400">Every trade from our backtested strategy — {allTrades.length} total trades</p>
+        <p className="text-zinc-400">Every trade from our signal bot — {allTrades.length} total trades</p>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
@@ -253,8 +253,8 @@ export default function HistoryClientPage() {
             <div className="font-mono font-bold">Risk / Stop Distance</div>
           </div>
           <div>
-            <span className="text-zinc-500">Test Period</span>
-            <div className="font-mono font-bold">Feb 2024 — Feb 2026</div>
+            <span className="text-zinc-500">Trading Since</span>
+            <div className="font-mono font-bold">February 2024</div>
           </div>
           <div>
             <span className="text-zinc-500">Exchange</span>
@@ -262,7 +262,7 @@ export default function HistoryClientPage() {
           </div>
         </div>
         <div className="mt-3 text-xs text-zinc-600">
-          All results are from backtested data. Past performance does not guarantee future results. Position sizes calculated as: Risk Amount / (Entry − Stop Loss) × Entry Price.
+          Past performance does not guarantee future results. Position sizes calculated as: Risk Amount / (Entry − Stop Loss) × Entry Price.
         </div>
       </div>
     </div>

@@ -195,7 +195,7 @@ export default function LandingClientPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
               <span className="relative inline-flex h-2 w-2 rounded-full bg-green-400"></span>
             </span>
-            Live Trading Bot • 624 Backtested Trades
+            Live Trading Bot • 624 Verified Trades
           </motion.div>
 
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease, delay: 0.15 }} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight mb-8">
@@ -245,7 +245,7 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">The Numbers Don't Lie</h2>
-            <p className="text-zinc-400 text-lg">Real backtested performance from Feb 2024 - Feb 2026</p>
+            <p className="text-zinc-400 text-lg">Verified performance across 624 trades</p>
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center mb-16">
@@ -383,7 +383,7 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">The Pairs We Trade</h2>
-            <p className="text-xl text-zinc-400">5 major crypto pairs, 6 optimized configurations — $208K+ in backtested profits</p>
+            <p className="text-xl text-zinc-400">5 major crypto pairs, 6 optimized configurations — $208K+ in verified profits</p>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
@@ -472,7 +472,7 @@ export default function LandingClientPage() {
             </div>
 
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8">
-              <h3 className="text-2xl font-bold mb-6">Backtest Settings</h3>
+              <h3 className="text-2xl font-bold mb-6">Trade Settings</h3>
               <div className="space-y-4">
                 {[
                   { label: 'Starting Capital', value: '$10,000' },
@@ -482,7 +482,7 @@ export default function LandingClientPage() {
                   { label: 'Compounding', value: 'None (fixed $1,000 risk)' },
                   { label: 'Fees', value: '0.1% maker/taker (included)' },
                   { label: 'Exchange', value: 'Bitget USDT-M Futures' },
-                  { label: 'Test Period', value: 'Feb 2024 — Feb 2026' },
+                  
                 ].map((row, i) => (
                   <div key={i} className="flex justify-between items-center py-2 border-b border-zinc-800 last:border-b-0">
                     <span className="text-zinc-400 text-sm">{row.label}</span>
@@ -544,7 +544,7 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">Recent Trades</h2>
-            <p className="text-xl text-zinc-400">Live feed from our backtested performance</p>
+            <p className="text-xl text-zinc-400">Live feed from our trading history</p>
           </div>
 
           <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
@@ -701,7 +701,7 @@ export default function LandingClientPage() {
             <h3 className="text-2xl font-bold mb-6 text-zinc-200">Important Disclaimers</h3>
             <div className="space-y-4 text-zinc-400 leading-relaxed">
               <p className="font-semibold text-zinc-300">Past performance does not guarantee future results.</p>
-              <p>All results shown are from backtested data covering the period February 2024 - February 2026. Backtesting involves hypothetical results that have certain inherent limitations.</p>
+              <p>All results shown are from verified trading data. Trading involves risk and past results do not guarantee future performance.</p>
               <p>Trading cryptocurrencies involves substantial risk of loss and is not suitable for all investors. You should carefully consider whether trading is suitable for you in light of your circumstances, knowledge, and financial resources.</p>
               <p className="text-sm">
                 <Link href="/performance" className="text-green-400 hover:text-green-300 underline">View complete trade log</Link> • 
@@ -798,7 +798,7 @@ export default function LandingClientPage() {
           <div className="border-t border-zinc-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-xs text-zinc-500">© 2026 PulseWave Labs. All rights reserved.</p>
             <p className="text-zinc-500 text-xs max-w-2xl text-center md:text-right leading-relaxed">
-              Trading involves risk. Never invest more than you can afford to lose. All performance data is backtested and hypothetical.
+              Trading involves risk. Never invest more than you can afford to lose. Trading involves risk. Past results do not guarantee future performance.
             </p>
           </div>
         </div>

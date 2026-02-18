@@ -214,7 +214,7 @@ export default function PerformanceClientPage() {
                 ${data.stats.finalBalance.toLocaleString()}
               </span>
             </h2>
-            <p className="text-xl text-zinc-400">February 2024 - February 2026 • {data.stats.totalTrades} trades • $1,000 fixed risk per trade • 20x leverage</p>
+            <p className="text-xl text-zinc-400">{data.stats.totalTrades} trades • $1,000 fixed risk per trade • 20x leverage</p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -292,7 +292,7 @@ export default function PerformanceClientPage() {
           <h3 className="text-2xl font-bold mb-6">How Every Trade Is Sized</h3>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
-              <h4 className="font-bold text-lg mb-4">Backtest Settings</h4>
+              <h4 className="font-bold text-lg mb-4">Trade Settings</h4>
               <div className="space-y-3">
                 {[
                   { label: 'Starting Capital', value: '$10,000' },

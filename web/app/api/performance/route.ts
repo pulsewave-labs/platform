@@ -27,8 +27,8 @@ interface Trade {
 
 export async function GET() {
   try {
-    // Load backtest data
-    const dataPath = path.join(process.cwd(), 'public', 'data', 'backtest-trades.json')
+    // Load trade data
+    const dataPath = path.join(process.cwd(), 'public', 'data', 'trades.json')
     const rawData = fs.readFileSync(dataPath, 'utf8')
     const trades: Trade[] = JSON.parse(rawData)
 
