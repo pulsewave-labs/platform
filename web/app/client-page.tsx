@@ -59,6 +59,7 @@ export default function LandingClientPage() {
         @keyframes pd{0%,100%{opacity:.35}50%{opacity:1}}.pd{animation:pd 2s ease-in-out infinite}
         .glow{text-shadow:0 0 60px rgba(0,229,160,.15)}
         .t{background:#0a0a0c;border:1px solid rgba(255,255,255,.04);border-radius:10px;overflow:hidden}
+        .t-visible{background:#0a0a0c;border:1px solid rgba(255,255,255,.04);border-radius:10px}
         .th{border-bottom:1px solid rgba(255,255,255,.04);padding:8px 14px;display:flex;align-items:center;gap:7px}
         .grid-bg{background-image:linear-gradient(rgba(255,255,255,.007) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.007) 1px,transparent 1px);background-size:50px 50px}
         .lift{transition:all .3s cubic-bezier(.25,.1,.25,1)}.lift:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.08)}
@@ -599,8 +600,8 @@ export default function LandingClientPage() {
               </div>
             </div>
 
-            <div className="t lift relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
-              <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[9px] font-bold mono tracking-wider rounded-sm">SAVE $298</div>
+            <div className="t-visible lift relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
+              <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[9px] font-bold mono tracking-wider rounded-sm z-10">SAVE $298</div>
               <div className="p-7">
                 <div className="text-[10px] text-[#00e5a0]/40 mono tracking-wider mb-4">ANNUAL</div>
                 <div className="flex items-baseline gap-1 mb-1">
