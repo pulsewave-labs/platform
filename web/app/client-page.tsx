@@ -667,24 +667,43 @@ export default function LandingClientPage() {
           </div>
 
           {/* ROI math */}
-          <div className="mt-8 max-w-2xl mx-auto">
-            <div className="t p-5">
-              <div className="text-[14px] text-white/55 mono tracking-wider mb-3">THE MATH</div>
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div>
-                  <div className="text-[24px] font-bold mono text-white/85">$149</div>
-                  <div className="text-[14px] text-white/55 mt-1">Monthly cost</div>
+          <div className="mt-10 max-w-2xl mx-auto">
+            <div className="relative bg-gradient-to-b from-[#00e5a0]/[0.03] to-transparent border border-[#00e5a0]/[0.08] rounded-xl p-8 overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
+
+              <div className="text-center mb-8">
+                <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
+                <p className="text-[14px] text-white/40">What $149/mo looks like on a $10K account</p>
+              </div>
+
+              <div className="flex items-center justify-center gap-3 md:gap-5 mb-8">
+                {/* Cost */}
+                <div className="text-center">
+                  <div className="text-[13px] text-white/30 mono mb-1">You pay</div>
+                  <div className="text-[28px] font-bold mono text-white/70">$149</div>
+                  <div className="text-[11px] text-white/25 mono">/month</div>
                 </div>
-                <div>
-                  <div className="text-[24px] font-bold mono text-[#00e5a0]">${Math.round(avgMonthly).toLocaleString()}</div>
-                  <div className="text-[14px] text-white/55 mt-1">Avg monthly profit*</div>
+
+                <div className="text-[20px] text-white/15 mono">→</div>
+
+                {/* Avg return */}
+                <div className="text-center">
+                  <div className="text-[13px] text-white/30 mono mb-1">Avg return</div>
+                  <div className="text-[28px] font-bold mono text-[#00e5a0]">+${Math.round(avgMonthly).toLocaleString()}</div>
+                  <div className="text-[11px] text-[#00e5a0]/30 mono">/month</div>
                 </div>
-                <div>
-                  <div className="text-[24px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
-                  <div className="text-[14px] text-white/55 mt-1">Return on subscription</div>
+
+                <div className="text-[20px] text-white/15 mono">=</div>
+
+                {/* ROI */}
+                <div className="text-center">
+                  <div className="text-[13px] text-white/30 mono mb-1">ROI</div>
+                  <div className="text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
                 </div>
               </div>
-              <div className="text-[14px] text-white/55 mt-3 text-center">*Based on $10K account, 10% risk, 20x leverage. Past results don't guarantee future performance.</div>
+
+              <div className="h-px bg-white/[0.04] mb-4"></div>
+              <p className="text-[10px] text-white/20 text-center">Based on verified results. $10K starting capital, 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
             </div>
           </div>
         </div>
