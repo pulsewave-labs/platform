@@ -7,173 +7,136 @@ function useCountUp(end: number, decimals = 0, duration = 2200) {
   const [value, setValue] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
   const started = useRef(false)
-
   useEffect(() => {
     if (!ref.current || started.current) return
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting && !started.current) {
+    const obs = new IntersectionObserver(([e]) => {
+      if (e.isIntersecting && !started.current) {
         started.current = true
-        let start: number
-        const step = (t: number) => {
-          if (!start) start = t
-          const p = Math.min((t - start) / duration, 1)
-          setValue(p * p * (3 - 2 * p) * end)
-          if (p < 1) requestAnimationFrame(step)
-        }
+        let s: number
+        const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
         requestAnimationFrame(step)
       }
     }, { threshold: 0.3 })
-    observer.observe(ref.current)
-    return () => observer.disconnect()
+    obs.observe(ref.current)
+    return () => obs.disconnect()
   }, [end, duration])
-
-  const display = decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString()
-  return { display, ref }
+  return { display: decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString(), ref }
 }
 
 export default function LandingClientPage() {
-  const [recentTrades, setRecentTrades] = useState<any[]>([])
-  const [perfData, setPerfData] = useState<any>(null)
+  const [trades, setTrades] = useState<any[]>([])
+  const [perf, setPerf] = useState<any>(null)
   const [scrolled, setScrolled] = useState(false)
-  const [mobileMenu, setMobileMenu] = useState(false)
+  const [menu, setMenu] = useState(false)
   const [time, setTime] = useState('')
 
   useEffect(() => {
-    fetch('/api/performance').then(r => r.json()).then(d => {
-      if (d?.trades) setRecentTrades(d.trades.slice(0, 8))
-      if (d) setPerfData(d)
-    }).catch(() => {})
+    fetch('/api/performance').then(r => r.json()).then(d => { if (d?.trades) setTrades(d.trades.slice(0, 8)); if (d) setPerf(d) }).catch(() => {})
     const fn = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', fn, { passive: true })
     const tick = () => setTime(new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC')
-    tick()
-    const iv = setInterval(tick, 1000)
+    tick(); const iv = setInterval(tick, 1000)
     return () => { window.removeEventListener('scroll', fn); clearInterval(iv) }
   }, [])
 
-  const scrollTo = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
-    setMobileMenu(false)
-  }
-
-  const ret = useCountUp(218418, 0, 2500)
+  const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenu(false) }
+  const equity = useCountUp(218418, 0, 2500)
   const tradeCount = useCountUp(624, 0, 2000)
-  const profitFactor = useCountUp(1.52, 2, 2000)
-  const winMonths = useCountUp(88, 0, 2000)
+  const pf = useCountUp(1.52, 2, 2000)
+  const winMo = useCountUp(88, 0, 2000)
 
   return (
-    <div className="min-h-screen bg-[#060608] text-white overflow-x-hidden antialiased">
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <div className="min-h-screen bg-[#08080a] text-[#c8c8c8] overflow-x-hidden antialiased">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: `
-        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-up { animation: fadeUp 0.7s ease-out forwards; }
-        .fade-up-1 { animation: fadeUp 0.7s ease-out 0.12s forwards; opacity: 0; }
-        .fade-up-2 { animation: fadeUp 0.7s ease-out 0.24s forwards; opacity: 0; }
-        .fade-up-3 { animation: fadeUp 0.7s ease-out 0.36s forwards; opacity: 0; }
-        @keyframes blink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
-        .blink { animation: blink 1.2s step-end infinite; }
-        @keyframes pulse-dot { 0%,100% { opacity: 0.4; } 50% { opacity: 1; } }
-        .pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-        .glow { text-shadow: 0 0 60px rgba(0,229,160,0.12); }
-        .terminal { background: #09090b; border: 1px solid rgba(255,255,255,0.04); border-radius: 12px; }
-        .terminal-header { border-bottom: 1px solid rgba(255,255,255,0.04); padding: 10px 16px; display: flex; align-items: center; gap: 8px; }
-        .terminal-dot { width: 6px; height: 6px; border-radius: 50%; }
-        .card-lift { transition: all 0.35s cubic-bezier(0.25,0.1,0.25,1); }
-        .card-lift:hover { transform: translateY(-3px); border-color: rgba(255,255,255,0.08); }
-        .grid-subtle { background-image: linear-gradient(rgba(255,255,255,0.008) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.008) 1px, transparent 1px); background-size: 48px 48px; }
+        body{font-family:'Inter',-apple-system,sans-serif}
+        .mono{font-family:'JetBrains Mono',monospace}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .fu{animation:fadeUp .7s ease-out forwards}.fu1{animation:fadeUp .7s ease-out .1s forwards;opacity:0}.fu2{animation:fadeUp .7s ease-out .2s forwards;opacity:0}.fu3{animation:fadeUp .7s ease-out .3s forwards;opacity:0}.fu4{animation:fadeUp .7s ease-out .4s forwards;opacity:0}
+        @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}.blink{animation:blink 1.2s step-end infinite}
+        @keyframes pd{0%,100%{opacity:.35}50%{opacity:1}}.pd{animation:pd 2s ease-in-out infinite}
+        .glow{text-shadow:0 0 60px rgba(0,229,160,.12)}
+        .t{background:#0a0a0c;border:1px solid rgba(255,255,255,.04);border-radius:10px;overflow:hidden}
+        .th{border-bottom:1px solid rgba(255,255,255,.04);padding:8px 14px;display:flex;align-items:center;gap:7px}
+        .td{width:6px;height:6px;border-radius:50%}
+        .grid-bg{background-image:linear-gradient(rgba(255,255,255,.007) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.007) 1px,transparent 1px);background-size:50px 50px}
+        .lift{transition:all .3s cubic-bezier(.25,.1,.25,1)}.lift:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.06)}
       `}} />
 
-      {/* ══ NAV ══ */}
-      <nav className={'fixed top-0 left-0 right-0 z-50 transition-all duration-500 ' + (scrolled ? 'bg-[#060608]/85 backdrop-blur-xl border-b border-white/[0.04]' : '')}>
-        <div className="max-w-6xl mx-auto px-6 md:px-10 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src="/logo.webp" alt="PulseWave" className="h-6" />
-            </div>
-            <div className="hidden md:flex items-center gap-7">
-              <button onClick={() => scrollTo('performance')} className="text-[13px] text-white/35 hover:text-white/65 transition-colors">Performance</button>
-              <button onClick={() => scrollTo('how')} className="text-[13px] text-white/35 hover:text-white/65 transition-colors">How It Works</button>
-              <button onClick={() => scrollTo('pricing')} className="text-[13px] text-white/35 hover:text-white/65 transition-colors">Pricing</button>
-              <Link href="/auth/login" className="text-[13px] text-white/35 hover:text-white/65 transition-colors">Log In</Link>
-              <Link href="/auth/signup" className="text-[13px] px-5 py-2 bg-[#00e5a0] text-black rounded-lg font-semibold hover:bg-[#00cc8e] transition-colors">
-                Get Access
-              </Link>
-            </div>
-            <button className="md:hidden text-white/50" onClick={() => setMobileMenu(!mobileMenu)}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={mobileMenu ? "M18 6L6 18M6 6l12 12" : "M4 8h16M4 16h16"} /></svg>
-            </button>
+      {/* NAV */}
+      <nav className={'fixed top-0 left-0 right-0 z-50 transition-all duration-300 '+(scrolled?'bg-[#08080a]/90 backdrop-blur-xl border-b border-white/[0.04]':'')}>
+        <div className="max-w-6xl mx-auto px-5 md:px-8 h-12 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <img src="/logo.webp" alt="PulseWave" className="h-5" />
+            <span className="hidden md:inline text-[9px] text-white/10 mono tracking-[.2em] mt-px">SIGNAL ENGINE</span>
           </div>
-          {mobileMenu && (
-            <div className="md:hidden pt-6 pb-4 space-y-4 border-t border-white/5 mt-4">
-              <button onClick={() => scrollTo('performance')} className="block text-white/40">Performance</button>
-              <button onClick={() => scrollTo('how')} className="block text-white/40">How It Works</button>
-              <button onClick={() => scrollTo('pricing')} className="block text-white/40">Pricing</button>
-              <Link href="/auth/login" className="block text-white/40">Log In</Link>
-              <Link href="/auth/signup" className="inline-block px-5 py-2 bg-[#00e5a0] text-black rounded-lg font-semibold">Get Access</Link>
-            </div>
-          )}
+          <div className="hidden md:flex items-center gap-6">
+            <button onClick={()=>scrollTo('proof')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Performance</button>
+            <button onClick={()=>scrollTo('how')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">How It Works</button>
+            <button onClick={()=>scrollTo('pricing')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Pricing</button>
+            <Link href="/auth/login" className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Log In</Link>
+            <Link href="/auth/signup" className="text-[11px] px-4 py-1.5 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
+          </div>
+          <button className="md:hidden text-white/40" onClick={()=>setMenu(!menu)}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={menu?"M18 6L6 18M6 6l12 12":"M4 8h16M4 16h16"}/></svg>
+          </button>
         </div>
+        {menu&&<div className="md:hidden px-5 pb-4 space-y-3 border-t border-white/5 mt-1 bg-[#08080a]">
+          <button onClick={()=>scrollTo('proof')} className="block text-white/30 text-[13px]">Performance</button>
+          <button onClick={()=>scrollTo('how')} className="block text-white/30 text-[13px]">How It Works</button>
+          <button onClick={()=>scrollTo('pricing')} className="block text-white/30 text-[13px]">Pricing</button>
+          <Link href="/auth/login" className="block text-white/30 text-[13px]">Log In</Link>
+          <Link href="/auth/signup" className="inline-block px-4 py-1.5 bg-[#00e5a0] text-black rounded font-bold text-[11px]">GET ACCESS</Link>
+        </div>}
       </nav>
 
 
-      {/* ═══════════════════════════════════
-          HERO
-      ═══════════════════════════════════ */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-6 md:px-10 pt-20 relative grid-subtle">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,229,160,0.035) 0%, transparent 65%)' }} />
+      {/* ════════════ HERO ════════════ */}
+      <section className="min-h-[100svh] flex flex-col items-center justify-center px-5 md:px-8 pt-14 relative grid-bg">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
 
-        <div className="max-w-3xl mx-auto text-center relative z-10">
-          {/* Live status */}
-          <div className="fade-up inline-flex items-center gap-2.5 px-4 py-2 rounded-lg border border-white/[0.05] bg-white/[0.02] mb-10">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span>
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span>
-            </span>
-            <span className="text-[11px] text-white/35 mono tracking-wide">LIVE — 624 VERIFIED TRADES</span>
+        <div className="w-full max-w-3xl mx-auto relative z-10">
+          {/* Status bar */}
+          <div className="fu flex items-center gap-2 mb-8">
+            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
+            <span className="text-[10px] text-white/20 mono tracking-[.15em]">LIVE ENGINE · MARKET STRUCTURE · 6 PAIRS</span>
           </div>
 
-          <h1 className="fade-up-1 text-[clamp(2.5rem,7vw,4.5rem)] font-bold leading-[1.08] tracking-[-0.03em] mb-6">
-            The signals that turned
-            <br />
-            <span className="text-[#00e5a0] glow">$10K into $218K</span>
+          {/* Headline */}
+          <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-bold leading-[1.1] tracking-tight mb-4">
+            The signals that turned $10K<br/>into <span className="text-[#00e5a0] glow">$218,418</span>
           </h1>
-
-          <p className="fade-up-2 text-lg text-white/30 leading-relaxed max-w-lg mx-auto mb-12">
-            Institutional-grade Market Structure analysis. 
-            6 crypto pairs. 2 years of verified results. 
-            Now delivering signals directly to you.
+          <p className="fu2 text-[15px] text-white/25 leading-relaxed max-w-md mb-10">
+            Institutional Market Structure analysis across 6 crypto pairs. 2 years of verified results. Now delivering signals to you.
           </p>
 
-          <div className="fade-up-3 flex flex-col sm:flex-row gap-3 justify-center mb-20">
-            <Link href="/auth/signup" className="px-8 py-3.5 bg-[#00e5a0] text-black rounded-lg font-semibold text-[14px] hover:bg-[#00cc8e] transition-colors">
-              Start receiving signals
+          {/* CTA row */}
+          <div className="fu3 flex flex-col sm:flex-row gap-2.5 mb-14 max-w-sm">
+            <Link href="/auth/signup" className="px-7 py-3 bg-[#00e5a0] text-black rounded font-bold text-[13px] hover:bg-[#00cc8e] transition-colors text-center">
+              Get signals — $97/mo
             </Link>
-            <Link href="/performance" className="px-8 py-3.5 rounded-lg text-[14px] font-semibold text-white/40 border border-white/[0.07] hover:border-white/[0.12] hover:text-white/60 transition-all">
-              View all trades
+            <Link href="/performance" className="px-7 py-3 rounded text-[13px] font-semibold text-white/30 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/45 transition-all text-center">
+              View trade log
             </Link>
           </div>
 
-          {/* Terminal preview — stats strip */}
-          <div className="terminal max-w-2xl mx-auto fade-up-3">
-            <div className="terminal-header">
-              <div className="terminal-dot bg-[#ff5f57]"></div>
-              <div className="terminal-dot bg-[#febc2e]"></div>
-              <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">pulsewave — performance</span>
-              <span className="text-[10px] text-white/10 mono ml-auto">{time}</span>
+          {/* Hero terminal — live stats */}
+          <div className="fu4 t">
+            <div className="th">
+              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              <span className="text-[9px] text-white/12 mono ml-1">performance_summary</span>
+              <span className="text-[9px] text-white/8 mono ml-auto hidden sm:inline">{time}</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.03]">
+            <div className="grid grid-cols-2 md:grid-cols-4">
               {[
-                { label: 'RETURN', val: '+2,084%', color: '#00e5a0' },
-                { label: 'TRADES', val: '624', color: '#c8c8c8' },
-                { label: 'PROFIT FACTOR', val: '1.52', color: '#c8c8c8' },
-                { label: 'WIN MONTHS', val: '88%', color: '#c8c8c8' },
-              ].map((s, i) => (
-                <div key={i} className="px-5 py-4">
-                  <div className="text-[9px] text-white/20 mono tracking-[0.15em] mb-1">{s.label}</div>
-                  <div className="text-lg font-bold mono" style={{ color: s.color }}>{s.val}</div>
+                { label:'EQUITY', ref:equity.ref, val:'$'+equity.display, c:'#00e5a0' },
+                { label:'TRADES', ref:tradeCount.ref, val:tradeCount.display, c:'#c8c8c8' },
+                { label:'PROFIT FACTOR', ref:pf.ref, val:pf.display, c:'#c8c8c8' },
+                { label:'WIN MONTHS', ref:winMo.ref, val:winMo.display+'%', c:'#c8c8c8' },
+              ].map((s,i)=>(
+                <div key={i} ref={s.ref} className="px-4 py-3.5 border-r border-b border-white/[0.02] last:border-r-0 md:[&:nth-child(n+3)]:border-b-0 [&:nth-child(n+3)]:border-b-0 md:[&:nth-child(n+3)]:border-b md:[&:nth-child(4)]:border-b-0">
+                  <div className="text-[8px] text-white/12 mono tracking-[.15em] mb-1">{s.label}</div>
+                  <div className="text-[18px] font-bold mono" style={{color:s.c}}>{s.val}</div>
                 </div>
               ))}
             </div>
@@ -182,304 +145,122 @@ export default function LandingClientPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════
-          PROOF — Numbers + Heatmap
-      ═══════════════════════════════════ */}
-      <section id="performance" className="py-28 px-6 md:px-10">
+      {/* ════════════ PROOF ════════════ */}
+      <section id="proof" className="py-24 px-5 md:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="max-w-lg mb-16">
-            <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">PERFORMANCE</p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-              Every trade, verified.<br />
-              <span className="text-white/30">Every month, profitable.</span>
-            </h2>
+          <div className="flex items-end justify-between mb-6">
+            <div>
+              <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">VERIFIED RESULTS</p>
+              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Every month. Every trade.</h2>
+            </div>
+            <Link href="/performance" className="text-[10px] text-white/15 mono tracking-wider hover:text-white/30 transition-colors hidden md:block">FULL TRADE LOG →</Link>
           </div>
 
-          {/* Big metrics */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-20">
-            {[
-              { label: 'Final equity', ref: ret.ref, val: '$' + ret.display, sub: 'from $10K starting' },
-              { label: 'Total trades', ref: tradeCount.ref, val: tradeCount.display, sub: 'over 24 months' },
-              { label: 'Profit factor', ref: profitFactor.ref, val: profitFactor.display, sub: 'win $ ÷ loss $' },
-              { label: 'Profitable months', ref: winMonths.ref, val: winMonths.display + '%', sub: '22 out of 25' },
-            ].map((s, i) => (
-              <div key={i} ref={s.ref} className="card-lift p-5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-                <div className="text-[10px] text-white/20 tracking-wide uppercase mb-3">{s.label}</div>
-                <div className="text-2xl md:text-3xl font-bold tracking-tight mb-1 mono">{s.val}</div>
-                <div className="text-[11px] text-white/15">{s.sub}</div>
+          {/* Monthly heatmap */}
+          {perf?.monthly&&(
+            <div className="t mb-8">
+              <div className="th">
+                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                <span className="text-[9px] text-white/12 mono ml-1">monthly_returns — {perf.monthly.length} months</span>
               </div>
-            ))}
-          </div>
-
-          {/* Monthly heatmap in terminal */}
-          {perfData?.monthly && (
-            <div className="terminal">
-              <div className="terminal-header">
-                <div className="terminal-dot bg-[#ff5f57]"></div>
-                <div className="terminal-dot bg-[#febc2e]"></div>
-                <div className="terminal-dot bg-[#28c840]"></div>
-                <span className="text-[10px] text-white/15 mono ml-2">monthly returns — 25 months</span>
-              </div>
-              <div className="p-5">
-                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-13 gap-1.5">
-                  {perfData.monthly.map((m: any, i: number) => {
-                    const pnl = m.pnl
-                    const intensity = Math.min(Math.abs(pnl) / 12000, 1)
-                    const bg = pnl > 0
-                      ? `rgba(0,229,160,${0.06 + intensity * 0.3})`
-                      : `rgba(255,77,77,${0.06 + intensity * 0.3})`
-                    return (
-                      <div key={i} className="aspect-square rounded flex flex-col items-center justify-center" style={{ background: bg }}>
-                        <div className="text-[7px] text-white/25 mono leading-none">{m.month.slice(5)}</div>
-                        <div className={'text-[9px] font-semibold mt-0.5 mono ' + (pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-                          {pnl > 0 ? '+' : ''}{(pnl / 1000).toFixed(1)}k
-                        </div>
+              <div className="p-4">
+                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-13 gap-1">
+                  {perf.monthly.map((m:any,i:number)=>{
+                    const pnl=m.pnl, int=Math.min(Math.abs(pnl)/12000,1)
+                    const bg=pnl>0?`rgba(0,229,160,${.06+int*.3})`:`rgba(255,77,77,${.06+int*.3})`
+                    return(
+                      <div key={i} className="aspect-square rounded flex flex-col items-center justify-center" style={{background:bg}}>
+                        <div className="text-[7px] text-white/20 mono">{m.month.slice(5)}</div>
+                        <div className={'text-[9px] font-semibold mono mt-px '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex items-center gap-5 mt-4 text-[10px] text-white/15 mono">
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-[#00e5a0]/25"></span>Profit</span>
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-[#ff4d4d]/25"></span>Loss</span>
-                  <span className="text-white/10">|</span>
-                  <span>Only 3 losing months</span>
+                <div className="flex gap-4 mt-3 text-[9px] text-white/12 mono">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#00e5a0]/20"></span>Profit</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#ff4d4d]/20"></span>Loss</span>
+                  <span className="text-white/8">|</span>
+                  <span>22 green · 3 red</span>
                 </div>
               </div>
             </div>
           )}
-        </div>
-      </section>
 
-
-      {/* ═══════════════════════════════════
-          LIVE TRADE FEED
-      ═══════════════════════════════════ */}
-      <section className="py-24 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-end justify-between mb-8">
-            <div>
-              <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">TRADE LOG</p>
-              <h2 className="text-2xl md:text-3xl font-bold tracking-tight">
-                Full transparency. Every trade.
-              </h2>
-            </div>
-            <Link href="/performance" className="text-[11px] text-white/25 hover:text-white/40 transition-colors mono tracking-wide hidden md:block">
-              FULL TRADE LOG →
-            </Link>
-          </div>
-
-          <div className="terminal overflow-hidden">
-            <div className="terminal-header">
-              <div className="terminal-dot bg-[#ff5f57]"></div>
-              <div className="terminal-dot bg-[#febc2e]"></div>
-              <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">recent executions · 7-day delay</span>
-              <span className="flex items-center gap-1.5 ml-auto">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pulse-dot"></span>
-                <span className="text-[9px] text-[#00e5a0]/50 mono">LIVE</span>
-              </span>
-            </div>
-            {/* Table header */}
-            <div className="hidden md:grid grid-cols-[100px_90px_70px_1fr_1fr_100px_70px] text-[9px] text-white/15 mono tracking-wider px-5 py-2.5 border-b border-white/[0.03]">
-              <div>DATE</div>
-              <div>PAIR</div>
-              <div>SIDE</div>
-              <div>ENTRY</div>
-              <div>EXIT</div>
-              <div className="text-right">P&L</div>
-              <div className="text-right">RESULT</div>
-            </div>
-            {recentTrades.map((t, i) => (
-              <div key={i} className={'grid grid-cols-[1fr_60px_80px] md:grid-cols-[100px_90px_70px_1fr_1fr_100px_70px] items-center px-5 py-3 border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors ' + (i % 2 === 0 ? 'bg-white/[0.005]' : '')}>
-                <div className="text-[11px] text-white/20 mono">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
-                <div className="text-[12px] font-semibold text-white/60 mono">{t.pair.replace('/USDT', '')}</div>
-                <div className="hidden md:block">
-                  <span className={'text-[9px] font-bold tracking-wider mono ' + (t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{t.action}</span>
-                </div>
-                <div className="text-[11px] text-white/15 mono hidden md:block">${Number(t.entry_price).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                <div className="text-[11px] text-white/15 mono hidden md:block">${Number(t.exit_price).toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                <div className={'text-[12px] font-semibold mono text-right ' + (t.pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-                  {t.pnl > 0 ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                </div>
-                <div className="text-right">
-                  <span className={'text-[9px] font-bold mono tracking-wider ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50')}>
-                    {t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center mt-5 md:hidden">
-            <Link href="/performance" className="text-[11px] text-white/25 mono tracking-wide">VIEW ALL 624 TRADES →</Link>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ═══════════════════════════════════
-          HOW IT WORKS
-      ═══════════════════════════════════ */}
-      <section id="how" className="py-28 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="max-w-lg mb-16">
-            <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">HOW IT WORKS</p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight">
-              Institutional signals.<br />
-              <span className="text-white/30">Delivered to your phone.</span>
-            </h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            {[
-              {
-                num: '01',
-                title: 'We scan. 24/7.',
-                desc: 'Our engine monitors BTC, ETH, SOL, AVAX, and XRP around the clock — detecting Break of Structure and Order Block setups that institutional traders rely on.',
-              },
-              {
-                num: '02',
-                title: 'Signal fires instantly.',
-                desc: 'Entry, stop loss, take profit, and position size — all calculated. Delivered to your Telegram and dashboard the moment a setup confirms.',
-              },
-              {
-                num: '03',
-                title: 'You execute the trade.',
-                desc: 'Copy the exact levels into your exchange. Same signals, same risk management, same system behind $218K in verified profits.',
-              },
-            ].map((step, i) => (
-              <div key={i} className="card-lift p-7 rounded-xl border border-white/[0.04] bg-white/[0.015]">
-                <div className="text-[28px] font-bold text-[#00e5a0]/10 mono mb-5">{step.num}</div>
-                <h3 className="text-[16px] font-semibold mb-3">{step.title}</h3>
-                <p className="text-[13px] text-white/25 leading-relaxed">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-
-      {/* ═══════════════════════════════════
-          WHAT A SIGNAL LOOKS LIKE
-      ═══════════════════════════════════ */}
-      <section className="py-24 px-6 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-10 items-center">
-            <div>
-              <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">SIGNAL PREVIEW</p>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight leading-tight mb-5">
-                Everything you need.<br />
-                <span className="text-white/30">Nothing you don't.</span>
-              </h2>
-              <p className="text-[14px] text-white/25 leading-relaxed mb-8">
-                Every signal comes with exact levels and position sizing calculated for your account. No interpretation needed — just execute.
-              </p>
-              <div className="space-y-3 text-[13px]">
+          {/* Summary stats */}
+          {perf?.monthly&&(()=>{
+            const m=perf.monthly, total=m.reduce((s:number,x:any)=>s+x.pnl,0), avg=total/m.length
+            const best=m.reduce((a:any,b:any)=>a.pnl>b.pnl?a:b,m[0]), worst=m.reduce((a:any,b:any)=>a.pnl<b.pnl?a:b,m[0])
+            return(
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8">
                 {[
-                  'Exact entry, stop loss, and take profit',
-                  'Position size for any account size',
-                  'Risk:reward ratio pre-calculated',
-                  'Instant Telegram notification',
-                  'Full reasoning and confidence score',
-                ].map((f, i) => (
-                  <div key={i} className="flex items-center gap-3 text-white/30">
-                    <span className="text-[#00e5a0] text-[11px] mono">→</span> {f}
+                  {l:'TOTAL P&L',v:'+$'+Math.round(total).toLocaleString(),c:'#00e5a0'},
+                  {l:'AVG MONTHLY',v:'+$'+Math.round(avg).toLocaleString(),c:'#00e5a0'},
+                  {l:'BEST MONTH',v:'+$'+Math.round(best.pnl).toLocaleString(),c:'#00e5a0'},
+                  {l:'WORST MONTH',v:'-$'+Math.abs(Math.round(worst.pnl)).toLocaleString(),c:'#ff4d4d'},
+                ].map((s,i)=>(
+                  <div key={i} className="t px-4 py-3.5">
+                    <div className="text-[8px] text-white/10 mono tracking-[.12em] mb-1">{s.l}</div>
+                    <div className="text-lg font-bold mono" style={{color:s.c}}>{s.v}</div>
                   </div>
                 ))}
               </div>
+            )
+          })()}
+
+          {/* Live trade feed */}
+          <div className="t">
+            <div className="th">
+              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              <span className="text-[9px] text-white/12 mono ml-1">recent_executions · 7-day delay</span>
+              <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/30 mono">LIVE</span></span>
             </div>
-
-            {/* Mock signal card */}
-            <div className="terminal">
-              <div className="terminal-header">
-                <div className="terminal-dot bg-[#ff5f57]"></div>
-                <div className="terminal-dot bg-[#febc2e]"></div>
-                <div className="terminal-dot bg-[#28c840]"></div>
-                <span className="text-[10px] text-white/15 mono ml-2">signal — live</span>
+            {/* Header row */}
+            <div className="hidden md:grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/10 mono tracking-[.1em] px-4 py-2 border-b border-white/[0.02]">
+              <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
+            </div>
+            {trades.map((t,i)=>(
+              <div key={i} className={'grid grid-cols-[1fr_50px_70px] md:grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-4 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
+                <div className="text-[10px] text-white/15 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+                <div className="text-[11px] text-white/45 mono font-medium">{t.pair.replace('/USDT','')}</div>
+                <div className="hidden md:block"><span className={'text-[9px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
+                <div className="text-[10px] text-white/12 mono hidden md:block">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div className="text-[10px] text-white/12 mono hidden md:block">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div className={'text-[11px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+                <div className="text-right"><span className={'text-[8px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/35':'text-[#ff4d4d]/35')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
               </div>
-              <div className="p-6 space-y-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-bold mono text-black bg-[#00e5a0] px-2 py-0.5 rounded">LONG</span>
-                    <span className="text-lg font-bold mono">SOL/USDT</span>
-                  </div>
-                  <span className="text-[10px] text-white/20 mono">82% confidence</span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-[9px] text-white/20 mono tracking-wider mb-1">ENTRY</div>
-                    <div className="text-[15px] font-bold mono">$195.40</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-white/20 mono tracking-wider mb-1">STOP LOSS</div>
-                    <div className="text-[15px] font-bold mono text-[#ff4d4d]">$188.20</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-white/20 mono tracking-wider mb-1">TAKE PROFIT</div>
-                    <div className="text-[15px] font-bold mono text-[#00e5a0]">$213.50</div>
-                  </div>
-                </div>
-
-                {/* R:R bar */}
-                <div>
-                  <div className="flex justify-between text-[9px] mono text-white/15 mb-1">
-                    <span>Risk $7.20 (3.7%)</span>
-                    <span>Reward $18.10 (9.3%)</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-white/[0.03] overflow-hidden flex">
-                    <div className="bg-[#ff4d4d]/40 rounded-l-full" style={{ width: '28%' }}></div>
-                    <div className="bg-[#00e5a0]/40 rounded-r-full" style={{ width: '72%' }}></div>
-                  </div>
-                  <div className="text-right text-[10px] text-[#00e5a0]/50 mono mt-1">2.5:1 R:R</div>
-                </div>
-
-                {/* Position sizing */}
-                <div className="border-t border-white/[0.03] pt-4">
-                  <div className="text-[9px] text-white/15 mono tracking-wider mb-2">POSITION SIZE</div>
-                  <div className="grid grid-cols-3 gap-2 text-[10px] mono">
-                    {[
-                      { acct: '$1K', size: '$2.7K', risk: '$100' },
-                      { acct: '$10K', size: '$27K', risk: '$1,000' },
-                      { acct: '$50K', size: '$135K', risk: '$5,000' },
-                    ].map((r, i) => (
-                      <div key={i} className="bg-white/[0.02] rounded px-2.5 py-2">
-                        <div className="text-white/30 mb-0.5">{r.acct} acct</div>
-                        <div className="text-white/60 font-medium">{r.size}</div>
-                        <div className="text-white/15 text-[9px]">risk {r.risk}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+            ))}
+            <div className="px-4 py-2.5 text-center">
+              <Link href="/performance" className="text-[10px] text-white/15 mono tracking-wider hover:text-white/30 transition-colors">VIEW ALL TRADES →</Link>
             </div>
           </div>
         </div>
       </section>
 
 
-      {/* ═══════════════════════════════════
-          PAIRS
-      ═══════════════════════════════════ */}
-      <section className="py-24 px-6 md:px-10">
+      {/* ════════════ HOW IT WORKS ════════════ */}
+      <section id="how" className="py-24 px-5 md:px-8">
         <div className="max-w-5xl mx-auto">
-          <div className="max-w-lg mb-10">
-            <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">TRADING UNIVERSE</p>
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight">5 pairs. 6 configurations.</h2>
-          </div>
+          <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">HOW IT WORKS</p>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-10">
+            Scan. Signal. Execute.
+          </h2>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="grid md:grid-cols-3 gap-3">
             {[
-              { pair: 'AVAX', profit: 33648, trades: 152 },
-              { pair: 'SOL', profit: 24239, trades: 98 },
-              { pair: 'ETH', profit: 25678, trades: 202 },
-              { pair: 'XRP', profit: 14378, trades: 87 },
-              { pair: 'BTC', profit: 6266, trades: 85 },
-            ].map((p, i) => (
-              <div key={i} className="card-lift p-5 rounded-xl border border-white/[0.04] bg-white/[0.01]">
-                <div className="text-lg font-bold text-white/40 mono mb-3">{p.pair}</div>
-                <div className="text-lg font-bold text-[#00e5a0] mono mb-2">+${(p.profit / 1000).toFixed(1)}K</div>
-                <div className="text-[10px] text-white/15 mono">{p.trades} trades</div>
+              {n:'01',t:'Engine scans 24/7',d:'Monitors BTC, ETH, SOL, AVAX, XRP for Break of Structure and Order Block setups across optimized timeframes.'},
+              {n:'02',t:'Signal fires instantly',d:'Entry, stop loss, take profit, and exact position sizing — delivered to Telegram and your dashboard the moment a setup confirms.'},
+              {n:'03',t:'You execute',d:'Copy the levels into Bitget. Same risk management, same system behind $218K in verified profits. No interpretation needed.'},
+            ].map((s,i)=>(
+              <div key={i} className="t lift">
+                <div className="th">
+                  <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                  <span className="text-[9px] text-white/12 mono ml-1">step_{s.n}</span>
+                </div>
+                <div className="p-5">
+                  <div className="text-[22px] font-bold text-white/[.04] mono mb-3">{s.n}</div>
+                  <h3 className="text-[15px] font-semibold mb-2">{s.t}</h3>
+                  <p className="text-[12px] text-white/20 leading-relaxed">{s.d}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -487,55 +268,60 @@ export default function LandingClientPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════
-          PRICING
-      ═══════════════════════════════════ */}
-      <section id="pricing" className="py-28 px-6 md:px-10">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-14">
-            <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">PRICING</p>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">
-              One plan. Full access.
+      {/* ════════════ SIGNAL PREVIEW ════════════ */}
+      <section className="py-24 px-5 md:px-8">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.1fr] gap-10 items-center">
+          <div>
+            <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">WHAT YOU GET</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
+              Every signal. Fully calculated.
             </h2>
-            <p className="text-white/25 text-[14px]">
-              The same signals behind $218K in verified profits.
+            <p className="text-[13px] text-white/20 leading-relaxed mb-8">
+              Each signal includes exact entry, stop loss, take profit, and position sizing for your account. No guesswork, no interpretation — just execute.
             </p>
+            <div className="space-y-2.5">
+              {['Exact entry, SL, and TP levels','Position sizing for any account size','Risk:reward ratio calculated','Instant Telegram notification','Confidence score and reasoning'].map((f,i)=>(
+                <div key={i} className="flex items-center gap-2.5 text-[12px] text-white/25">
+                  <span className="text-[#00e5a0]/50 mono text-[10px]">→</span>{f}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <div className="p-8 rounded-xl border border-white/[0.05] bg-white/[0.015]">
-              <div className="text-[11px] text-white/25 mono tracking-wide mb-5">MONTHLY</div>
-              <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-bold mono">$97</span>
-                <span className="text-white/20 text-[13px]">/month</span>
-              </div>
-              <Link href="/auth/signup" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/50 text-[13px] font-semibold text-center hover:border-white/[0.15] hover:text-white/70 transition-all mb-6">
-                Get started
-              </Link>
-              <div className="space-y-2.5 text-[12px] text-white/25">
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> All signals, all pairs</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Telegram instant alerts</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Performance dashboard</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Cancel anytime</div>
-              </div>
+          {/* Signal card */}
+          <div className="t">
+            <div className="th">
+              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              <span className="text-[9px] text-white/12 mono ml-1">signal — live</span>
+              <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span></span>
             </div>
-
-            <div className="p-8 rounded-xl border border-[#00e5a0]/15 bg-[#00e5a0]/[0.02] relative">
-              <div className="absolute -top-2.5 left-6 px-3 py-0.5 bg-[#00e5a0] text-black text-[9px] font-bold mono tracking-wider rounded">SAVE $194</div>
-              <div className="text-[11px] text-white/25 mono tracking-wide mb-5">ANNUAL</div>
-              <div className="flex items-baseline gap-1 mb-1">
-                <span className="text-4xl font-bold mono">$970</span>
-                <span className="text-white/20 text-[13px]">/year</span>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-[9px] font-bold mono text-black bg-[#00e5a0] px-1.5 py-px rounded">LONG</span>
+                  <span className="text-lg font-bold mono">SOL/USDT</span>
+                </div>
+                <span className="text-[9px] text-white/15 mono">82% conf</span>
               </div>
-              <div className="text-[11px] text-[#00e5a0]/40 mono mb-5">2 months free</div>
-              <Link href="/auth/signup" className="block w-full py-3 rounded-lg bg-[#00e5a0] text-black text-[13px] font-semibold text-center hover:bg-[#00cc8e] transition-colors mb-6">
-                Get started
-              </Link>
-              <div className="space-y-2.5 text-[12px] text-white/25">
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Everything in monthly</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Priority delivery</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Advanced analytics</div>
-                <div className="flex items-center gap-2.5"><span className="text-[#00e5a0] mono text-[10px]">→</span> Direct support</div>
+              <div className="grid grid-cols-3 gap-3">
+                {[{l:'ENTRY',v:'$195.40',c:''},{l:'STOP LOSS',v:'$188.20',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:'$213.50',c:'text-[#00e5a0]'}].map((x,i)=>(
+                  <div key={i}><div className="text-[8px] text-white/12 mono tracking-wider mb-1">{x.l}</div><div className={'text-[14px] font-bold mono '+x.c}>{x.v}</div></div>
+                ))}
+              </div>
+              {/* R:R bar */}
+              <div>
+                <div className="flex justify-between text-[8px] mono text-white/10 mb-1"><span>Risk 3.7%</span><span>Reward 9.3%</span></div>
+                <div className="h-1 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/30 rounded-l-full" style={{width:'28%'}}></div><div className="bg-[#00e5a0]/30 rounded-r-full" style={{width:'72%'}}></div></div>
+                <div className="text-right text-[9px] text-[#00e5a0]/40 mono mt-1">2.5:1 R:R</div>
+              </div>
+              {/* Position sizing */}
+              <div className="border-t border-white/[0.03] pt-3">
+                <div className="text-[8px] text-white/10 mono tracking-wider mb-2">POSITION SIZE</div>
+                <div className="grid grid-cols-3 gap-1.5 text-[9px] mono">
+                  {[{a:'$1K',s:'$2.7K',r:'$100'},{a:'$10K',s:'$27K',r:'$1,000'},{a:'$50K',s:'$135K',r:'$5,000'}].map((r,i)=>(
+                    <div key={i} className="bg-white/[0.02] rounded px-2.5 py-2"><div className="text-white/20 mb-0.5">{r.a} acct</div><div className="text-white/50 font-medium">{r.s}</div><div className="text-white/10 text-[8px]">risk {r.r}</div></div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -543,28 +329,41 @@ export default function LandingClientPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════
-          AUTHORITY STRIP
-      ═══════════════════════════════════ */}
-      <section className="py-20 px-6 md:px-10">
+      {/* ════════════ PAIRS ════════════ */}
+      <section className="py-20 px-5 md:px-8">
+        <div className="max-w-5xl mx-auto">
+          <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">TRADING UNIVERSE</p>
+          <h2 className="text-xl font-bold tracking-tight mb-6">5 pairs. 6 configurations. $208K+ profit.</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
+            {[
+              {p:'AVAX',pnl:33648,n:152},{p:'SOL',pnl:24239,n:98},{p:'ETH',pnl:25678,n:202},{p:'XRP',pnl:14378,n:87},{p:'BTC',pnl:6266,n:85},
+            ].map((x,i)=>(
+              <div key={i} className="t lift p-4">
+                <div className="text-[15px] font-bold text-white/30 mono mb-2">{x.p}</div>
+                <div className="text-[15px] font-bold text-[#00e5a0] mono mb-2">+${(x.pnl/1000).toFixed(1)}K</div>
+                <div className="text-[9px] text-white/10 mono">{x.n} trades</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+      {/* ════════════ SOCIAL PROOF STRIP ════════════ */}
+      <section className="py-16 px-5 md:px-8">
         <div className="max-w-3xl mx-auto">
-          <div className="terminal">
-            <div className="terminal-header">
-              <div className="terminal-dot bg-[#ff5f57]"></div>
-              <div className="terminal-dot bg-[#febc2e]"></div>
-              <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">system status</span>
+          <div className="t">
+            <div className="th">
+              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              <span className="text-[9px] text-white/12 mono ml-1">system_status</span>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-white/[0.03]">
+            <div className="grid grid-cols-2 md:grid-cols-4">
               {[
-                { label: 'UPTIME', val: '24/7', sub: 'market monitoring' },
-                { label: 'DELIVERY', val: '<1 min', sub: 'signal to phone' },
-                { label: 'HIDDEN FEES', val: '$0', sub: 'what you see is it' },
-                { label: 'TRACK RECORD', val: '2 years', sub: '624 verified trades' },
-              ].map((s, i) => (
-                <div key={i} className="px-5 py-5 text-center">
-                  <div className="text-xl font-bold mono mb-1">{s.val}</div>
-                  <div className="text-[9px] text-white/15 mono tracking-wider">{s.sub}</div>
+                {v:'24/7',l:'Market monitoring'},{v:'<1 min',l:'Signal delivery'},{v:'$0',l:'Hidden fees'},{v:'2 years',l:'Track record'},
+              ].map((s,i)=>(
+                <div key={i} className="px-4 py-4 text-center border-r border-white/[0.02] last:border-r-0">
+                  <div className="text-lg font-bold mono mb-0.5">{s.v}</div>
+                  <div className="text-[9px] text-white/12 mono">{s.l}</div>
                 </div>
               ))}
             </div>
@@ -573,24 +372,81 @@ export default function LandingClientPage() {
       </section>
 
 
-      {/* ═══════════════════════════════════
-          FINAL CTA
-      ═══════════════════════════════════ */}
-      <section className="py-28 px-6 md:px-10 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none" style={{ background: 'radial-gradient(circle, rgba(0,229,160,0.03) 0%, transparent 65%)' }} />
-        <div className="max-w-2xl mx-auto text-center relative z-10">
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-5">
-            Stop watching charts.<br />
-            <span className="text-white/30">Let the engine find the trades.</span>
+      {/* ════════════ PRICING ════════════ */}
+      <section id="pricing" className="py-24 px-5 md:px-8">
+        <div className="max-w-3xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">PRICING</p>
+            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">One plan. Full access.</h2>
+            <p className="text-[13px] text-white/20">Same signals behind $218K in verified profits.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-3 max-w-xl mx-auto">
+            {/* Monthly */}
+            <div className="t">
+              <div className="th">
+                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                <span className="text-[9px] text-white/12 mono ml-1">plan_monthly</span>
+              </div>
+              <div className="p-6">
+                <div className="flex items-baseline gap-1 mb-5">
+                  <span className="text-3xl font-bold mono">$97</span>
+                  <span className="text-white/15 text-[12px]">/mo</span>
+                </div>
+                <div className="space-y-2 text-[11px] text-white/20 mb-6">
+                  {['All signals, all pairs','Telegram instant alerts','Performance dashboard','Position sizing','Cancel anytime'].map((f,i)=>(
+                    <div key={i} className="flex items-center gap-2"><span className="text-[#00e5a0]/40 mono text-[9px]">→</span>{f}</div>
+                  ))}
+                </div>
+                <Link href="/auth/signup" className="block w-full py-2.5 rounded border border-white/[0.07] text-white/40 text-[11px] font-bold text-center hover:border-white/[0.12] hover:text-white/60 transition-all mono tracking-wide">SUBSCRIBE</Link>
+              </div>
+            </div>
+
+            {/* Annual */}
+            <div className="t relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
+              <div className="absolute -top-2 right-4 px-2 py-px bg-[#00e5a0] text-black text-[8px] font-bold mono tracking-wider rounded">SAVE $194</div>
+              <div className="th">
+                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                <span className="text-[9px] text-white/12 mono ml-1">plan_annual</span>
+              </div>
+              <div className="p-6">
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-bold mono text-[#00e5a0]">$970</span>
+                  <span className="text-white/15 text-[12px]">/yr</span>
+                </div>
+                <div className="text-[10px] text-[#00e5a0]/30 mono mb-5">2 months free</div>
+                <div className="space-y-2 text-[11px] text-white/20 mb-6">
+                  {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support line','Early feature access'].map((f,i)=>(
+                    <div key={i} className="flex items-center gap-2"><span className="text-[#00e5a0]/40 mono text-[9px]">→</span>{f}</div>
+                  ))}
+                </div>
+                <Link href="/auth/signup" className="block w-full py-2.5 rounded bg-[#00e5a0] text-black text-[11px] font-bold text-center hover:bg-[#00cc8e] transition-colors mono tracking-wide">SUBSCRIBE</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      {/* ════════════ FINAL CTA ════════════ */}
+      <section className="py-24 px-5 md:px-8 relative">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.025) 0%,transparent 65%)'}}/>
+        <div className="max-w-xl mx-auto text-center relative z-10">
+          <div className="t inline-block px-5 py-2 mb-6">
+            <span className="text-[32px] md:text-[40px] font-bold mono text-[#00e5a0] glow">+$208,418</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
+            Stop watching charts.<br/>
+            <span className="text-white/25">Let the engine find the trades.</span>
           </h2>
-          <p className="text-white/25 text-[14px] mb-10 max-w-md mx-auto">
-            624 trades. $208K profit. The same system, now sending signals directly to you.
+          <p className="text-[13px] text-white/20 mb-8">
+            Public trades are delayed 7 days. Subscribers get signals the moment they fire.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link href="/auth/signup" className="px-10 py-3.5 bg-[#00e5a0] text-black rounded-lg font-semibold text-[14px] hover:bg-[#00cc8e] transition-colors">
-              Start receiving signals
+          <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-sm mx-auto">
+            <Link href="/auth/signup" className="flex-1 py-3 bg-[#00e5a0] text-black rounded font-bold text-[12px] hover:bg-[#00cc8e] transition-colors text-center">
+              Get access — $97/mo
             </Link>
-            <Link href="/performance" className="px-10 py-3.5 rounded-lg text-[14px] font-semibold text-white/35 border border-white/[0.07] hover:border-white/[0.12] hover:text-white/55 transition-all">
+            <Link href="/performance" className="flex-1 py-3 rounded text-[12px] font-semibold text-white/25 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/40 transition-all text-center">
               Verify every trade
             </Link>
           </div>
@@ -598,29 +454,25 @@ export default function LandingClientPage() {
       </section>
 
 
-      {/* ══ DISCLAIMER ══ */}
-      <section className="py-10 px-6 md:px-10 border-t border-white/[0.03]">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[10px] text-white/10 leading-relaxed">
-            Past performance does not guarantee future results. Trading cryptocurrencies with leverage involves substantial risk of loss. 
-            All results shown are from verified historical data. PulseWave Labs provides signals for informational purposes only. 
-            We are not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/25 transition-colors">Full risk disclosure</Link>.
-          </p>
+      {/* DISCLAIMER */}
+      <section className="py-8 px-5 md:px-8 border-t border-white/[0.02]">
+        <div className="max-w-xl mx-auto text-center">
+          <p className="text-[9px] text-white/8 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/20 transition-colors">Full risk disclosure</Link>.</p>
         </div>
       </section>
 
-      {/* ══ FOOTER ══ */}
-      <footer className="py-8 px-6 md:px-10 border-t border-white/[0.03]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3">
-            <img src="/logo.webp" alt="PulseWave" className="h-4 opacity-25" />
-            <span className="text-[10px] text-white/10">© 2026 PulseWave Labs</span>
+      {/* FOOTER */}
+      <footer className="py-6 px-5 md:px-8 border-t border-white/[0.02]">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <img src="/logo.webp" alt="PulseWave" className="h-3 opacity-20"/>
+            <span className="text-[9px] text-white/8">© 2026 PulseWave Labs</span>
           </div>
-          <div className="flex items-center gap-6 text-[10px] text-white/10">
-            <Link href="/performance" className="hover:text-white/25 transition-colors">Trades</Link>
-            <Link href="/privacy" className="hover:text-white/25 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/25 transition-colors">Terms</Link>
-            <Link href="/disclaimer" className="hover:text-white/25 transition-colors">Disclaimer</Link>
+          <div className="flex gap-5 text-[9px] text-white/8">
+            <Link href="/performance" className="hover:text-white/20 transition-colors">Trades</Link>
+            <Link href="/privacy" className="hover:text-white/20 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/20 transition-colors">Terms</Link>
+            <Link href="/disclaimer" className="hover:text-white/20 transition-colors">Disclaimer</Link>
           </div>
         </div>
       </footer>
