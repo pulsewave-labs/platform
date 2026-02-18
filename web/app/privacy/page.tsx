@@ -28,7 +28,7 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li><strong className="text-white/70">Account registration:</strong> Email address, password (hashed, never stored in plaintext)</li>
               <li><strong className="text-white/70">Telegram linking:</strong> Telegram user ID and chat ID (when you connect via our bot)</li>
-              <li><strong className="text-white/70">Payment information:</strong> Processed by Stripe — we do not store credit card numbers, CVVs, or full card details</li>
+              <li><strong className="text-white/70">Payment information:</strong> Processed by Whop — we do not store credit card numbers, CVVs, or full card details</li>
               <li><strong className="text-white/70">Communications:</strong> Any messages you send to our support</li>
             </ul>
 
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
               <li><strong className="text-white/70">Supabase:</strong> Database hosting and authentication</li>
               <li><strong className="text-white/70">Vercel:</strong> Website hosting and deployment</li>
               <li><strong className="text-white/70">Railway:</strong> Signal engine hosting</li>
-              <li><strong className="text-white/70">Stripe:</strong> Payment processing</li>
+              <li><strong className="text-white/70">Whop:</strong> Payment processing and subscription management</li>
               <li><strong className="text-white/70">Telegram:</strong> Signal delivery</li>
             </ul>
             <p className="mb-3">These providers process data solely on our behalf and are contractually bound to protect it.</p>
@@ -94,7 +94,7 @@ export default function PrivacyPage() {
               <li>Passwords hashed using bcrypt (never stored in plaintext)</li>
               <li>Database access restricted with Row Level Security (RLS) policies</li>
               <li>Service role keys stored as encrypted environment variables</li>
-              <li>No storage of payment card details (handled entirely by Stripe)</li>
+              <li>No storage of payment card details (handled entirely by Whop)</li>
             </ul>
             <p>
               While we take reasonable measures to protect your data, no method of electronic transmission or storage is 100% secure. We cannot guarantee absolute security.
