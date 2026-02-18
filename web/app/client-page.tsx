@@ -32,7 +32,7 @@ export default function LandingClientPage() {
   const [openFaq, setOpenFaq] = useState<number|null>(null)
 
   useEffect(() => {
-    fetch('/api/performance').then(r => r.json()).then(d => { if (d?.trades) setTrades(d.trades.slice(0, 8)); if (d) setPerf(d) }).catch(() => {})
+    fetch('/api/performance').then(r => r.json()).then(d => { if (d?.trades) setTrades(d.trades); if (d) setPerf(d) }).catch(() => {})
     const fn = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', fn, { passive: true })
     const tick = () => setTime(new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC')
@@ -41,12 +41,40 @@ export default function LandingClientPage() {
   }, [])
 
   const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenu(false) }
-  const equity = useCountUp(218418, 0, 2500)
-  const tradeCount = useCountUp(624, 0, 2000)
-  const pf = useCountUp(1.52, 2, 2000)
-  const winMo = useCountUp(88, 0, 2000)
+
+  // Compute all stats from API data
+  const allTrades = perf?.trades || []
+  const totalTrades = allTrades.length
+  const totalProfit = allTrades.reduce((s:number,t:any)=>s+Number(t.pnl||0),0)
+  const finalBalance = 10000 + totalProfit
+  const wins = allTrades.filter((t:any)=>t.pnl>0)
+  const losses = allTrades.filter((t:any)=>t.pnl<0)
+  const winRate = totalTrades > 0 ? (wins.length/totalTrades*100) : 0
+  const grossProfit = wins.reduce((s:number,t:any)=>s+Number(t.pnl),0)
+  const grossLoss = Math.abs(losses.reduce((s:number,t:any)=>s+Number(t.pnl),0))
+  const profitFactor = grossLoss > 0 ? grossProfit/grossLoss : 0
+  const mo = perf?.monthly || []
+  const greenMonths = mo.filter((m:any)=>m.pnl>0).length
+  const redMonths = mo.filter((m:any)=>m.pnl<=0).length
+  const totalMonths = mo.length
+  const winMonthPct = totalMonths > 0 ? (greenMonths/totalMonths*100) : 0
+  const avgMonthly = totalMonths > 0 ? totalProfit/totalMonths : 0
+  const avgWinTrade = wins.length > 0 ? grossProfit/wins.length : 0
+  const avgPerMonth = totalMonths > 0 ? totalTrades/totalMonths : 0
+
+  // Pair stats from trades
+  const pairStats:{[k:string]:{pnl:number,n:number}} = {}
+  allTrades.forEach((t:any)=>{const p=(t.pair||'').replace('/USDT','');if(!pairStats[p])pairStats[p]={pnl:0,n:0};pairStats[p].pnl+=Number(t.pnl||0);pairStats[p].n++})
+  const pairList = Object.entries(pairStats).map(([p,v])=>({p,...v})).sort((a,b)=>b.pnl-a.pnl)
+
+  const equity = useCountUp(Math.round(finalBalance), 0, 2500)
+  const tradeCountUp = useCountUp(totalTrades, 0, 2000)
+  const pfUp = useCountUp(profitFactor, 2, 2000)
+  const winMoUp = useCountUp(Math.round(winMonthPct), 0, 2000)
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  const fmtK = (n:number) => n>=1000?'$'+Math.round(n).toLocaleString():n>=0?'$'+Math.round(n).toLocaleString():'-$'+Math.abs(Math.round(n)).toLocaleString()
+  const fmtKShort = (n:number) => Math.abs(n)>=1000?(n>0?'+':'')+('$'+(n/1000).toFixed(0)+'K'):(n>0?'+':'')+('$'+Math.round(n))
 
   return (
     <div className="min-h-screen bg-[#08080a] text-[#c8c8c8] overflow-x-hidden antialiased">
@@ -104,13 +132,13 @@ export default function LandingClientPage() {
           </div>
 
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
-            While you were sleeping,<br/>our engine made <span className="text-[#00e5a0] glow">$218,418</span>
+            While you were sleeping,<br/>our engine made <span className="text-[#00e5a0] glow">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
           </h1>
           <p className="fu2 text-[16px] text-white/85 leading-relaxed max-w-xl mb-4">
             Most traders lose because they trade on emotion. Our Market Structure engine doesn't have emotions. It scans. It waits. It strikes.
           </p>
           <p className="fu2 text-[13px] text-white/65 max-w-md mb-10 leading-relaxed">
-            624 verified trades. 88% profitable months. Now it sends you the exact same signals — straight to Telegram.
+            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Now it sends you the exact same signals — straight to Telegram.
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
@@ -118,7 +146,7 @@ export default function LandingClientPage() {
               Start receiving signals
             </Link>
             <Link href="/performance" className="px-8 py-3.5 rounded-lg text-[13px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
-              See all 624 trades
+              See all {totalTrades} trades
             </Link>
           </div>
 
@@ -127,9 +155,9 @@ export default function LandingClientPage() {
             <div className="grid grid-cols-2 md:grid-cols-4">
               {[
                 { label:'STARTING BALANCE', sub:'→ CURRENT', ref:equity.ref, val:'$10K → $'+equity.display, c:'#00e5a0' },
-                { label:'TOTAL TRADES', sub:'VERIFIED', ref:tradeCount.ref, val:tradeCount.display, c:'#e0e0e0' },
-                { label:'PROFIT FACTOR', sub:'$1.52 MADE PER $1 LOST', ref:pf.ref, val:pf.display, c:'#e0e0e0' },
-                { label:'PROFITABLE MONTHS', sub:'22 OF 25', ref:winMo.ref, val:winMo.display+'%', c:'#e0e0e0' },
+                { label:'TOTAL TRADES', sub:'VERIFIED', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
+                { label:'PROFIT FACTOR', sub:'$'+profitFactor.toFixed(2)+' PER $1 LOST', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
+                { label:'PROFITABLE MONTHS', sub:greenMonths+' OF '+totalMonths, ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
               ].map((s,i)=>(
                 <div key={i} ref={s.ref} className="px-5 py-4 border-r border-b border-white/[0.02] last:border-r-0 md:last:border-b-0 md:[&:nth-child(n+3)]:border-b-0">
                   <div className="text-[8px] text-white/55 mono tracking-[.12em] mb-0.5">{s.label}</div>
@@ -178,7 +206,7 @@ export default function LandingClientPage() {
           </div>
           <p className="text-[14px] text-white/55 max-w-xl mx-auto leading-relaxed">
             You've been burned before. We know — because so have we. That's why we publish <strong className="text-white/85">every single trade</strong> — wins AND losses — with timestamps, entries, exits, and exact P&L. 
-            <Link href="/performance" className="text-[#00e5a0]/60 hover:text-[#00e5a0] ml-1 underline underline-offset-2 transition-colors">All 624 of them.</Link>
+            <Link href="/performance" className="text-[#00e5a0]/60 hover:text-[#00e5a0] ml-1 underline underline-offset-2 transition-colors">All {totalTrades} of them.</Link>
           </p>
         </div>
       </section>
@@ -227,7 +255,7 @@ export default function LandingClientPage() {
             <div>
               <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">THE PROOF</p>
               <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight">
-                624 trades. Every one public.
+                {totalTrades} trades. Every one public.
               </h2>
               <p className="text-[14px] text-white/55 mt-2">Not screenshots. Not highlights. The complete, unedited record.</p>
             </div>
@@ -310,7 +338,7 @@ export default function LandingClientPage() {
               <div className="grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/55 mono tracking-[.1em] px-5 py-2 border-b border-white/[0.02]">
                 <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
               </div>
-              {trades.map((t,i)=>(
+              {trades.slice(0,8).map((t,i)=>(
                 <div key={'d'+i} className={'grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-5 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
                   <div className="text-[10px] text-white/65 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
                   <div className="text-[11px] text-white/85 mono font-medium">{t.pair.replace('/USDT','')}</div>
@@ -324,7 +352,7 @@ export default function LandingClientPage() {
             </div>
             {/* Mobile */}
             <div className="md:hidden divide-y divide-white/[0.02]">
-              {trades.map((t,i)=>(
+              {trades.slice(0,8).map((t,i)=>(
                 <div key={'m'+i} className={'px-4 py-3.5 '+(i%2===0?'bg-white/[0.003]':'')}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
@@ -342,7 +370,7 @@ export default function LandingClientPage() {
               ))}
             </div>
             <div className="px-5 py-3 text-center border-t border-white/[0.02]">
-              <Link href="/performance" className="text-[11px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors">VERIFY ALL 624 TRADES →</Link>
+              <Link href="/performance" className="text-[11px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors">VERIFY ALL {totalTrades} TRADES →</Link>
             </div>
           </div>
         </div>
@@ -504,9 +532,7 @@ export default function LandingClientPage() {
               <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">TRADING UNIVERSE</p>
               <h3 className="text-xl font-bold tracking-tight mb-5">5 pairs. 6 optimized configs.</h3>
               <div className="grid grid-cols-2 gap-2">
-                {[
-                  {p:'AVAX',pnl:33648,n:152},{p:'SOL',pnl:24239,n:98},{p:'ETH',pnl:25678,n:202},{p:'XRP',pnl:14378,n:87},{p:'BTC',pnl:6266,n:85},
-                ].map((x,i)=>(
+                {pairList.map((x,i)=>(
                   <div key={i} className="t lift p-4">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-[14px] font-bold text-white/55 mono">{x.p}</span>
@@ -527,7 +553,7 @@ export default function LandingClientPage() {
                     {l:'Market Monitoring',v:'24/7',d:'Never sleeps. Scans every candle close.'},
                     {l:'Signal Delivery',v:'< 60s',d:'From detection to your Telegram.'},
                     {l:'Risk Per Trade',v:'10%',d:'Same formula. Every single trade.'},
-                    {l:'Track Record',v:'2 years',d:'624 trades. Fully timestamped.'},
+                    {l:'Track Record',v:totalMonths>0?Math.floor(totalMonths/12)+' yr'+(totalMonths>=24?'s':''):'—',d:totalTrades+' trades. Fully timestamped.'},
                     {l:'Hidden Fees',v:'$0',d:'What you see is what you pay.'},
                   ].map((s,i)=>(
                     <div key={i} className="px-5 py-3.5 flex items-center justify-between">
@@ -558,7 +584,7 @@ export default function LandingClientPage() {
               Less than one winning trade.
             </h2>
             <p className="text-[14px] text-white/65 max-w-lg mx-auto">
-              Our average winning trade returns +$2,400 on a $10K account. Your subscription pays for itself on the first signal that hits.
+              Our average winning trade returns +${Math.round(avgWinTrade).toLocaleString()} on a $10K account. Your subscription pays for itself on the first signal that hits.
             </p>
           </div>
 
@@ -629,11 +655,11 @@ export default function LandingClientPage() {
                   <div className="text-[10px] text-white/55 mt-1">Monthly cost</div>
                 </div>
                 <div>
-                  <div className="text-[20px] font-bold mono text-[#00e5a0]">$8,337</div>
+                  <div className="text-[20px] font-bold mono text-[#00e5a0]">${Math.round(avgMonthly).toLocaleString()}</div>
                   <div className="text-[10px] text-white/55 mt-1">Avg monthly profit*</div>
                 </div>
                 <div>
-                  <div className="text-[20px] font-bold mono text-[#00e5a0]">56x</div>
+                  <div className="text-[20px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
                   <div className="text-[10px] text-white/55 mt-1">Return on subscription</div>
                 </div>
               </div>
@@ -655,11 +681,11 @@ export default function LandingClientPage() {
 
           <div className="space-y-2">
             {[
-              {q:'Why is your win rate only 40%?',a:'Because we use wide take profits with tight risk management. You don\'t need to win most trades — you need your winners to be bigger than your losers. Our profit factor is 1.52: for every $1 lost, we make $1.52. Over 624 trades, that turns $10K into $218K.'},
-              {q:'How do I know the results are real?',a:'Every single trade is published with timestamps, entry/exit prices, P&L, and running balance. Go to our performance page and audit all 624 trades yourself. We show the losses too — 3 losing months out of 25. No other signal service does this.'},
+              {q:'Why is your win rate only '+Math.round(winRate)+'%?',a:'Because we use wide take profits with tight risk management. You don\'t need to win most trades — you need your winners to be bigger than your losers. Our profit factor is '+profitFactor.toFixed(2)+': for every $1 lost, we make $'+profitFactor.toFixed(2)+'. Over '+totalTrades+' trades, that turns $10K into $'+Math.round(finalBalance).toLocaleString()+'.'},
+              {q:'How do I know the results are real?',a:'Every single trade is published with timestamps, entry/exit prices, P&L, and running balance. Go to our performance page and audit all '+totalTrades+' trades yourself. We show the losses too — '+redMonths+' losing month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. No other signal service does this.'},
               {q:'What if I don\'t know how to trade?',a:'Each signal tells you exactly what to do: which pair, which direction, where to enter, stop loss, and take profit. Position size is calculated for your account. If you can copy 5 numbers into an exchange, you can follow our signals.'},
               {q:'What exchange do I need?',a:'We recommend Bitget for USDT-M futures, but signals work on any exchange that supports crypto futures — Bybit, OKX, Binance, etc. The levels are the same everywhere.'},
-              {q:'How many signals per month?',a:'Roughly 25 signals per month on average across all pairs. Quality over quantity — we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
+              {q:'How many signals per month?',a:'Roughly '+Math.round(avgPerMonth)+' signals per month on average across all pairs. Quality over quantity — we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
               {q:'Can I cancel anytime?',a:'Yes. Monthly subscribers cancel anytime, no questions asked. No lock-in, no cancellation fees. If the signals don\'t pay for themselves, you shouldn\'t be paying for them.'},
             ].map((faq,i)=>(
               <div key={i} className="t p-5">
@@ -680,7 +706,7 @@ export default function LandingClientPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.025) 0%,transparent 65%)'}}/>
         <div className="max-w-2xl mx-auto text-center relative z-10">
           <div className="t inline-block px-8 py-3 mb-8">
-            <span className="text-[36px] md:text-[44px] font-bold mono text-[#00e5a0] glow">+$218,418</span>
+            <span className="text-[36px] md:text-[44px] font-bold mono text-[#00e5a0] glow">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
           </div>
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
             Two kinds of traders read this page.
