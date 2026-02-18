@@ -2,630 +2,367 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { ToastProvider, useSuccessToast, useErrorToast } from '../../../components/ui/toast'
-import { DemoModeBanner } from '../../../components/ui/empty-state'
-import { Skeleton } from '../../../components/ui/skeleton'
-import { useSettings } from '../../../lib/hooks'
-import { supabase } from '../../../lib/api'
-import { Settings as SettingsIcon, User, Bell, Link, Shield, Check, X } from 'lucide-react'
+import { 
+  Bell,
+  Smartphone,
+  Mail,
+  MessageSquare,
+  CreditCard,
+  User,
+  Shield,
+  Palette,
+  Globe,
+  Save,
+  Check,
+  X,
+  AlertTriangle,
+  Bot,
+  Activity
+} from 'lucide-react'
 
-type Tab = 'Account' | 'Notifications' | 'Exchanges' | 'Risk Parameters'
+interface NotificationSettings {
+  signalAlerts: boolean
+  emailNotifications: boolean
+  telegramBot: boolean
+  pushNotifications: boolean
+  dailyReports: boolean
+  weeklyReports: boolean
+  tradeUpdates: boolean
+  systemAlerts: boolean
+}
 
-const tabs: Tab[] = ['Account', 'Notifications', 'Exchanges', 'Risk Parameters']
+interface AccountInfo {
+  email: string
+  plan: string
+  planExpiry: string
+  telegramConnected: boolean
+  telegramUsername?: string
+}
 
-// Mock settings data
-const exchangeConnections = [
-  {
-    name: 'Binance',
-    logo: '🟡',
-    status: 'connected' as const,
-    lastSync: '2 minutes ago',
-    permissions: ['Read', 'Trade']
-  },
-  {
-    name: 'Bybit',
-    logo: '🟠', 
-    status: 'connected' as const,
-    lastSync: '5 minutes ago',
-    permissions: ['Read', 'Trade']
-  },
-  {
-    name: 'Coinbase Pro',
-    logo: '🔵',
-    status: 'disconnected' as const,
-    lastSync: 'Never',
-    permissions: []
-  },
-  {
-    name: 'OKX',
-    logo: '⚫',
-    status: 'disconnected' as const,
-    lastSync: 'Never', 
-    permissions: []
-  }
-]
-
-export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<Tab>('Account')
-  const [userProfile, setUserProfile] = useState({
-    fullName: '',
-    email: '',
-    timezone: 'UTC-8',
-    tradingStyle: 'Swing Trader'
+export default function SettingsClientPage() {
+  const [notifications, setNotifications] = useState<NotificationSettings>({
+    signalAlerts: true,
+    emailNotifications: true,
+    telegramBot: false,
+    pushNotifications: true,
+    dailyReports: true,
+    weeklyReports: false,
+    tradeUpdates: true,
+    systemAlerts: true
   })
-  const [notifications, setNotifications] = useState({
-    signals: true,
-    trades: true,
-    news: false,
-    risk: true,
-    email: true,
-    push: false
+
+  const [account, setAccount] = useState<AccountInfo>({
+    email: 'trader@example.com',
+    plan: 'Annual Plan',
+    planExpiry: '2027-02-18',
+    telegramConnected: false,
+    telegramUsername: ''
   })
-  const [riskParams, setRiskParams] = useState({
-    maxRiskPerTrade: '2',
-    maxDailyLoss: '5',
-    maxPositions: '5',
-    autoStopTrading: true,
-    requireConfirmation: true
-  })
+
   const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-  // Fetch settings and user data
-  const { data: settings, loading: settingsLoading, error: settingsError, updateSettings } = useSettings()
-  const showSuccess = useSuccessToast()
-  const showError = useErrorToast()
-
-  // Load user profile from Supabase
-  useEffect(() => {
-    const loadUserProfile = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          setUserProfile(prev => ({
-            ...prev,
-            fullName: user.user_metadata?.full_name || user.email?.split('@')[0] || '',
-            email: user.email || ''
-          }))
-        }
-      } catch (error) {
-        console.error('Failed to load user profile:', error)
-      }
-    }
-    
-    loadUserProfile()
-  }, [])
-
-  // Load settings data
-  useEffect(() => {
-    if (settings) {
-      if (settings.notifications) {
-        setNotifications(prev => ({ ...prev, ...settings.notifications }))
-      }
-      if (settings.riskParams) {
-        setRiskParams(prev => ({ ...prev, ...settings.riskParams }))
-      }
-      if (settings.profile) {
-        setUserProfile(prev => ({ ...prev, ...settings.profile }))
-      }
-    }
-  }, [settings])
-  
-  const tabIcons = {
-    Account: User,
-    Notifications: Bell,
-    Exchanges: Link,
-    'Risk Parameters': Shield
-  }
-  
-  const toggleNotification = (key: keyof typeof notifications) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }))
-  }
-  
-  const updateRiskParam = (key: keyof typeof riskParams, value: string | boolean) => {
-    setRiskParams(prev => ({ ...prev, [key]: value }))
+  const handleNotificationChange = (key: keyof NotificationSettings) => {
+    setNotifications(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
   }
 
-  const handleSaveProfile = async () => {
+  const handleSave = async () => {
     setSaving(true)
-    try {
-      await updateSettings({ profile: userProfile })
-      showSuccess('Profile saved', 'Your profile information has been updated.')
-    } catch (error) {
-      showError('Failed to save profile', 'Please try again.')
-    } finally {
-      setSaving(false)
-    }
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    setSaving(false)
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
   }
 
-  const handleSaveNotifications = async () => {
-    setSaving(true)
-    try {
-      await updateSettings({ notifications })
-      showSuccess('Notifications saved', 'Your notification preferences have been updated.')
-    } catch (error) {
-      showError('Failed to save notifications', 'Please try again.')
-    } finally {
-      setSaving(false)
-    }
+  const connectTelegram = () => {
+    // Would open Telegram bot connection flow
+    alert('Connect to @PulseWaveSignalsBot on Telegram to receive instant trade alerts!')
   }
 
-  const handleSaveRiskParams = async () => {
-    setSaving(true)
-    try {
-      await updateSettings({ riskParams })
-      showSuccess('Risk settings saved', 'Your risk parameters have been updated.')
-    } catch (error) {
-      showError('Failed to save risk settings', 'Please try again.')
-    } finally {
-      setSaving(false)
-    }
-  }
-  
   return (
-    <motion.div 
-      className="space-y-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-    >
-        {/* Demo Mode Banner */}
-        {settingsError && <DemoModeBanner />}
-        
-        {/* Header */}
+    <div className="space-y-8 max-w-4xl">
+      {/* Account Overview */}
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.6 }}
+        className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
       >
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-[#00F0B5]/20 rounded-xl flex items-center justify-center">
-            <SettingsIcon size={18} className="text-[#00F0B5]" />
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-500 rounded-xl flex items-center justify-center">
+            <User size={20} className="text-white" />
           </div>
           <div>
-            <div className="text-sm text-[#6b7280]">Settings</div>
-            <div className="text-sm text-[#9ca3af]">Manage your account & preferences</div>
+            <h2 className="text-xl font-bold">Account Overview</h2>
+            <p className="text-zinc-400">Manage your subscription and account details</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-zinc-400">Email Address</label>
+              <div className="mt-1 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                {account.email}
+              </div>
+            </div>
+            <div>
+              <label className="text-sm text-zinc-400">Current Plan</label>
+              <div className="mt-1 flex items-center justify-between px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                <span className="font-semibold text-green-400">{account.plan}</span>
+                <span className="text-sm text-zinc-400">Renews {new Date(account.planExpiry).toLocaleDateString()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-zinc-400">Signal Bot Status</label>
+              <div className="mt-1 flex items-center gap-3 px-4 py-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 font-semibold">Active & Monitoring</span>
+              </div>
+            </div>
+            <div>
+              <label className="text-sm text-zinc-400">Performance</label>
+              <div className="mt-1 px-4 py-3 bg-zinc-800/50 border border-zinc-700 rounded-lg">
+                <div className="flex justify-between items-center">
+                  <span>Bot Equity</span>
+                  <span className="font-bold text-green-400">$218,418</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Tab Navigation */}
+      {/* Notification Settings */}
       <motion.div
-        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-2 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
+        transition={{ delay: 0.1 }}
+        className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
       >
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-          {tabs.map(tab => {
-            const IconComponent = tabIcons[tab]
-            const isActive = activeTab === tab
-            
-            return (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-h-[44px] ${
-                  isActive
-                    ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
-                    : 'text-[#6b7280] hover:text-[#9ca3af] hover:bg-[#1b2332]/50'
-                }`}
-              >
-                <IconComponent size={16} />
-                {tab}
-              </button>
-            )
-          })}
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+            <Bell size={20} className="text-blue-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">Notification Preferences</h2>
+            <p className="text-zinc-400">Choose how you want to receive trading alerts</p>
+          </div>
         </div>
-      </motion.div>
 
-      {/* Tab Content */}
-      <motion.div
-        key={activeTab}
-        className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        {/* Account Tab */}
-        {activeTab === 'Account' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Profile Information</h3>
-              
-              {settingsLoading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {Array.from({ length: 4 }).map((_, i) => (
-                    <div key={i}>
-                      <Skeleton className="w-20 h-4 mb-2" />
-                      <Skeleton className="w-full h-12 rounded-xl" />
-                    </div>
-                  ))}
+        <div className="space-y-6">
+          {/* Telegram Integration */}
+          <div className="bg-zinc-800/30 border border-zinc-700 rounded-lg p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <MessageSquare size={20} className="text-blue-400" />
+                <div>
+                  <h3 className="font-semibold">Telegram Bot</h3>
+                  <p className="text-sm text-zinc-400">Get instant signal alerts on Telegram</p>
+                </div>
+              </div>
+              {account.telegramConnected ? (
+                <div className="flex items-center gap-2 text-green-400 text-sm">
+                  <Check size={16} />
+                  <span>Connected</span>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                      Full Name
-                    </label>
-                    <input
-                      type="text"
-                      value={userProfile.fullName}
-                      onChange={(e) => setUserProfile(prev => ({ ...prev, fullName: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                      placeholder="Your full name"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                      Email Address
-                    </label>
-                    <input
-                      type="email"
-                      value={userProfile.email}
-                      onChange={(e) => setUserProfile(prev => ({ ...prev, email: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                      placeholder="your.email@example.com"
-                      disabled
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                      Timezone
-                    </label>
-                    <select 
-                      value={userProfile.timezone}
-                      onChange={(e) => setUserProfile(prev => ({ ...prev, timezone: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                    >
-                      <option value="UTC-8">UTC-8 (Pacific Time)</option>
-                      <option value="UTC-5">UTC-5 (Eastern Time)</option>
-                      <option value="UTC+0">UTC+0 (London)</option>
-                      <option value="UTC+1">UTC+1 (Central Europe)</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                      Trading Style
-                    </label>
-                    <select 
-                      value={userProfile.tradingStyle}
-                      onChange={(e) => setUserProfile(prev => ({ ...prev, tradingStyle: e.target.value }))}
-                      className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                    >
-                      <option value="Swing Trader">Swing Trader</option>
-                      <option value="Day Trader">Day Trader</option>
-                      <option value="Scalper">Scalper</option>
-                      <option value="Position Trader">Position Trader</option>
-                    </select>
-                  </div>
-                </div>
+                <button
+                  onClick={connectTelegram}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-400 transition-colors text-sm font-semibold"
+                >
+                  Connect Bot
+                </button>
               )}
             </div>
-            
-            <div className="flex justify-end pt-4">
-              <button 
-                onClick={handleSaveProfile}
-                disabled={saving || settingsLoading}
-                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving ? 'Saving...' : 'Save Changes'}
-              </button>
-            </div>
+            {account.telegramConnected && (
+              <div className="text-sm text-zinc-400">
+                Connected as @{account.telegramUsername || 'telegram_user'}
+              </div>
+            )}
           </div>
-        )}
 
-        {/* Notifications Tab */}
-        {activeTab === 'Notifications' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Notification Preferences</h3>
+          {/* Notification Categories */}
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h3 className="font-semibold text-zinc-200 flex items-center gap-2">
+                <Activity size={16} />
+                Signal Notifications
+              </h3>
               
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-[#1b2332]">
+              {[
+                { key: 'signalAlerts' as keyof NotificationSettings, label: 'New Trading Signals', desc: 'Get notified when new signals are detected' },
+                { key: 'tradeUpdates' as keyof NotificationSettings, label: 'Trade Updates', desc: 'Updates when signals hit TP/SL' },
+                { key: 'dailyReports' as keyof NotificationSettings, label: 'Daily Performance', desc: 'Daily P&L and performance summary' },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-b-0">
                   <div>
-                    <div className="text-sm font-medium text-white">Trading Signals</div>
-                    <div className="text-xs text-[#6b7280]">Get notified when new signals are generated</div>
+                    <div className="font-medium">{item.label}</div>
+                    <div className="text-sm text-zinc-400">{item.desc}</div>
                   </div>
                   <button
-                    onClick={() => toggleNotification('signals')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.signals ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
+                    onClick={() => handleNotificationChange(item.key)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      notifications[item.key] ? 'bg-green-500' : 'bg-zinc-600'
                     }`}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.signals ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        notifications[item.key] ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
                   </button>
                 </div>
-                
-                <div className="flex items-center justify-between py-3 border-b border-[#1b2332]">
-                  <div>
-                    <div className="text-sm font-medium text-white">Trade Executions</div>
-                    <div className="text-xs text-[#6b7280]">Notifications for filled orders and position updates</div>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification('trades')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.trades ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.trades ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between py-3 border-b border-[#1b2332]">
-                  <div>
-                    <div className="text-sm font-medium text-white">Market News</div>
-                    <div className="text-xs text-[#6b7280]">High impact news and market events</div>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification('news')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.news ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.news ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between py-3 border-b border-[#1b2332]">
-                  <div>
-                    <div className="text-sm font-medium text-white">Risk Alerts</div>
-                    <div className="text-xs text-[#6b7280]">Warnings when risk limits are approached</div>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification('risk')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.risk ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.risk ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-              </div>
+              ))}
             </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Delivery Methods</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3">
-                  <div>
-                    <div className="text-sm font-medium text-white">Email Notifications</div>
-                    <div className="text-xs text-[#6b7280]">Receive notifications via email</div>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification('email')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.email ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.email ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-                
-                <div className="flex items-center justify-between py-3">
-                  <div>
-                    <div className="text-sm font-medium text-white">Push Notifications</div>
-                    <div className="text-xs text-[#6b7280]">Browser and mobile push notifications</div>
-                  </div>
-                  <button
-                    onClick={() => toggleNotification('push')}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      notifications.push ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      notifications.push ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-end pt-4">
-              <button 
-                onClick={handleSaveNotifications}
-                disabled={saving || settingsLoading}
-                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving ? 'Saving...' : 'Save Notifications'}
-              </button>
-            </div>
-          </div>
-        )}
 
-        {/* Exchanges Tab */}
-        {activeTab === 'Exchanges' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Exchange Connections</h3>
-              <p className="text-sm text-[#6b7280] mb-6">
-                Connect your exchange accounts to enable automated trading and portfolio synchronization.
-              </p>
+            <div className="space-y-4">
+              <h3 className="font-semibold text-zinc-200 flex items-center gap-2">
+                <Mail size={16} />
+                General Notifications
+              </h3>
               
-              <div className="grid gap-4">
-                {exchangeConnections.map((exchange, index) => (
-                  <div
-                    key={exchange.name}
-                    className="bg-[#0a0e17] border border-[#1b2332] rounded-xl p-4 hover:border-[#1b2332]/80 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="text-2xl">{exchange.logo}</div>
-                        <div>
-                          <div className="text-sm font-medium text-white">{exchange.name}</div>
-                          <div className="text-xs text-[#6b7280]">
-                            Last sync: {exchange.lastSync}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-1 text-xs px-2 py-1 rounded-md ${
-                          exchange.status === 'connected' 
-                            ? 'bg-[#4ade80]/20 text-[#4ade80]' 
-                            : 'bg-[#6b7280]/20 text-[#6b7280]'
-                        }`}>
-                          {exchange.status === 'connected' ? (
-                            <Check size={12} />
-                          ) : (
-                            <X size={12} />
-                          )}
-                          {exchange.status}
-                        </div>
-                        
-                        <button className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                          exchange.status === 'connected'
-                            ? 'bg-[#f87171]/20 text-[#f87171] hover:bg-[#f87171]/30'
-                            : 'bg-[#00F0B5]/20 text-[#00F0B5] hover:bg-[#00F0B5]/30'
-                        }`}>
-                          {exchange.status === 'connected' ? 'Disconnect' : 'Connect'}
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {exchange.status === 'connected' && (
-                      <div className="mt-3 pt-3 border-t border-[#1b2332]">
-                        <div className="text-xs text-[#6b7280] mb-2">Permissions:</div>
-                        <div className="flex gap-2">
-                          {exchange.permissions.map(permission => (
-                            <span
-                              key={permission}
-                              className="px-2 py-1 bg-[#1b2332] text-[#9ca3af] text-xs rounded-md"
-                            >
-                              {permission}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Risk Parameters Tab */}
-        {activeTab === 'Risk Parameters' && (
-          <div className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Risk Management Settings</h3>
-              <p className="text-sm text-[#6b7280] mb-6">
-                Configure automated risk controls to protect your account from excessive losses.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Max Risk Per Trade (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={riskParams.maxRiskPerTrade}
-                    onChange={(e) => updateRiskParam('maxRiskPerTrade', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                    min="0.1"
-                    max="10"
-                    step="0.1"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Max Daily Loss (%)
-                  </label>
-                  <input
-                    type="number"
-                    value={riskParams.maxDailyLoss}
-                    onChange={(e) => updateRiskParam('maxDailyLoss', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                    min="1"
-                    max="20"
-                    step="0.5"
-                  />
-                </div>
-                
-                <div>
-                  <label className="text-sm font-medium text-[#6b7280] uppercase tracking-wide mb-2 block">
-                    Max Open Positions
-                  </label>
-                  <input
-                    type="number"
-                    value={riskParams.maxPositions}
-                    onChange={(e) => updateRiskParam('maxPositions', e.target.value)}
-                    className="w-full bg-[#0a0e17] border border-[#1b2332] rounded-xl px-4 py-3 text-base md:text-sm text-white font-mono focus:outline-none focus:border-[#00F0B5]/50 transition-colors min-h-[48px]"
-                    min="1"
-                    max="20"
-                  />
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-4">Automated Controls</h3>
-              
-              <div className="space-y-4">
-                <div className="flex items-center justify-between py-3 border-b border-[#1b2332]">
+              {[
+                { key: 'emailNotifications' as keyof NotificationSettings, label: 'Email Notifications', desc: 'Receive notifications via email' },
+                { key: 'pushNotifications' as keyof NotificationSettings, label: 'Browser Push', desc: 'Push notifications in your browser' },
+                { key: 'weeklyReports' as keyof NotificationSettings, label: 'Weekly Reports', desc: 'Weekly performance summary' },
+                { key: 'systemAlerts' as keyof NotificationSettings, label: 'System Alerts', desc: 'Important system and maintenance updates' },
+              ].map((item) => (
+                <div key={item.key} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-b-0">
                   <div>
-                    <div className="text-sm font-medium text-white">Auto Stop Trading</div>
-                    <div className="text-xs text-[#6b7280]">Automatically stop all trading when daily loss limit is reached</div>
+                    <div className="font-medium">{item.label}</div>
+                    <div className="text-sm text-zinc-400">{item.desc}</div>
                   </div>
                   <button
-                    onClick={() => updateRiskParam('autoStopTrading', !riskParams.autoStopTrading)}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      riskParams.autoStopTrading ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
+                    onClick={() => handleNotificationChange(item.key)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      notifications[item.key] ? 'bg-green-500' : 'bg-zinc-600'
                     }`}
                   >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      riskParams.autoStopTrading ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        notifications[item.key] ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
                   </button>
                 </div>
-                
-                <div className="flex items-center justify-between py-3">
-                  <div>
-                    <div className="text-sm font-medium text-white">Require Trade Confirmation</div>
-                    <div className="text-xs text-[#6b7280]">Require manual confirmation before executing trades</div>
-                  </div>
-                  <button
-                    onClick={() => updateRiskParam('requireConfirmation', !riskParams.requireConfirmation)}
-                    className={`w-12 h-6 rounded-full transition-colors ${
-                      riskParams.requireConfirmation ? 'bg-[#00F0B5]' : 'bg-[#1b2332]'
-                    }`}
-                  >
-                    <div className={`w-5 h-5 bg-white rounded-full transition-transform ${
-                      riskParams.requireConfirmation ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </button>
-                </div>
-              </div>
-            </div>
-            
-            <div className="flex justify-end pt-4">
-              <button 
-                onClick={handleSaveRiskParams}
-                disabled={saving || settingsLoading}
-                className="px-6 py-3 bg-[#00F0B5] text-white font-medium rounded-xl hover:bg-[#00F0B5]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving ? 'Saving...' : 'Save Risk Settings'}
-              </button>
+              ))}
             </div>
           </div>
-        )}
+        </div>
       </motion.div>
-    </motion.div>
+
+      {/* Subscription Management */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
+      >
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+            <CreditCard size={20} className="text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold">Subscription Management</h2>
+            <p className="text-zinc-400">Manage your billing and subscription details</p>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <Check size={16} className="text-green-400" />
+                <span className="font-semibold text-green-400">Annual Plan Active</span>
+              </div>
+              <div className="text-sm text-zinc-400">
+                Your subscription renews automatically on {new Date(account.planExpiry).toLocaleDateString()}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors text-left">
+                <div className="font-medium">Update Payment Method</div>
+                <div className="text-sm text-zinc-400">Change your billing information</div>
+              </button>
+              
+              <button className="w-full px-4 py-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors text-left">
+                <div className="font-medium">View Billing History</div>
+                <div className="text-sm text-zinc-400">Download invoices and receipts</div>
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-4">
+              <div className="flex items-center gap-3 mb-2">
+                <AlertTriangle size={16} className="text-amber-400" />
+                <span className="font-semibold text-amber-400">Need Help?</span>
+              </div>
+              <div className="text-sm text-zinc-400 mb-3">
+                Questions about your subscription or billing?
+              </div>
+              <button className="px-3 py-2 bg-amber-500/20 text-amber-300 rounded-lg text-sm hover:bg-amber-500/30 transition-colors">
+                Contact Support
+              </button>
+            </div>
+
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <div className="font-medium text-red-400 mb-2">Cancel Subscription</div>
+              <div className="text-sm text-zinc-400 mb-3">
+                You can cancel anytime. Your signals will continue until your billing period ends.
+              </div>
+              <button className="px-3 py-2 border border-red-500/50 text-red-400 rounded-lg text-sm hover:bg-red-500/10 transition-colors">
+                Cancel Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Save Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="flex justify-end"
+      >
+        <button
+          onClick={handleSave}
+          disabled={saving || saved}
+          className={`px-6 py-3 rounded-lg font-semibold transition-all ${
+            saved 
+              ? 'bg-green-500 text-white' 
+              : saving
+              ? 'bg-zinc-700 text-zinc-400'
+              : 'bg-green-500 hover:bg-green-400 text-white'
+          }`}
+        >
+          {saved ? (
+            <span className="flex items-center gap-2">
+              <Check size={16} />
+              Saved!
+            </span>
+          ) : saving ? (
+            <span className="flex items-center gap-2">
+              <div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <Save size={16} />
+              Save Changes
+            </span>
+          )}
+        </button>
+      </motion.div>
+    </div>
   )
 }

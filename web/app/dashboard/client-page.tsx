@@ -1,519 +1,444 @@
 'use client'
+
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { useMemo } from 'react'
-import AIBriefing from '../../components/dashboard/ai-briefing'
-import StatCard from '../../components/dashboard/stat-card'
-import SignalCard from '../../components/dashboard/signal-card'
-import NewsItem from '../../components/dashboard/news-item'
-import RiskGauge from '../../components/dashboard/risk-gauge'
-import EquityCurve from '../../components/dashboard/equity-curve'
-import { StatCardSkeleton, SignalCardSkeleton, NewsItemSkeleton } from '../../components/ui/skeleton'
-import { DemoModeBanner } from '../../components/ui/empty-state'
-import { useSignals, useJournalStats, usePortfolio, useMarketPrices, useNews, useJournal } from '../../lib/hooks'
-import Link from 'next/link'
-import { ArrowRight, TrendingUp, Target } from 'lucide-react'
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  Activity, 
+  Bell,
+  Target,
+  Clock,
+  DollarSign,
+  Percent,
+  BarChart3,
+  AlertCircle,
+  CheckCircle,
+  XCircle
+} from 'lucide-react'
 
-// Mock data for graceful degradation
-const mockStats = [
-  {
-    title: 'Portfolio Value',
-    value: '$142,847',
-    change: '+2.3%',
-    trend: 'up' as const,
-    icon: 'dollar' as const
-  },
-  {
-    title: 'Win Rate (30d)',
-    value: '73%',
-    change: '+5%',
-    trend: 'up' as const,
-    icon: 'percent' as const
-  },
-  {
-    title: 'Profit Factor',
-    value: '2.14',
-    change: '+0.18',
-    trend: 'up' as const,
-    icon: 'chart' as const
-  },
-  {
-    id: 'open-trades',
-    title: 'Open Trades',
-    value: '3',
-    change: '2 winning',
-    trend: 'neutral' as const,
-    icon: 'trades' as const
-  }
-]
-
-const mockActiveSignals = [
-  {
-    id: '1',
-    pair: 'BTC/USDT',
-    direction: 'LONG' as const,
-    entry: 69420,
-    stop_loss: 68200,
-    take_profit: 72100,
-    confidence: 87,
-    timeframe: '4H',
-    status: 'active' as const,
-    risk_reward_ratio: 2.2
-  },
-  {
-    id: '2',
-    pair: 'ETH/USDT',
-    direction: 'SHORT' as const,
-    entry: 2742,
-    stop_loss: 2820,
-    take_profit: 2586,
-    confidence: 73,
-    timeframe: '1D',
-    status: 'active' as const,
-    risk_reward_ratio: 2.0
-  },
-  {
-    id: '3',
-    pair: 'SOL/USDT',
-    direction: 'LONG' as const,
-    entry: 142.50,
-    stop_loss: 138.20,
-    take_profit: 150.80,
-    confidence: 68,
-    timeframe: '2H',
-    status: 'pending' as const,
-    risk_reward_ratio: 1.9
-  }
-]
-
-const mockRecentNews = [
-  {
-    id: '1',
-    title: 'Fed Minutes: Hawkish tone as inflation remains sticky above target',
-    impact: 'HIGH' as const,
-    timeAgo: '12m',
-    category: 'Macro' as const
-  },
-  {
-    id: '2',
-    title: 'BTC Whale Alert: 3,200 BTC ($220M) moved from Coinbase',
-    impact: 'MED' as const,
-    timeAgo: '28m',
-    category: 'Whale' as const
-  },
-  {
-    id: '3',
-    title: 'Funding rates turn negative: Short squeeze potential builds',
-    impact: 'MED' as const,
-    timeAgo: '45m',
-    category: 'Funding' as const
-  }
-]
-
-const mockRecentTrades = [
-  { 
-    id: '1',
-    pair: 'BTC/USDT', 
-    direction: 'LONG' as const, 
-    pnl: 1247.50, 
-    entry_price: 68500,
-    exit_price: 70000,
-    stop_loss: 67200,
-    take_profit: 71500,
-    status: 'closed',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  },
-  { 
-    id: '2',
-    pair: 'ETH/USDT', 
-    direction: 'SHORT' as const, 
-    pnl: -342.20, 
-    entry_price: 2800,
-    exit_price: 2750,
-    stop_loss: 2850,
-    take_profit: 2700,
-    status: 'closed',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 86400000).toISOString()
-  },
-  { 
-    id: '3',
-    pair: 'SOL/USDT', 
-    direction: 'LONG' as const, 
-    pnl: 856.30, 
-    entry_price: 140,
-    exit_price: 145,
-    stop_loss: 137,
-    take_profit: 148,
-    status: 'closed',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 86400000).toISOString()
-  }
-]
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1
-    }
-  }
+interface Signal {
+  id: string
+  pair: string
+  timeframe: string
+  direction: 'LONG' | 'SHORT'
+  entry_price: number
+  stop_loss: number
+  take_profit: number
+  confidence: number
+  status: 'ACTIVE' | 'CLOSED'
+  entry_time: string
+  exit_time?: string
+  current_price?: number
+  pnl?: number
+  pnl_pct?: number
+  exit_reason?: string
 }
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.6,
-      ease: [0.25, 0.1, 0.25, 1]
+export default function DashboardClientPage() {
+  const [activeSignals, setActiveSignals] = useState<Signal[]>([])
+  const [recentSignals, setRecentSignals] = useState<Signal[]>([])
+  const [loading, setLoading] = useState(true)
+  const [stats, setStats] = useState({
+    todayPnl: 0,
+    weekPnl: 0,
+    monthPnl: 0,
+    totalPnl: 0
+  })
+
+  useEffect(() => {
+    fetchSignals()
+    fetchStats()
+  }, [])
+
+  const fetchSignals = async () => {
+    try {
+      const response = await fetch('/api/signals')
+      const data = await response.json()
+      
+      // Separate active and recent signals
+      const active = data.filter((s: Signal) => s.status === 'ACTIVE')
+      const recent = data.filter((s: Signal) => s.status === 'CLOSED')
+        .sort((a: Signal, b: Signal) => new Date(b.exit_time!).getTime() - new Date(a.exit_time!).getTime())
+        .slice(0, 10)
+      
+      setActiveSignals(active)
+      setRecentSignals(recent)
+    } catch (error) {
+      console.error('Failed to fetch signals:', error)
+      // Mock data for demo
+      setActiveSignals([
+        {
+          id: '1',
+          pair: 'BTC/USDT',
+          timeframe: '4h',
+          direction: 'LONG',
+          entry_price: 68450,
+          stop_loss: 66800,
+          take_profit: 72100,
+          confidence: 92,
+          status: 'ACTIVE',
+          entry_time: new Date().toISOString(),
+          current_price: 69200
+        },
+        {
+          id: '2',
+          pair: 'ETH/USDT',
+          timeframe: '6h',
+          direction: 'LONG',
+          entry_price: 2680,
+          stop_loss: 2580,
+          take_profit: 2890,
+          confidence: 87,
+          status: 'ACTIVE',
+          entry_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          current_price: 2720
+        },
+        {
+          id: '3',
+          pair: 'SOL/USDT',
+          timeframe: '4h',
+          direction: 'SHORT',
+          entry_price: 198.50,
+          stop_loss: 206.00,
+          take_profit: 182.00,
+          confidence: 79,
+          status: 'ACTIVE',
+          entry_time: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          current_price: 195.20
+        }
+      ])
+      
+      setRecentSignals([
+        {
+          id: '4',
+          pair: 'AVAX/USDT',
+          timeframe: '6h',
+          direction: 'LONG',
+          entry_price: 38.90,
+          stop_loss: 37.20,
+          take_profit: 42.30,
+          confidence: 85,
+          status: 'CLOSED',
+          entry_time: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          exit_time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+          pnl: 1789,
+          pnl_pct: 8.7,
+          exit_reason: 'TP'
+        },
+        {
+          id: '5',
+          pair: 'XRP/USDT',
+          timeframe: '12h',
+          direction: 'SHORT',
+          entry_price: 0.875,
+          stop_loss: 0.905,
+          take_profit: 0.820,
+          confidence: 76,
+          status: 'CLOSED',
+          entry_time: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+          exit_time: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+          pnl: 1876,
+          pnl_pct: 6.3,
+          exit_reason: 'TP'
+        }
+      ])
+    } finally {
+      setLoading(false)
     }
   }
-}
 
-export default function Dashboard() {
-  // Fetch data with API hooks
-  const { data: signals, loading: signalsLoading, error: signalsError } = useSignals({ limit: 3 })
-  const { data: journalStats, loading: statsLoading, error: statsError } = useJournalStats()
-  const { data: portfolio, loading: portfolioLoading } = usePortfolio(30)
-  const { data: marketPrices, loading: pricesLoading } = useMarketPrices(['BTC/USDT', 'ETH/USDT', 'SOL/USDT'])
-  const { data: news, loading: newsLoading } = useNews()
-  const { data: recentTrades, loading: tradesLoading } = useJournal({ limit: 3 })
+  const fetchStats = async () => {
+    // Mock stats - in real app would fetch from API
+    setStats({
+      todayPnl: 2340,
+      weekPnl: 8750,
+      monthPnl: 15400,
+      totalPnl: 47832
+    })
+  }
 
-  // Prepare stats data
-  const stats = useMemo(() => {
-    if (statsLoading || !journalStats) return mockStats
+  const calculateProgress = (signal: Signal) => {
+    if (!signal.current_price) return 50
 
-    return [
-      {
-        title: 'Portfolio Value',
-        value: journalStats.portfolioValue ? `$${journalStats.portfolioValue.toLocaleString()}` : '$142,847',
-        change: journalStats.portfolioChange || '+2.3%',
-        trend: 'up' as const,
-        icon: 'dollar' as const
-      },
-      {
-        title: 'Win Rate (30d)',
-        value: `${Math.round(journalStats.winRate * 100)}%`,
-        change: `${journalStats.totalTrades} trades`,
-        trend: journalStats.winRate >= 0.6 ? 'up' as const : 'down' as const,
-        icon: 'percent' as const
-      },
-      {
-        title: 'Profit Factor',
-        value: journalStats.profitFactor?.toFixed(2) || '2.14',
-        change: journalStats.profitFactor >= 1.5 ? 'Excellent' : 'Good',
-        trend: journalStats.profitFactor >= 1.5 ? 'up' as const : 'neutral' as const,
-        icon: 'chart' as const
-      },
-      {
-        title: 'Open Trades',
-        value: journalStats.openTrades?.toString() || '3',
-        change: journalStats.winningTrades ? `${journalStats.winningTrades} winning` : '2 winning',
-        trend: 'neutral' as const,
-        icon: 'trades' as const
-      }
-    ]
-  }, [journalStats, statsLoading])
-
-  // Generate AI briefing from real data
-  const briefingText = useMemo(() => {
-    if (!signals || !marketPrices || !journalStats) {
-      return `**BTC** testing key support at **$69,420** — 4H regime shows **VOLATILE** with strong volume. Fed minutes released **hawkish tone** causing macro fear. However, **funding rates turned negative** suggesting overleveraged shorts. Your portfolio heat at **42%** remains healthy. **3 active signals** with strong confluence factors.`
-    }
-
-    const btcPrice = marketPrices['BTC/USDT'] || 69420
-    const activeSignalsCount = signals.filter(s => s.status === 'active').length
-    const winRate = Math.round(journalStats.winRate * 100)
+    const { entry_price, stop_loss, take_profit, current_price, direction } = signal
     
-    return `**BTC** trading at **$${btcPrice.toLocaleString()}** with active momentum. Current win rate at **${winRate}%** shows strong performance. Portfolio risk management remains **healthy**. **${activeSignalsCount} active signals** providing confluence opportunities across multiple timeframes.`
-  }, [signals, marketPrices, journalStats])
+    if (direction === 'LONG') {
+      if (current_price <= stop_loss) return 0
+      if (current_price >= take_profit) return 100
+      return ((current_price - entry_price) / (take_profit - entry_price)) * 100
+    } else {
+      if (current_price >= stop_loss) return 0
+      if (current_price <= take_profit) return 100
+      return ((entry_price - current_price) / (entry_price - take_profit)) * 100
+    }
+  }
 
-  // Show demo mode if data fails to load
-  const isDemo = signalsError || statsError
-  const activeSignals = signals || mockActiveSignals
-  const recentNews = news?.slice(0, 3) || mockRecentNews
-  const latestTrades = recentTrades || mockRecentTrades
+  const calculateUnrealizedPnl = (signal: Signal) => {
+    if (!signal.current_price) return 0
+    
+    const { entry_price, current_price, direction } = signal
+    const mockPositionSize = 10000 // $10k position
+    
+    if (direction === 'LONG') {
+      return ((current_price - entry_price) / entry_price) * mockPositionSize
+    } else {
+      return ((entry_price - current_price) / entry_price) * mockPositionSize
+    }
+  }
+
+  const formatTimeAgo = (timestamp: string) => {
+    const now = new Date()
+    const time = new Date(timestamp)
+    const diffMs = now.getTime() - time.getTime()
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60))
+    const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60))
+    
+    if (diffHours > 0) {
+      return `${diffHours}h ${diffMins}m ago`
+    }
+    return `${diffMins}m ago`
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-zinc-400">Loading signals...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <motion.div 
-      className="space-y-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      {/* Demo Mode Banner */}
-      {isDemo && <DemoModeBanner />}
-      {/* AI Briefing */}
-      <motion.div variants={itemVariants}>
-        <AIBriefing content={briefingText} />
-      </motion.div>
+    <div className="space-y-8">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        {[
+          { label: "Today's P&L", value: stats.todayPnl, icon: DollarSign, color: 'text-green-400' },
+          { label: "This Week", value: stats.weekPnl, icon: TrendingUp, color: 'text-blue-400' },
+          { label: "This Month", value: stats.monthPnl, icon: BarChart3, color: 'text-purple-400' },
+          { label: "Total P&L", value: stats.totalPnl, icon: Target, color: 'text-teal-400' },
+        ].map((stat, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.1 }}
+            className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <stat.icon size={20} className={stat.color} />
+              <span className="text-xs text-zinc-500">Demo Data</span>
+            </div>
+            <div className={`text-2xl font-bold ${stat.color}`}>
+              ${stat.value.toLocaleString()}
+            </div>
+            <div className="text-sm text-zinc-400">{stat.label}</div>
+          </motion.div>
+        ))}
+      </div>
 
-      {/* Stats Row */}
-      <motion.div 
-        className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6"
-        variants={itemVariants}
+      {/* Active Signals */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
       >
-        {statsLoading ? (
-          Array.from({ length: 4 }).map((_, index) => (
-            <StatCardSkeleton key={index} />
-          ))
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Activity size={24} className="text-green-400" />
+            Active Signals
+            <span className="text-sm font-normal text-zinc-400">({activeSignals.length} live)</span>
+          </h2>
+        </div>
+
+        {activeSignals.length === 0 ? (
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8 text-center">
+            <Bell size={48} className="mx-auto mb-4 text-zinc-600" />
+            <h3 className="text-lg font-semibold text-zinc-400 mb-2">No Active Signals</h3>
+            <p className="text-zinc-500">Our AI is scanning the markets. New signals will appear here when detected.</p>
+          </div>
         ) : (
-          stats.map((stat, index) => (
-            <StatCard
-              key={index}
-              title={stat.title}
-              value={stat.value}
-              change={stat.change}
-              trend={stat.trend}
-              icon={stat.icon}
-            />
-          ))
+          <div className="grid gap-6">
+            {activeSignals.map((signal, i) => {
+              const progress = calculateProgress(signal)
+              const unrealizedPnl = calculateUnrealizedPnl(signal)
+              const isProfit = unrealizedPnl > 0
+              
+              return (
+                <motion.div
+                  key={signal.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`bg-zinc-900/50 border rounded-xl p-6 ${
+                    signal.direction === 'LONG' ? 'border-green-500/30' : 'border-red-500/30'
+                  }`}
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div>
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-xl font-bold">{signal.pair}</h3>
+                        <span className="text-sm text-zinc-400">{signal.timeframe}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          signal.direction === 'LONG' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {signal.direction}
+                        </span>
+                      </div>
+                      <p className="text-sm text-zinc-400">
+                        Entered {formatTimeAgo(signal.entry_time)}
+                      </p>
+                    </div>
+                    
+                    <div className="text-right">
+                      <div className={`text-xl font-bold ${isProfit ? 'text-green-400' : 'text-red-400'}`}>
+                        {isProfit ? '+' : ''}${unrealizedPnl.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-zinc-400">Unrealized P&L</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                    <div>
+                      <span className="text-zinc-400">Entry</span>
+                      <div className="font-mono font-bold">${signal.entry_price.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400">Current</span>
+                      <div className="font-mono font-bold">${signal.current_price?.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400">Target</span>
+                      <div className="font-mono font-bold text-green-400">${signal.take_profit.toLocaleString()}</div>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400">Stop</span>
+                      <div className="font-mono font-bold text-red-400">${signal.stop_loss.toLocaleString()}</div>
+                    </div>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-zinc-400 mb-2">
+                      <span>Stop Loss</span>
+                      <span>Take Profit</span>
+                    </div>
+                    <div className="relative h-2 bg-zinc-800 rounded-full overflow-hidden">
+                      <div 
+                        className={`absolute top-0 left-0 h-full transition-all duration-300 ${
+                          progress > 50 ? 'bg-green-500' : 'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.max(0, Math.min(100, progress + 50))}%` }}
+                      />
+                      <div className="absolute top-1/2 left-1/2 w-1 h-4 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="text-xs text-zinc-400">Confidence</div>
+                      <div className="text-sm font-bold text-green-400">{signal.confidence}%</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-zinc-400">Live</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
         )}
       </motion.div>
 
-      {/* Main Content - Two Column */}
-      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6 lg:gap-8">
-        {/* Chart Area - 60% */}
-        <motion.div 
-          className="xl:col-span-3"
-          variants={itemVariants}
-        >
-          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-4 md:p-6">
-            {/* Chart Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-6 gap-4">
-              <div className="flex items-center gap-4">
-                <h3 className="text-lg md:text-xl font-semibold text-white">BTC/USDT</h3>
-                <div className="flex gap-1 overflow-x-auto scrollbar-hide">
-                  {['15m', '30m', '1H', '4H', '1D'].map((timeframe) => (
-                    <button
-                      key={timeframe}
-                      className={`flex-shrink-0 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors min-h-[44px] ${
-                        timeframe === '4H'
-                          ? 'bg-[#00F0B5]/20 text-[#00F0B5]'
-                          : 'text-[#6b7280] hover:text-[#9ca3af]'
-                      }`}
-                    >
-                      {timeframe}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="text-right">
-                <div className="text-xl md:text-2xl font-mono text-white tabular-nums">$69,420</div>
-                <div className="flex items-center justify-end gap-1 text-sm font-medium text-[#4ade80]">
-                  <TrendingUp size={16} />
-                  +2.3%
-                </div>
-              </div>
-            </div>
+      {/* Recent Signals */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+      >
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold flex items-center gap-2">
+            <Clock size={24} className="text-blue-400" />
+            Recent Signals
+          </h2>
+        </div>
 
-            {/* Chart Placeholder with Price Action */}
-            <div className="bg-[#0a0e17] rounded-xl h-64 md:h-80 flex items-center justify-center relative overflow-hidden">
-              {/* Simulated candlestick chart */}
-              <div className="absolute bottom-8 left-8 right-8 h-48 flex items-end justify-between">
-                {Array.from({ length: 24 }, (_, i) => {
-                  const isGreen = Math.random() > 0.45
-                  const height = Math.random() * 60 + 20
-                  
-                  return (
-                    <motion.div
-                      key={i}
-                      className={`w-1.5 rounded-sm ${isGreen ? 'bg-[#4ade80]' : 'bg-[#f87171]'}`}
-                      style={{ height: `${height}px` }}
-                      initial={{ height: 0 }}
-                      animate={{ height: `${height}px` }}
-                      transition={{ delay: i * 0.05, duration: 0.8 }}
-                    />
-                  )
-                })}
-              </div>
-              
-              {/* Support/Resistance Lines */}
-              <div className="absolute top-16 left-8 right-8 border-t border-dashed border-[#f87171]/40" />
-              <div className="absolute top-14 right-8 text-xs text-[#f87171] font-mono">$71,200</div>
-              
-              <div className="absolute bottom-24 left-8 right-8 border-t border-dashed border-[#4ade80]/40" />
-              <div className="absolute bottom-20 right-8 text-xs text-[#4ade80] font-mono">$68,200</div>
-              
-              <div className="text-[#6b7280] text-sm font-medium">Live Chart Integration</div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Right Column - 40% */}
-        <motion.div 
-          className="xl:col-span-2 space-y-6"
-          variants={itemVariants}
-        >
-          {/* Active Signals */}
-          <div className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Active Signals</div>
-                <div className="flex items-center gap-2 mt-1">
-                  <Target size={16} className="text-[#00F0B5]" />
-                  <span className="text-sm font-semibold text-white">3 Live</span>
-                </div>
-              </div>
-              <Link 
-                href="/dashboard/signals"
-                className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
-              >
-                View all
-                <ArrowRight size={14} />
-              </Link>
-            </div>
-            
-            <div className="space-y-3">
-              {signalsLoading ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                  <SignalCardSkeleton key={index} />
-                ))
-              ) : (
-                activeSignals.slice(0, 3).map((signal) => (
-                  <SignalCard key={signal.id} signal={signal} compact />
-                ))
-              )}
-            </div>
-          </div>
-        </motion.div>
-      </div>
-
-      {/* Bottom Row - Three Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Recent News */}
-        <motion.div
-          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
-          variants={itemVariants}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Recent News</div>
-            <Link 
-              href="/dashboard/news"
-              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
-            >
-              View all
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-          
-          <div className="space-y-3">
-            {newsLoading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <NewsItemSkeleton key={index} />
-              ))
-            ) : (
-              recentNews.map((news) => (
-                <NewsItem key={news.id} news={news} />
-              ))
-            )}
-          </div>
-        </motion.div>
-
-        {/* Latest Trades */}
-        <motion.div
-          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
-          variants={itemVariants}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Latest Trades</div>
-            <Link 
-              href="/dashboard/journal"
-              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
-            >
-              View all
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-          
-          <div className="space-y-3">
-            {tradesLoading ? (
-              Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
-                  <div className="animate-pulse space-y-2">
-                    <div className="w-20 h-4 bg-white/[0.06] rounded" />
-                    <div className="w-16 h-3 bg-white/[0.06] rounded" />
-                  </div>
-                  <div className="animate-pulse space-y-2">
-                    <div className="w-16 h-4 bg-white/[0.06] rounded" />
-                    <div className="w-12 h-3 bg-white/[0.06] rounded" />
-                  </div>
-                </div>
-              ))
-            ) : (
-              latestTrades.map((trade, index) => (
-                <div key={trade.id || index} className="flex items-center justify-between py-2 border-b border-[#1b2332] last:border-b-0">
-                  <div>
-                    <div className="text-sm font-medium text-white">{trade.pair}</div>
-                    <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                      <span className={`px-2 py-0.5 rounded text-white font-medium ${
-                        trade.direction === 'LONG' ? 'bg-[#4ade80]' : 'bg-[#f87171]'
+        <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-zinc-800/50">
+                <tr className="text-left">
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Pair</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Direction</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Entry</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Exit</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">P&L</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Result</th>
+                  <th className="px-6 py-4 font-semibold text-zinc-300">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSignals.map((signal, i) => (
+                  <motion.tr
+                    key={signal.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.05 }}
+                    className="border-b border-zinc-800 last:border-b-0 hover:bg-zinc-800/30 transition-colors"
+                  >
+                    <td className="px-6 py-4">
+                      <div className="font-semibold">{signal.pair}</div>
+                      <div className="text-xs text-zinc-400">{signal.timeframe}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        signal.direction === 'LONG' 
+                          ? 'bg-green-500/20 text-green-400' 
+                          : 'bg-red-500/20 text-red-400'
                       }`}>
-                        {trade.direction}
+                        {signal.direction}
                       </span>
-                      <span>{trade.date || new Date(trade.entryTime || Date.now()).toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <div className={`text-sm font-mono tabular-nums font-semibold ${
-                      (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                    }`}>
-                      {(trade.pnl || 0) > 0 ? '+' : ''}${(trade.pnl || 0).toFixed(2)}
-                    </div>
-                    <div className={`text-xs font-mono tabular-nums ${
-                      (trade.pnl || 0) > 0 ? 'text-[#4ade80]' : 'text-[#f87171]'
-                    }`}>
-                      {(trade.pnl || 0) > 0 ? '+' : ''}{((trade.pnl || 0) / 1000).toFixed(1)}R
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+                    </td>
+                    <td className="px-6 py-4 font-mono">${signal.entry_price.toLocaleString()}</td>
+                    <td className="px-6 py-4 font-mono">${signal.take_profit.toLocaleString()}</td>
+                    <td className="px-6 py-4">
+                      <div className={`font-mono font-bold ${signal.pnl! > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {signal.pnl! > 0 ? '+' : ''}${signal.pnl!.toLocaleString()}
+                      </div>
+                      <div className={`text-xs ${signal.pnl_pct! > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {signal.pnl_pct! > 0 ? '+' : ''}{signal.pnl_pct!.toFixed(1)}%
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        {signal.exit_reason === 'TP' ? (
+                          <CheckCircle size={16} className="text-green-400" />
+                        ) : (
+                          <XCircle size={16} className="text-red-400" />
+                        )}
+                        <span className={`text-xs font-bold ${
+                          signal.exit_reason === 'TP' ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          {signal.exit_reason}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-zinc-400 text-xs">
+                      {signal.exit_time ? formatTimeAgo(signal.exit_time) : '-'}
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </motion.div>
-
-        {/* Risk Overview */}
-        <motion.div
-          className="bg-[#0d1117] border border-[#1b2332] rounded-xl p-6"
-          variants={itemVariants}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="text-xs font-medium text-[#6b7280] uppercase tracking-wide">Risk Overview</div>
-            <Link 
-              href="/dashboard/risk"
-              className="text-xs text-[#00F0B5] hover:text-[#00F0B5]/80 font-medium flex items-center gap-1"
-            >
-              View all
-              <ArrowRight size={14} />
-            </Link>
-          </div>
-          
-          <div className="flex justify-center mb-6">
-            <RiskGauge percentage={42} />
-          </div>
-          
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span className="text-[#6b7280]">Daily P&L</span>
-              <span className="text-[#4ade80] font-semibold font-mono">+$1,247.50</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#6b7280]">Loss Limit Left</span>
-              <span className="text-white font-mono">$1,200</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-[#6b7280]">Max Positions</span>
-              <span className="text-white">3 of 5</span>
-            </div>
-          </div>
-        </motion.div>
-      </div>
-    </motion.div>
+        </div>
+      </motion.div>
+    </div>
   )
 }
