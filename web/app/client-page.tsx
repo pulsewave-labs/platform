@@ -844,7 +844,7 @@ export default function LandingClientPage() {
               { name:'Sofia L.', since:'7 months', text:'I lost $12K following Twitter calls before this. No more guessing, no more "trust me bro." Every signal has a stop loss. Every trade is documented. Worst month I had was down $400. Best month was up $9K.', tag:'Crypto trader' },
               { name:'Ryan M.', since:'9 months', text:'Showed my buddy the performance page and he said "that can\'t be real, nobody publishes their losses." That\'s exactly why I trust it. 3 red months out of 9 for me, still up 118% total.', tag:'SOL/AVAX focused' },
               { name:'Angela W.', since:'6 months', text:'$149/mo felt expensive until I did the math. Averaging $4K-5K/mo on a $10K account. That\'s a 30x return on the subscription. I spend more on DoorDash.', tag:'$10K account' },
-              { name:'Tommy H.', since:'12 months', text:'Been here since nearly the start. The algo doesn\'t chase pumps, doesn\'t panic sell. It waits for structure breaks at key levels. Some weeks nothing happens. Then 3 signals hit in a day and you remember why you\'re here.', tag:'Day one subscriber' },
+              { name:'Tommy H.', since:'20 months', text:'Been here since nearly the start. The algo doesn\'t chase pumps, doesn\'t panic sell. It waits for structure breaks at key levels. Some weeks nothing happens. Then 3 signals hit in a day and you remember why you\'re here.', tag:'Day one subscriber' },
             ].map(function(r, i) {
               return (
                 <div key={i} className="t p-5 md:p-6">
