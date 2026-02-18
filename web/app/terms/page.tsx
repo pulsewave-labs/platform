@@ -2,223 +2,209 @@ import Link from 'next/link'
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-[#0a0e17] text-white">
-      <div className="max-w-4xl mx-auto px-6 md:px-8 py-16">
-        <div className="mb-8">
-          <Link href="/" className="inline-flex items-center gap-2 text-[#00F0B5] hover:text-[#4DFFD0] transition-colors mb-6">
-            ← Back to Home
+    <div className="min-h-screen bg-[#08080a] text-white">
+      <div className="max-w-3xl mx-auto px-6 md:px-8 py-16">
+        <div className="mb-10">
+          <Link href="/" className="inline-flex items-center gap-2 text-[#00e5a0] hover:text-[#00cc8e] transition-colors text-[13px] mono mb-6">
+            ← Back
           </Link>
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">Terms of Service</h1>
-          <p className="text-[#8b95a5] text-lg">Terms and conditions for using PulseWave Labs services</p>
+          <h1 className="text-3xl md:text-4xl font-bold mb-3">Terms of Service</h1>
+          <p className="text-white/40 text-[14px]">Last updated: February 18, 2026</p>
         </div>
 
-        <div className="prose prose-invert max-w-none space-y-8">
+        <div className="space-y-8 text-[14px] text-white/60 leading-relaxed">
+
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">1. Acceptance of Terms</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              By accessing or using PulseWave Labs ("we," "us," "our") services, website, or platform (collectively, the "Service"), 
-              you agree to be bound by these Terms of Service ("Terms"). If you disagree with any part of these terms, 
-              then you may not access the Service.
+            <h2 className="text-[18px] font-bold mb-3 text-white">1. Agreement to Terms</h2>
+            <p className="mb-3">
+              By accessing or using any services provided by PulseWave Labs ("Company," "we," "us," "our"), including our website, trading signal platform, Telegram bot, APIs, and all related services (collectively, the "Service"), you agree to be bound by these Terms of Service ("Terms").
             </p>
-            <p className="text-[#8b95a5] leading-relaxed">
-              These Terms constitute a legally binding agreement between you and PulseWave Labs. 
-              By using our Service, you represent that you are at least 18 years old and have the legal capacity to enter into these Terms.
+            <p>
+              If you do not agree to these Terms, you must not access or use the Service. You represent that you are at least 18 years of age, have the legal capacity to enter into binding agreements, and are not prohibited from using the Service under any applicable law.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">2. Description of Service</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              PulseWave Labs provides trading tools, technical analysis, market signals, and educational content related to cryptocurrency trading. 
-              Our services include but are not limited to:
+            <h2 className="text-[18px] font-bold mb-3 text-white">2. Description of Service</h2>
+            <p className="mb-3">
+              PulseWave Labs provides an automated cryptocurrency trading signal service. Our Service includes:
             </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Algorithmic trading signals and analysis</li>
-              <li>Risk management tools and calculators</li>
-              <li>Trading journal and performance tracking</li>
-              <li>Educational content and market insights</li>
-              <li>Technical analysis tools and indicators</li>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>Algorithmic trading signals delivered via Telegram and our web platform</li>
+              <li>Historical trade performance data and analytics</li>
+              <li>Signal dashboards displaying active and past signals</li>
+              <li>Position sizing guidance and risk management information</li>
             </ul>
-            <p className="text-[#8b95a5] leading-relaxed">
-              <strong className="text-white">Important:</strong> Our services provide tools and information for educational and analytical purposes only. 
-              We do not provide investment advice, manage client accounts, or make trading decisions on your behalf.
+            <p>
+              <strong className="text-white">Our Service provides information and signals only. We do not execute trades on your behalf, manage your funds, or have access to your exchange accounts.</strong> All trading decisions and execution are your sole responsibility. Our Service does not constitute investment advice — please refer to our Risk Disclaimer for full details.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">3. User Responsibilities</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              By using our Service, you agree to:
-            </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Provide accurate and complete information during registration</li>
-              <li>Maintain the security of your account credentials</li>
-              <li>Use the Service in compliance with all applicable laws and regulations</li>
-              <li>Not share your account access with others</li>
-              <li>Not attempt to reverse engineer, hack, or compromise our platform</li>
-              <li>Not use our Service for any illegal or unauthorized purposes</li>
-              <li>Take full responsibility for your trading decisions and their outcomes</li>
+            <h2 className="text-[18px] font-bold mb-3 text-white">3. Subscription & Billing</h2>
+
+            <p className="font-semibold text-white mb-2">Pricing</p>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>Monthly plan: $149/month, billed monthly</li>
+              <li>Annual plan: $1,490/year, billed annually (saves $298)</li>
+              <li>All prices in USD</li>
             </ul>
-            <p className="text-[#8b95a5] leading-relaxed">
-              You acknowledge that trading cryptocurrencies involves substantial risk and that you are solely responsible for 
-              evaluating the risks and benefits of any trading decisions.
+
+            <p className="font-semibold text-white mb-2">Billing</p>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>Subscriptions are billed in advance at the beginning of each billing period</li>
+              <li>Subscriptions automatically renew unless cancelled before the renewal date</li>
+              <li>We reserve the right to change pricing with 30 days written notice</li>
+              <li>Continued use after a price change constitutes acceptance of the new pricing</li>
+            </ul>
+
+            <p className="font-semibold text-white mb-2">Refunds</p>
+            <p className="mb-3">
+              We offer a <strong className="text-white">7-day money-back guarantee</strong> for new subscribers on their first subscription period only. To request a refund, contact us at hello@pulsewavelabs.io within 7 days of your initial payment. Refunds are processed to the original payment method within 5–10 business days. No refunds are provided after the 7-day period, for renewal payments, or for annual subscriptions after 7 days from purchase.
+            </p>
+
+            <p className="font-semibold text-white mb-2">Cancellation</p>
+            <p>
+              You may cancel your subscription at any time through your account settings or by contacting hello@pulsewavelabs.io. Cancellation takes effect at the end of your current billing period. You will retain access until your paid period expires. No partial or prorated refunds for unused time.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">4. Account Terms</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              To access certain features of our Service, you must create an account. You are responsible for:
-            </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Maintaining the confidentiality of your account information</li>
-              <li>All activities that occur under your account</li>
-              <li>Notifying us immediately of any unauthorized use of your account</li>
+            <h2 className="text-[18px] font-bold mb-3 text-white">4. Account Responsibilities</h2>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>You must provide accurate, current, and complete information during registration</li>
+              <li>You are responsible for maintaining the security of your account credentials</li>
+              <li>You are responsible for all activity that occurs under your account</li>
+              <li>You must notify us immediately of any unauthorized access</li>
+              <li>One account per person — accounts are non-transferable</li>
+              <li>You may not share, redistribute, resell, or rebroadcast signals to any third party</li>
             </ul>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              We reserve the right to terminate or suspend your account at any time for violations of these Terms or for any other reason, 
-              with or without notice.
-            </p>
-            <p className="text-[#8b95a5] leading-relaxed">
-              Accounts that remain inactive for 12 months or more may be suspended. 
-              We will provide notice before suspending inactive accounts.
+            <p>
+              We reserve the right to suspend or terminate accounts that violate these Terms, redistribute signals, or engage in any abusive behavior, with or without notice and without refund.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">5. Payment and Refund Policy</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              Our Service operates on a subscription basis with the following terms:
-            </p>
-            
-            <h3 className="text-lg font-semibold mb-3 text-white">Free Trial</h3>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              New users are eligible for a 14-day free trial. No credit card is required for the trial period. 
-              The trial automatically expires without any charges unless you choose to subscribe.
-            </p>
-
-            <h3 className="text-lg font-semibold mb-3 text-white">Subscription Terms</h3>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Subscriptions are billed monthly or annually in advance</li>
-              <li>All fees are in USD unless otherwise specified</li>
-              <li>Subscriptions automatically renew unless cancelled</li>
-              <li>Price changes will be communicated 30 days in advance</li>
-            </ul>
-
-            <h3 className="text-lg font-semibold mb-3 text-white">Refund Policy</h3>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              We offer a 30-day money-back guarantee for new subscribers. To request a refund:
-            </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Contact support within 30 days of your first payment</li>
-              <li>Refunds are processed to the original payment method</li>
-              <li>Refunds may take 5-10 business days to appear on your statement</li>
-              <li>Free trial users are not eligible for refunds as no payment was charged</li>
-            </ul>
-
-            <h3 className="text-lg font-semibold mb-3 text-white">Cancellation</h3>
-            <p className="text-[#8b95a5] leading-relaxed">
-              You may cancel your subscription at any time through your account settings or by contacting support. 
-              Cancellation takes effect at the end of your current billing period. No partial refunds are provided for unused portions of subscription periods.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">6. Intellectual Property</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              The Service and its original content, features, and functionality are and will remain the exclusive property of PulseWave Labs and its licensors. 
-              The Service is protected by copyright, trademark, and other laws. Our trademarks and trade dress may not be used without our prior written consent.
-            </p>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              You are granted a limited, non-exclusive, non-transferable license to access and use the Service for your personal use only. 
-              You may not:
-            </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Reproduce, distribute, or create derivative works from our content</li>
-              <li>Reverse engineer or attempt to extract source code from our platform</li>
-              <li>Use our signals or analysis for commercial redistribution</li>
-              <li>Remove or alter any proprietary notices or labels</li>
+            <h2 className="text-[18px] font-bold mb-3 text-white">5. Prohibited Uses</h2>
+            <p className="mb-3">You agree not to:</p>
+            <ul className="list-disc list-inside space-y-1.5 text-white/55">
+              <li>Redistribute, resell, or commercially exploit our signals or content</li>
+              <li>Reverse engineer, decompile, or attempt to extract our algorithms or source code</li>
+              <li>Use automated systems (bots, scrapers) to access our platform without authorization</li>
+              <li>Circumvent or disable any security features of our platform</li>
+              <li>Use the Service for any illegal purpose or in violation of any applicable law</li>
+              <li>Impersonate any person or entity, or misrepresent your affiliation</li>
+              <li>Interfere with or disrupt the Service or servers</li>
+              <li>Create multiple accounts to abuse free trials or referral programs</li>
             </ul>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">7. Limitation of Liability</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              <strong className="text-white">IMPORTANT:</strong> To the maximum extent permitted by applicable law, 
-              PulseWave Labs shall not be liable for any indirect, incidental, special, consequential, or punitive damages, 
-              including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+            <h2 className="text-[18px] font-bold mb-3 text-white">6. Signal Delivery</h2>
+            <p className="mb-3">
+              We deliver signals primarily through Telegram and our web dashboard. While we make commercially reasonable efforts to deliver signals promptly and accurately:
             </p>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              In any case, PulseWave Labs' total liability to you for all damages, losses, and causes of action 
-              shall not exceed the total amount of subscription fees paid by you to PulseWave Labs in the twelve (12) months 
-              preceding the incident giving rise to such liability.
-            </p>
-            <p className="text-[#8b95a5] leading-relaxed">
-              This limitation applies whether the alleged liability is based on contract, tort, negligence, strict liability, or any other basis, 
-              even if PulseWave Labs has been advised of the possibility of such damage.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">8. Indemnification</h2>
-            <p className="text-[#8b95a5] leading-relaxed">
-              You agree to defend, indemnify, and hold harmless PulseWave Labs and its officers, directors, employees, and agents 
-              from and against any claims, liabilities, damages, judgments, awards, losses, costs, expenses, or fees 
-              arising out of or relating to your use of the Service, your trading activities, or your violation of these Terms.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">9. Disclaimer of Warranties</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              The Service is provided on an "AS IS" and "AS AVAILABLE" basis. PulseWave Labs expressly disclaims all warranties, 
-              whether express or implied, including but not limited to:
-            </p>
-            <ul className="list-disc list-inside text-[#8b95a5] space-y-2 mb-4">
-              <li>Warranties of merchantability, fitness for a particular purpose, and non-infringement</li>
-              <li>Warranties regarding the accuracy, reliability, or completeness of any information</li>
-              <li>Warranties that the Service will be uninterrupted, error-free, or secure</li>
-              <li>Any warranties regarding trading results or profitability</li>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>We do not guarantee uninterrupted delivery of signals</li>
+              <li>Delivery may be delayed or prevented by factors outside our control (Telegram outages, internet issues, exchange downtime)</li>
+              <li>Signal parameters (entry, stop loss, take profit) are targets — actual execution prices will vary</li>
+              <li>We may pause, modify, or discontinue signal delivery at any time for maintenance, strategy adjustments, or market conditions</li>
             </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">10. Governing Law</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              These Terms shall be governed by and construed in accordance with the laws of the State of Delaware, 
-              without regard to its conflict of law provisions. Any legal action or proceeding arising under these Terms 
-              will be brought exclusively in the courts of Delaware.
+            <p>
+              We are not liable for any losses resulting from delayed, missed, or failed signal delivery, regardless of the cause.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">11. Changes to Terms</h2>
-            <p className="text-[#8b95a5] leading-relaxed mb-4">
-              We reserve the right to modify or replace these Terms at any time. If a revision is material, 
-              we will provide at least 30 days notice prior to any new terms taking effect.
+            <h2 className="text-[18px] font-bold mb-3 text-white">7. Intellectual Property</h2>
+            <p className="mb-3">
+              All content, algorithms, strategies, code, designs, trade data, analytics, and materials on the Service are the exclusive property of PulseWave Labs and are protected by copyright, trademark, and trade secret laws.
             </p>
-            <p className="text-[#8b95a5] leading-relaxed">
-              By continuing to use the Service after the revised Terms become effective, 
-              you agree to be bound by the revised Terms.
+            <p>
+              Your subscription grants you a limited, non-exclusive, non-transferable, revocable license to access and use the Service for your personal, non-commercial trading use only. You may not reproduce, distribute, modify, create derivative works from, publicly display, or commercially exploit any content from the Service without prior written consent.
             </p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold mb-4 text-white">12. Contact Information</h2>
-            <p className="text-[#8b95a5] leading-relaxed">
-              If you have any questions about these Terms, please contact us at:
-              <br />
-              <strong className="text-white">Email:</strong> legal@pulsewavelabs.com
-              <br />
-              <strong className="text-white">Support:</strong> support@pulsewavelabs.com
+            <h2 className="text-[18px] font-bold mb-3 text-white">8. Limitation of Liability</h2>
+            <p className="mb-3">
+              <strong className="text-white">TO THE MAXIMUM EXTENT PERMITTED BY LAW, PULSEWAVE LABS AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND AFFILIATES SHALL NOT BE LIABLE FOR:</strong>
+            </p>
+            <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
+              <li>Any trading losses, regardless of whether you followed our signals</li>
+              <li>Any indirect, incidental, special, consequential, or punitive damages</li>
+              <li>Loss of profits, revenue, data, goodwill, or other intangible losses</li>
+              <li>Damages arising from interrupted or delayed signal delivery</li>
+              <li>Damages arising from unauthorized access to your account</li>
+              <li>Any third-party claims related to your trading activity</li>
+            </ul>
+            <p>
+              <strong className="text-white">In no event shall our total aggregate liability exceed the amount you paid to PulseWave Labs in the three (3) months preceding the event giving rise to the claim.</strong> This limitation applies regardless of the legal theory (contract, tort, negligence, strict liability, or otherwise).
             </p>
           </section>
 
-          <div className="border-t border-white/10 pt-8 mt-12">
-            <p className="text-sm text-[#6b7280] leading-relaxed">
-              <strong className="text-[#8b95a5]">Last updated:</strong> February 17, 2026
-              <br />
-              These Terms are effective immediately upon posting. Please review them periodically for updates.
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">9. Indemnification</h2>
+            <p>
+              You agree to indemnify, defend, and hold harmless PulseWave Labs and its officers, directors, employees, agents, and affiliates from any and all claims, liabilities, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising from: (a) your use of the Service; (b) your trading activities and decisions; (c) your violation of these Terms; (d) your violation of any third-party rights; or (e) any content you submit or transmit through the Service.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">10. Disclaimer of Warranties</h2>
+            <p>
+              THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, NON-INFRINGEMENT, AND ANY WARRANTIES ARISING FROM COURSE OF DEALING OR USAGE OF TRADE. WE DO NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, OR FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">11. Dispute Resolution</h2>
+            <p className="mb-3">
+              Any dispute arising from or relating to these Terms or the Service shall be resolved through binding arbitration administered by the American Arbitration Association under its Commercial Arbitration Rules. Arbitration shall take place in the State of Wyoming. The arbitrator's award shall be final and binding and may be entered in any court of competent jurisdiction.
+            </p>
+            <p>
+              <strong className="text-white">You agree to waive any right to participate in a class action lawsuit or class-wide arbitration.</strong> All claims must be brought individually.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">12. Governing Law</h2>
+            <p>
+              These Terms shall be governed by and construed in accordance with the laws of the State of Wyoming, United States, without regard to conflict of law principles.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">13. Modifications</h2>
+            <p>
+              We reserve the right to modify these Terms at any time. Material changes will be communicated via email or platform notification at least 14 days before taking effect. Your continued use of the Service after changes become effective constitutes acceptance. If you disagree with any changes, you must stop using the Service and cancel your subscription.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">14. Termination</h2>
+            <p>
+              We may terminate or suspend your access to the Service immediately, without prior notice or liability, for any reason, including breach of these Terms. Upon termination, your right to use the Service ceases immediately. Sections related to intellectual property, limitation of liability, indemnification, disclaimer of warranties, and dispute resolution survive termination.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">15. Severability</h2>
+            <p>
+              If any provision of these Terms is found to be unenforceable or invalid, that provision shall be limited or eliminated to the minimum extent necessary, and the remaining provisions shall remain in full force and effect.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-[18px] font-bold mb-3 text-white">16. Contact</h2>
+            <p>
+              Questions about these Terms: <strong className="text-white">hello@pulsewavelabs.io</strong>
+            </p>
+          </section>
+
+          <div className="border-t border-white/[0.06] pt-6 mt-10">
+            <p className="text-[12px] text-white/25">
+              © 2026 PulseWave Labs. All rights reserved.
             </p>
           </div>
         </div>
