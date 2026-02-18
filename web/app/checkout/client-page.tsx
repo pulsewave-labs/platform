@@ -182,7 +182,7 @@ export default function CheckoutClientPage() {
                       <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className={inputClass} placeholder="Min. 8 chars" minLength={8} required />
                     </div>
                     <div>
-                      <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">CONFIRM</label>
+                      <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">CONFIRM PASSWORD</label>
                       <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className={inputClass} placeholder="Re-enter" minLength={8} required />
                     </div>
                   </div>
