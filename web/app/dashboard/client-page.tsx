@@ -342,26 +342,12 @@ export default function DashboardClientPage() {
   })
   var pairList = Object.entries(pairPerf).map(function(e) { return { pair: e[0], ...e[1] } }).sort(function(a, b) { return b.pnl - a.pnl })
 
-  // Next scan schedule — engine scans at 4h/6h/12h candle closes
+  // Next scan countdown — scans every 60s
   var [scanCountdown, setScanCountdown] = useState('')
   useEffect(function() {
     function calcNext() {
-      var n = new Date()
-      var h = n.getUTCHours(), m = n.getUTCMinutes(), s = n.getUTCSeconds()
-      var totalSec = h * 3600 + m * 60 + s
-      // Scan times: every 4h (0,4,8,12,16,20), every 6h (0,6,12,18), every 12h (0,12) — all +30s
-      var scanHours = [0,4,6,8,12,16,18,20]
-      var nextSec = Infinity
-      for (var i = 0; i < scanHours.length; i++) {
-        var target = scanHours[i] * 3600 + 30
-        var diff = target - totalSec
-        if (diff < 0) diff += 86400
-        if (diff < nextSec) nextSec = diff
-      }
-      var hrs = Math.floor(nextSec / 3600)
-      var mins = Math.floor((nextSec % 3600) / 60)
-      var secs = nextSec % 60
-      setScanCountdown((hrs > 0 ? hrs + 'h ' : '') + mins + 'm ' + secs + 's')
+      var secs = 60 - new Date().getSeconds()
+      setScanCountdown(secs + 's')
     }
     calcNext()
     var iv = setInterval(calcNext, 1000)
@@ -394,7 +380,7 @@ export default function DashboardClientPage() {
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
           <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">NEXT SCAN</div>
           <div className="text-[20px] mono font-bold text-white/80">{scanCountdown}</div>
-          <div className="text-[9px] mono text-[#555] mt-1">5 pairs monitored</div>
+          <div className="text-[9px] mono text-[#555] mt-1">Continuous monitoring</div>
         </div>
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
           <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST SIGNAL</div>
@@ -447,19 +433,6 @@ export default function DashboardClientPage() {
               <div className="text-[#888] mono text-[12px] font-medium mb-1">Scanning for setups</div>
               <div className="text-[#444] text-[11px] mono mb-1">Next scan in {scanCountdown}</div>
               <div className="text-[#333] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
-            </div>
-            {/* Scan schedule */}
-            <div className="border-t border-white/[0.03] px-4 py-3">
-              <div className="text-[8px] mono text-[#444] tracking-[.12em] mb-2">SCAN SCHEDULE (UTC)</div>
-              <div className="flex flex-wrap gap-1.5">
-                {['00:00','04:00','06:00','08:00','12:00','16:00','18:00','20:00'].map(function(t) {
-                  var h = parseInt(t)
-                  var nowH = new Date().getUTCHours()
-                  var isPast = h < nowH || (h === nowH && new Date().getUTCMinutes() > 0)
-                  var isNext = !isPast && h >= nowH
-                  return <span key={t} className={'text-[9px] mono px-2 py-0.5 rounded ' + (isNext ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : isPast ? 'bg-white/[0.01] text-[#333]' : 'bg-white/[0.02] text-[#555]')}>{t}</span>
-                })}
-              </div>
             </div>
           </div>
         ) : (
