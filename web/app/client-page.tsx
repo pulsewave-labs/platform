@@ -198,7 +198,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#ff4d4d]/75 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
+            <div className="text-[12px] text-[#ff4d4d]/75 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
               90% of signal services exist to<br className="hidden md:block"/> take your money, not make it.
             </h2>
@@ -239,7 +239,7 @@ export default function LandingClientPage() {
       <section id="how" className="py-24 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
+            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
               The same method institutions use.<br className="hidden md:block"/> Automated. Delivered to your phone.
             </h2>
@@ -510,7 +510,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-3">HONEST TAKE</div>
+            <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">HONEST TAKE</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Most people shouldn't<br className="hidden md:block" /> subscribe to this.</h2>
           </div>
 
@@ -576,7 +576,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
+            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
               5 pairs. 24/7 monitoring.<br className="hidden md:block"/> Built like a hedge fund. Priced like a subscription.
             </h2>
@@ -637,7 +637,7 @@ export default function LandingClientPage() {
 
           {/* Price comparison anchor */}
           <div className="max-w-2xl mx-auto mb-8">
-            <div className="text-[11px] text-white/30 mono tracking-[.2em] mb-5 text-center">WHAT TRADERS TYPICALLY SPEND</div>
+            <div className="text-[12px] text-white/30 mono tracking-[.2em] mb-5 text-center">WHAT TRADERS TYPICALLY SPEND</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 {n:'Trading Courses',v:'$500 – $5,000',s:'One-time purchase. No ongoing signals. You still trade alone.'},
@@ -707,7 +707,7 @@ export default function LandingClientPage() {
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
 
               <div className="text-center mb-8">
-                <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
+                <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
                 <p className="text-[14px] text-white/40">What $149/mo looks like on a $10K account</p>
               </div>
 
@@ -752,7 +752,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">SCALE IT</div>
+            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">SCALE IT</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
               Same signals. Your account size.
             </h2>
@@ -796,7 +796,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-3">QUESTIONS</div>
+            <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">QUESTIONS</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Before you decide.</h2>
           </div>
 
