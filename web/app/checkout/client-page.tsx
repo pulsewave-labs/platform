@@ -253,8 +253,8 @@ export default function CheckoutClientPage() {
           <div className="fu order-2" style={{animationDelay:'.3s'}}>
 
             {/* What you get */}
-            <div className="border border-white/[0.04] rounded-xl p-6 mb-4">
-              <div className="text-[11px] text-white/20 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
+            <div className="bg-[#0a0a0c] border border-white/[0.06] rounded-xl p-6 mb-4">
+              <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
               <div className="space-y-3">
                 {[
                   { t: 'Real-time signals on 5 pairs', s: 'BTC, ETH, SOL, AVAX, XRP' },
@@ -270,8 +270,8 @@ export default function CheckoutClientPage() {
                         <span className="text-[8px] text-[#00e5a0]/60 mono">✓</span>
                       </div>
                       <div>
-                        <div className="text-[13px] text-white/60">{f.t}</div>
-                        <div className="text-[11px] text-white/20">{f.s}</div>
+                        <div className="text-[13px] text-white/75">{f.t}</div>
+                        <div className="text-[11px] text-white/35">{f.s}</div>
                       </div>
                     </div>
                   )
