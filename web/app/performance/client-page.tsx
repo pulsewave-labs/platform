@@ -98,7 +98,7 @@ export default function PerformanceClientPage() {
         <div className="max-w-[1400px] mx-auto px-6 md:px-10 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo.webp" alt="PulseWave" className="h-7 opacity-70 group-hover:opacity-100 transition-opacity" />
+              <img src="/logo.webp" alt="PulseWave" className="h-7" />
             </Link>
             <span className="text-white/70">|</span>
             <span className="text-[11px] text-white/70 mono tracking-wide">PERFORMANCE</span>
