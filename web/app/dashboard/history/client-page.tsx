@@ -65,8 +65,8 @@ export default function HistoryClientPage() {
   const [filterPair, setFilterPair] = useState('')
   const [filterDirection, setFilterDirection] = useState('')
   const [filterResult, setFilterResult] = useState('')
-  const [sortField, setSortField] = useState<string>('entry_time')
-  const [sortDirection, setSortDirection] = useState<string>('desc')
+  const [sortField, setSortField] = useState('entry_time')
+  const [sortDirection, setSortDirection] = useState('desc')
   const [currentPage, setCurrentPage] = useState(1)
   const tradesPerPage = 25
 
