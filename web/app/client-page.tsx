@@ -156,12 +156,12 @@ export default function LandingClientPage() {
           </h2>
           <div className="grid md:grid-cols-3 gap-3 text-left mb-10">
             {[
-              {icon:'🎯',title:'Cherry-picked screenshots',desc:'They show you their wins. They hide 80% of their trades. You never see the full picture until you\'ve already paid.'},
-              {icon:'🤡',title:'"Trust me bro" track records',desc:'No verified data. No timestamps. No stop losses. Just Lamborghinis and vague "10x this week" posts.'},
-              {icon:'💸',title:'Signals that bleed you dry',desc:'5 signals a day with no risk management. You\'re not trading — you\'re gambling someone else\'s hunches with your money.'},
+              {icon:'01',title:'Cherry-picked screenshots',desc:'They show you their wins. They hide 80% of their trades. You never see the full picture until you\'ve already paid.'},
+              {icon:'02',title:'"Trust me bro" track records',desc:'No verified data. No timestamps. No stop losses. Just Lamborghinis and vague "10x this week" posts.'},
+              {icon:'03',title:'Signals that bleed you dry',desc:'5 signals a day with no risk management. You\'re not trading — you\'re gambling someone else\'s hunches with your money.'},
             ].map((p,i)=>(
               <div key={i} className="t p-5">
-                <div className="text-xl mb-2">{p.icon}</div>
+                <div className="text-[11px] mono text-white/[0.06] font-bold mb-2">{p.icon}</div>
                 <h3 className="text-[14px] font-semibold mb-2 text-white/80">{p.title}</h3>
                 <p className="text-[12px] text-white/35 leading-relaxed">{p.desc}</p>
               </div>
