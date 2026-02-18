@@ -11,10 +11,19 @@ function timeAgo(dateStr: string) {
   return Math.floor(hrs / 24) + 'd ago'
 }
 
+var TIME_FILTERS = [
+  { label: '1M', days: 30 },
+  { label: '3M', days: 90 },
+  { label: '6M', days: 180 },
+  { label: '1Y', days: 365 },
+  { label: 'ALL', days: 0 },
+]
+
 function EquityChart({ trades }: { trades: any[] }) {
   var containerRef = useRef(null as HTMLDivElement | null)
   var [hover, setHover] = useState(null as null | { x: number, y: number, trade: any, idx: number })
   var [dims, setDims] = useState({ w: 800, h: 300 })
+  var [timeFilter, setTimeFilter] = useState('ALL')
 
   useEffect(function() {
     function measure() {
@@ -31,11 +40,31 @@ function EquityChart({ trades }: { trades: any[] }) {
   if (!trades || trades.length < 2) return null
 
   // Build equity curve from trades (sorted oldest first)
-  var sorted = trades.slice().sort(function(a: any, b: any) {
+  var allSorted = trades.slice().sort(function(a: any, b: any) {
     return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
   })
 
-  var points = [{ balance: 10000, date: sorted[0].entry_time, pnl: 0, pair: '', action: '', idx: 0 }]
+  // Apply time filter
+  var filterDef = TIME_FILTERS.find(function(f) { return f.label === timeFilter })
+  var sorted = allSorted
+  if (filterDef && filterDef.days > 0) {
+    var cutoff = Date.now() - filterDef.days * 86400000
+    sorted = allSorted.filter(function(t: any) { return new Date(t.exit_time || t.entry_time).getTime() >= cutoff })
+  }
+
+  if (sorted.length < 2) sorted = allSorted // fallback if filter too tight
+
+  // Calculate starting balance for filtered view
+  var startingBalance = 10000
+  if (filterDef && filterDef.days > 0 && sorted.length < allSorted.length) {
+    // Find the balance right before the filtered window
+    var firstFilteredIdx = allSorted.indexOf(sorted[0])
+    if (firstFilteredIdx > 0) {
+      startingBalance = allSorted[firstFilteredIdx - 1].balance_after
+    }
+  }
+
+  var points = [{ balance: startingBalance, date: sorted[0].entry_time, pnl: 0, pair: '', action: '', idx: 0 }]
   for (var i = 0; i < sorted.length; i++) {
     points.push({
       balance: sorted[i].balance_after,
@@ -46,6 +75,11 @@ function EquityChart({ trades }: { trades: any[] }) {
       idx: i + 1
     })
   }
+
+  // Period stats
+  var periodPnl = sorted.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
+  var periodWins = sorted.filter(function(t: any) { return t.pnl > 0 }).length
+  var periodWR = sorted.length > 0 ? (periodWins / sorted.length * 100).toFixed(1) : '0'
 
   var pad = { top: 20, right: 16, bottom: 28, left: 56 }
   var cw = dims.w - pad.left - pad.right
@@ -136,10 +170,26 @@ function EquityChart({ trades }: { trades: any[] }) {
   return (
     <div ref={containerRef} className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
-        <div className="text-[10px] mono text-[#555] tracking-widest font-medium">EQUITY CURVE</div>
+        <div className="flex items-center gap-4">
+          <div className="text-[10px] mono text-[#555] tracking-widest font-medium">EQUITY CURVE</div>
+          <div className="flex items-center gap-0.5">
+            {TIME_FILTERS.map(function(f) {
+              var active = timeFilter === f.label
+              return (
+                <button key={f.label}
+                  onClick={function() { setTimeFilter(f.label); setHover(null) }}
+                  className={'px-2 py-0.5 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/8' : 'text-[#333] hover:text-[#555]')}
+                >
+                  {f.label}
+                </button>
+              )
+            })}
+          </div>
+        </div>
         <div className="flex items-center gap-4 text-[9px] mono">
           <span className="text-[#444]">{sorted.length} TRADES</span>
-          <span className="text-[#00e5a0]">$10K → ${Math.round(sorted[sorted.length - 1].balance_after / 1000)}K</span>
+          <span className={periodPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{periodPnl >= 0 ? '+' : ''}${Math.round(periodPnl).toLocaleString()}</span>
+          <span className="text-[#555]">{periodWR}% WR</span>
         </div>
       </div>
       <svg
@@ -172,7 +222,7 @@ function EquityChart({ trades }: { trades: any[] }) {
         <path d={pathD} fill="none" stroke="#00e5a0" strokeWidth="1.5" strokeLinejoin="round" />
 
         {/* Starting point */}
-        <circle cx={xPos(0)} cy={yPos(10000)} r="2.5" fill="#0c0c0c" stroke="#00e5a0" strokeWidth="1" />
+        <circle cx={xPos(0)} cy={yPos(startingBalance)} r="2.5" fill="#0c0c0c" stroke="#00e5a0" strokeWidth="1" />
 
         {/* End point */}
         <circle cx={xPos(points.length - 1)} cy={yPos(points[points.length - 1].balance)} r="2.5" fill="#00e5a0" />
