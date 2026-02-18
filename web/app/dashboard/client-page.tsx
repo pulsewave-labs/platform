@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-function timeAgo(dateStr: string) {
+function timeAgo(dateStr) {
   var ms = Date.now() - new Date(dateStr).getTime()
   var mins = Math.floor(ms / 60000)
   if (mins < 60) return mins + 'm ago'
@@ -19,9 +19,9 @@ var TIME_FILTERS = [
   { label: 'ALL', days: 0 },
 ]
 
-function EquityChart({ trades }: { trades: any[] }) {
-  var containerRef = useRef(null as HTMLDivElement | null)
-  var [hover, setHover] = useState(null as null | { x: number, y: number, trade: any, idx: number })
+function EquityChart({ trades }) {
+  var containerRef = useRef(null)
+  var [hover, setHover] = useState(null)
   var [dims, setDims] = useState({ w: 800, h: 380 })
   var [timeFilter, setTimeFilter] = useState('ALL')
 
@@ -39,7 +39,7 @@ function EquityChart({ trades }: { trades: any[] }) {
 
   if (!trades || trades.length < 2) return null
 
-  var allSorted = trades.slice().sort(function(a: any, b: any) {
+  var allSorted = trades.slice().sort(function(a, b) {
     return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
   })
 
@@ -47,7 +47,7 @@ function EquityChart({ trades }: { trades: any[] }) {
   var sorted = allSorted
   if (filterDef && filterDef.days > 0) {
     var cutoff = Date.now() - filterDef.days * 86400000
-    sorted = allSorted.filter(function(t: any) { return new Date(t.exit_time || t.entry_time).getTime() >= cutoff })
+    sorted = allSorted.filter(function(t) { return new Date(t.exit_time || t.entry_time).getTime() >= cutoff })
   }
   if (sorted.length < 2) sorted = allSorted
 
@@ -62,14 +62,13 @@ function EquityChart({ trades }: { trades: any[] }) {
     points.push({ balance: sorted[i].balance_after, date: sorted[i].exit_time || sorted[i].entry_time, pnl: sorted[i].pnl, pair: sorted[i].pair, action: sorted[i].action, idx: i + 1 })
   }
 
-  var periodPnl = sorted.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
-  var periodWins = sorted.filter(function(t: any) { return t.pnl > 0 }).length
+  var periodPnl = sorted.reduce(function(s, t) { return s + t.pnl }, 0)
+  var periodWins = sorted.filter(function(t) { return t.pnl > 0 }).length
   var periodLosses = sorted.length - periodWins
   var periodWR = sorted.length > 0 ? (periodWins / sorted.length * 100).toFixed(1) : '0'
   var lastBal = points[points.length - 1].balance
   var periodReturn = startingBalance > 0 ? ((lastBal - startingBalance) / startingBalance * 100).toFixed(1) : '0'
 
-  // Find peak balance and current drawdown
   var peakBal = startingBalance
   var peakIdx = 0
   for (var pi = 0; pi < points.length; pi++) {
@@ -89,14 +88,12 @@ function EquityChart({ trades }: { trades: any[] }) {
   maxBal = maxBal + range * 0.06
   range = maxBal - minBal
 
-  function xPos(idx: number) { return pad.left + (idx / (points.length - 1)) * cw }
-  function yPos(bal: number) { return pad.top + (1 - (bal - minBal) / range) * ch }
+  function xPos(idx) { return pad.left + (idx / (points.length - 1)) * cw }
+  function yPos(bal) { return pad.top + (1 - (bal - minBal) / range) * ch }
 
-  // Smooth curve using monotone cubic interpolation
-  function buildSmoothPath(pts: { x: number, y: number }[]) {
+  function buildSmoothPath(pts) {
     if (pts.length < 2) return ''
     if (pts.length === 2) return 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1) + 'L' + pts[1].x.toFixed(1) + ',' + pts[1].y.toFixed(1)
-
     var d = 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1)
     for (var si = 1; si < pts.length; si++) {
       var p0 = pts[Math.max(0, si - 2)]
@@ -112,14 +109,13 @@ function EquityChart({ trades }: { trades: any[] }) {
     return d
   }
 
-  // Downsample points for smooth rendering if too many
   var displayPoints = points
   if (points.length > 200) {
     var sampleRate = Math.ceil(points.length / 200)
     displayPoints = points.filter(function(_, idx) { return idx === 0 || idx === points.length - 1 || idx % sampleRate === 0 })
   }
 
-  var xyPoints = displayPoints.map(function(p, idx) {
+  var xyPoints = displayPoints.map(function(p) {
     var origIdx = points.indexOf(p)
     return { x: xPos(origIdx), y: yPos(p.balance) }
   })
@@ -128,7 +124,6 @@ function EquityChart({ trades }: { trades: any[] }) {
   var lastPt = xyPoints[xyPoints.length - 1]
   var areaPath = smoothPath + ' L' + lastPt.x.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' L' + xyPoints[0].x.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' Z'
 
-  // Y-axis labels (nicer ticks)
   var yTicks = 5
   var yLabels = []
   for (var t = 0; t <= yTicks; t++) {
@@ -136,8 +131,7 @@ function EquityChart({ trades }: { trades: any[] }) {
     yLabels.push({ val: val, y: yPos(val) })
   }
 
-  // X-axis labels
-  var xLabels: { label: string, x: number }[] = []
+  var xLabels = []
   var lastMonth = ''
   for (var j = 0; j < points.length; j++) {
     var d = new Date(points[j].date)
@@ -150,7 +144,6 @@ function EquityChart({ trades }: { trades: any[] }) {
   var step = Math.ceil(xLabels.length / (dims.w > 600 ? 10 : 5))
   xLabels = xLabels.filter(function(_, i) { return i % step === 0 })
 
-  // Drawdown shading
   var drawdownRegions = []
   var ddPeak = points[0].balance
   var ddStart = -1
@@ -174,7 +167,7 @@ function EquityChart({ trades }: { trades: any[] }) {
     }
   }
 
-  function handleInteraction(clientX: number) {
+  function handleInteraction(clientX) {
     if (!containerRef.current) return
     var rect = containerRef.current.getBoundingClientRect()
     var mx = clientX - rect.left
@@ -184,12 +177,11 @@ function EquityChart({ trades }: { trades: any[] }) {
     setHover({ x: xPos(idx), y: yPos(pt.balance), trade: pt, idx: idx })
   }
 
-  var handleMouseMove = useCallback(function(e: React.MouseEvent) { handleInteraction(e.clientX) }, [points, cw])
-  var handleTouchMove = useCallback(function(e: React.TouchEvent) { if (e.touches[0]) { e.preventDefault(); handleInteraction(e.touches[0].clientX) } }, [points, cw])
+  var handleMouseMove = useCallback(function(e) { handleInteraction(e.clientX) }, [points, cw])
+  var handleTouchMove = useCallback(function(e) { if (e.touches[0]) { e.preventDefault(); handleInteraction(e.touches[0].clientX) } }, [points, cw])
 
   return (
     <div ref={containerRef} className="border border-white/[0.04] rounded-lg bg-[#0c0c0c] overflow-hidden">
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between px-5 py-3 border-b border-white/[0.03] gap-2">
         <div className="flex items-center gap-4">
           <div>
@@ -237,7 +229,6 @@ function EquityChart({ trades }: { trades: any[] }) {
         </div>
       </div>
 
-      {/* Chart */}
       <svg
         width={dims.w}
         height={dims.h}
@@ -260,57 +251,45 @@ function EquityChart({ trades }: { trades: any[] }) {
           </linearGradient>
         </defs>
 
-        {/* Grid lines */}
         {yLabels.map(function(yl, i) {
           return <line key={i} x1={pad.left} x2={dims.w - pad.right} y1={yl.y} y2={yl.y} stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
         })}
 
-        {/* Drawdown shading */}
         {drawdownRegions.map(function(d, i) {
           return <path key={i} d={d} fill="#ff4d4d" opacity="0.035" />
         })}
 
-        {/* Area fill */}
         <path d={areaPath} fill="url(#eqGrad)" />
-
-        {/* Main line — smooth curve */}
         <path d={smoothPath} fill="none" stroke="url(#lineGrad)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
-        {/* Peak marker */}
         <circle cx={xPos(peakIdx)} cy={yPos(peakBal)} r="3" fill="none" stroke="#00e5a0" strokeWidth="1" opacity="0.3" />
         <text x={xPos(peakIdx)} y={yPos(peakBal) - 8} textAnchor="middle" fill="#00e5a0" opacity="0.3" fontSize="8" fontFamily="JetBrains Mono, monospace">ATH ${Math.round(peakBal / 1000)}K</text>
 
-        {/* End point with glow */}
         <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="8" fill="#00e5a0" opacity="0.06" />
         <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="4" fill="#00e5a0" opacity="0.15" />
         <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="2.5" fill="#00e5a0" />
 
-        {/* Y-axis labels */}
         {yLabels.map(function(yl, i) {
           var label = yl.val >= 1000 ? '$' + Math.round(yl.val / 1000) + 'K' : '$' + Math.round(yl.val)
           return <text key={i} x={pad.left - 8} y={yl.y + 3} textAnchor="end" fill="#444" fontSize="9" fontFamily="JetBrains Mono, monospace">{label}</text>
         })}
 
-        {/* X-axis labels */}
         {xLabels.map(function(xl, i) {
           return <text key={i} x={xl.x} y={dims.h - 8} textAnchor="middle" fill="#444" fontSize="9" fontFamily="JetBrains Mono, monospace">{xl.label}</text>
         })}
 
-        {/* Hover crosshair */}
         {hover && (
           <>
             <line x1={hover.x} x2={hover.x} y1={pad.top} y2={pad.top + ch} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
             <line x1={pad.left} x2={dims.w - pad.right} y1={hover.y} y2={hover.y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="3,3" />
             <circle cx={hover.x} cy={hover.y} r="4" fill="#00e5a0" />
             <circle cx={hover.x} cy={hover.y} r="8" fill="#00e5a0" opacity="0.1" />
-            {/* Hover balance label */}
             <rect x={dims.w - pad.right + 2} y={hover.y - 8} width="52" height="16" rx="3" fill="#0c0c0c" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
             <text x={dims.w - pad.right + 6} y={hover.y + 3} fill="#ccc" fontSize="9" fontFamily="JetBrains Mono, monospace">${Math.round(hover.trade.balance / 1000)}K</text>
           </>
         )}
       </svg>
 
-      {/* Tooltip bar */}
       <div className="flex items-center justify-between px-5 py-2 border-t border-white/[0.03] text-[13px] mono min-h-[36px]">
         {hover && hover.trade ? (
           <>
@@ -338,24 +317,25 @@ function EquityChart({ trades }: { trades: any[] }) {
 }
 
 export default function DashboardClientPage() {
-  const [signals, setSignals] = useState([])
-  const [performance, setPerformance] = useState(null)
-  const [loading, setLoading] = useState(true)
+  var [performance, setPerformance] = useState(null)
+  var [loading, setLoading] = useState(true)
+  var [selectedMonth, setSelectedMonth] = useState(null)
+  var [filterPair, setFilterPair] = useState('')
+  var [filterDir, setFilterDir] = useState('')
+  var [selectedTrade, setSelectedTrade] = useState(null)
 
   function fetchData() {
-    return Promise.all([
-      fetch('/api/signals').then(function(r) { return r.json() }).catch(function() { return { signals: [] } }),
-      fetch('/api/performance').then(function(r) { return r.json() }).catch(function() { return null }),
-    ]).then(function(results) {
-      setSignals(results[0].signals || [])
-      setPerformance(results[1])
-      setLoading(false)
-    })
+    return fetch('/api/performance')
+      .then(function(r) { return r.json() })
+      .then(function(result) {
+        setPerformance(result)
+        setLoading(false)
+      })
+      .catch(function() { setLoading(false) })
   }
 
   useEffect(function init() {
     fetchData()
-    // Auto-refresh every 60s for live data
     var iv = setInterval(fetchData, 60000)
     return function() { clearInterval(iv) }
   }, [])
@@ -371,11 +351,10 @@ export default function DashboardClientPage() {
     )
   }
 
-  var stats = performance ? (performance as any).stats : null
-  var monthly = performance ? (performance as any).monthly || [] : []
-  var allTrades = performance ? (performance as any).trades || [] : []
+  var stats = performance ? performance.stats : null
+  var monthly = performance ? performance.monthly || [] : []
+  var allTrades = performance ? performance.trades || [] : []
   var recentTrades = allTrades.slice(0, 15)
-  var activeSignals = signals.filter(function(s: any) { return s.status === 'active' })
 
   // Streak calc
   var currentStreak = 0
@@ -392,31 +371,37 @@ export default function DashboardClientPage() {
   // This month P&L
   var now = new Date()
   var thisMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0')
-  var thisMonthData = monthly.find(function(m: any) { return m.month === thisMonthKey })
+  var thisMonthData = monthly.find(function(m) { return m.month === thisMonthKey })
 
-  // Last month
-  var lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-  var lastMonthKey = lastMonth.getFullYear() + '-' + String(lastMonth.getMonth() + 1).padStart(2, '0')
-  var lastMonthData = monthly.find(function(m: any) { return m.month === lastMonthKey })
-
-  // This week P&L (last 7 days)
+  // This week P&L
   var weekAgo = Date.now() - 7 * 86400000
-  var weekTrades = allTrades.filter(function(t: any) { return new Date(t.exit_time || t.entry_time).getTime() >= weekAgo })
-  var weekPnl = weekTrades.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
+  var weekTrades = allTrades.filter(function(t) { return new Date(t.exit_time || t.entry_time).getTime() >= weekAgo })
+  var weekPnl = weekTrades.reduce(function(s, t) { return s + t.pnl }, 0)
 
   // Last signal time
   var lastSignalTime = allTrades.length > 0 ? allTrades[0].entry_time : null
 
-  // Pair performance
-  var pairPerf: any = {}
-  allTrades.forEach(function(t: any) {
-    var p = t.pair || ''
-    if (!pairPerf[p]) pairPerf[p] = { pnl: 0, trades: 0, wins: 0 }
-    pairPerf[p].pnl += t.pnl
-    pairPerf[p].trades++
-    if (t.pnl > 0) pairPerf[p].wins++
+  // Group trades by month for modal
+  var tradesByMonth = {}
+  allTrades.forEach(function(t) {
+    var d = new Date(t.entry_time)
+    var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    if (!tradesByMonth[key]) tradesByMonth[key] = []
+    tradesByMonth[key].push(t)
   })
-  var pairList = Object.entries(pairPerf).map(function(e) { return { pair: e[0], ...e[1] } }).sort(function(a, b) { return b.pnl - a.pnl })
+
+  var pairs = Array.from(new Set(allTrades.map(function(t) { return t.pair }))).sort()
+
+  var modalTrades = selectedMonth ? (tradesByMonth[selectedMonth.month] || []).slice().sort(function(a, b) {
+    return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime()
+  }).filter(function(t) {
+    if (filterPair && t.pair !== filterPair) return false
+    if (filterDir && t.action !== filterDir) return false
+    return true
+  }) : []
+
+  var monthDate = selectedMonth ? new Date(selectedMonth.month + '-01') : null
+  var monthName = monthDate ? monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : ''
 
   return (
     <div className="space-y-4">
@@ -424,15 +409,15 @@ export default function DashboardClientPage() {
       {/* Stats Grid 3x3 */}
       <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
         {[
-          { label: 'THIS MONTH', value: thisMonthData ? (thisMonthData.pnl >= 0 ? '+' : '') + '$' + thisMonthData.pnl.toLocaleString() : '—', color: thisMonthData && thisMonthData.pnl >= 0 ? '#00e5a0' : thisMonthData ? '#ff4d4d' : '#333', sub: thisMonthData ? thisMonthData.trades + ' trades' : '' },
+          { label: 'THIS MONTH', value: thisMonthData ? (thisMonthData.pnl >= 0 ? '+' : '') + '$' + thisMonthData.pnl.toLocaleString() : '--', color: thisMonthData && thisMonthData.pnl >= 0 ? '#00e5a0' : thisMonthData ? '#ff4d4d' : '#333', sub: thisMonthData ? thisMonthData.trades + ' trades' : '' },
           { label: 'LAST 7 DAYS', value: (weekPnl >= 0 ? '+' : '') + '$' + Math.round(weekPnl).toLocaleString(), color: weekPnl >= 0 ? '#00e5a0' : '#ff4d4d', sub: weekTrades.length + ' trades' },
-          { label: 'LAST SIGNAL', value: lastSignalTime ? timeAgo(lastSignalTime) : '—', color: '#e0e0e0', sub: allTrades[0] ? allTrades[0].pair + ' · ' + allTrades[0].action : '' },
-          { label: 'RETURN', value: stats ? '+' + stats.totalReturn.toFixed(1) + '%' : '—', color: '#00e5a0', sub: 'all time' },
-          { label: 'WIN RATE', value: stats ? stats.winRate + '%' : '—', color: '#e0e0e0', sub: stats ? stats.wins + 'W / ' + stats.losses + 'L' : '' },
-          { label: 'PROFIT FACTOR', value: stats ? stats.profitFactor.toFixed(2) : '—', color: '#e0e0e0', sub: '' },
-          { label: 'MONTHLY AVG', value: stats ? '+$' + stats.avgMonthlyPnl.toLocaleString() : '—', color: '#00e5a0', sub: stats ? stats.profitableMonths + '/' + stats.totalMonths + ' months green' : '' },
-          { label: 'BEST MONTH', value: stats && performance ? '+$' + Math.round(Math.max.apply(null, performance.monthly.map(function(m: any) { return m.pnl }))).toLocaleString() : '—', color: '#00e5a0', sub: '' },
-          { label: 'TOTAL TRADES', value: stats ? String(stats.totalTrades) : '—', color: '#e0e0e0', sub: '' },
+          { label: 'LAST SIGNAL', value: lastSignalTime ? timeAgo(lastSignalTime) : '--', color: '#e0e0e0', sub: allTrades[0] ? allTrades[0].pair + ' / ' + allTrades[0].action : '' },
+          { label: 'RETURN', value: stats ? '+' + stats.totalReturn.toFixed(1) + '%' : '--', color: '#00e5a0', sub: 'all time' },
+          { label: 'WIN RATE', value: stats ? stats.winRate + '%' : '--', color: '#e0e0e0', sub: stats ? stats.wins + 'W / ' + stats.losses + 'L' : '' },
+          { label: 'PROFIT FACTOR', value: stats ? stats.profitFactor.toFixed(2) : '--', color: '#e0e0e0', sub: '' },
+          { label: 'MONTHLY AVG', value: stats ? '+$' + stats.avgMonthlyPnl.toLocaleString() : '--', color: '#00e5a0', sub: stats ? stats.profitableMonths + '/' + stats.totalMonths + ' months green' : '' },
+          { label: 'BEST MONTH', value: stats && performance ? '+$' + Math.round(Math.max.apply(null, performance.monthly.map(function(m) { return m.pnl }))).toLocaleString() : '--', color: '#00e5a0', sub: '' },
+          { label: 'TOTAL TRADES', value: stats ? String(stats.totalTrades) : '--', color: '#e0e0e0', sub: '' },
         ].map(function(s, i) {
           return (
             <div key={i} className="bg-[#0c0c0c] px-5 py-4">
@@ -447,124 +432,87 @@ export default function DashboardClientPage() {
       {/* Equity Chart */}
       {allTrades.length > 0 && <EquityChart trades={allTrades} />}
 
-      {/* Active Signals */}
-      <section>
-        <div className="flex items-center gap-2.5 mb-3">
-          <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">ACTIVE SIGNALS</h2>
-          <span className="text-[13px] mono px-2 py-0.5 rounded-md bg-white/[0.03] text-[#777]">{activeSignals.length}</span>
-        </div>
-
-        {activeSignals.length === 0 ? (
-          <div className="border border-white/[0.04] rounded-lg bg-[#0c0c0c] overflow-hidden">
-            <div className="py-10 flex flex-col items-center">
-              <div className="w-40 h-px bg-white/[0.04] rounded-full overflow-hidden mb-5">
-                <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
-              </div>
-              <div className="text-[#888] mono text-[14px] font-medium mb-1">Scanning for setups...</div>
-              <div className="text-[#444] text-[12px] mono">Signals fire instantly via Telegram when detected</div>
-            </div>
+      {/* Monthly Breakdown */}
+      {monthly.length > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">MONTHLY BREAKDOWN</h2>
+            <span className="text-[12px] mono text-[#555]">{monthly.length} months</span>
           </div>
-        ) : (
-          <div className="space-y-2">
-            {activeSignals.map(function(sig: any) {
-              var isLong = sig.direction === 'LONG'
-              var entry = Number(sig.entry)
-              var sl = Number(sig.stop_loss)
-              var tp = Number(sig.take_profit)
-              var risk = Math.abs(entry - sl)
-              var reward = Math.abs(tp - entry)
-              var rr = risk > 0 ? (reward / risk).toFixed(1) : '0'
-              var slPct = ((risk / entry) * 100).toFixed(2)
-              var tpPct = ((reward / entry) * 100).toFixed(2)
-              var rrNum = risk > 0 ? reward / risk : 0
-              var barWidth = Math.min(rrNum / 4 * 100, 100)
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {monthly.slice().reverse().map(function(m) {
+              var isPos = m.pnl >= 0
+              var monthD = new Date(m.month + '-01')
+              var monthShort = monthD.toLocaleDateString('en-US', { month: 'short' })
+              var year = monthD.getFullYear()
+              var wr = m.trades > 0 ? (m.wins / m.trades * 100).toFixed(0) : '0'
+              var maxPnl = Math.max.apply(null, monthly.map(function(x) { return Math.abs(x.pnl) }))
+              var intensity = Math.min(Math.abs(m.pnl) / maxPnl, 1)
 
               return (
-                <div key={sig.id} className="border border-[#161616] rounded-lg overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
-                    <div className="flex items-center gap-3">
-                      <span className={'px-2 py-0.5 rounded text-[12px] mono font-bold tracking-wider ' + (isLong ? 'bg-[#00e5a0]/8 text-[#00e5a0] border border-[#00e5a0]/15' : 'bg-[#ff4d4d]/8 text-[#ff4d4d] border border-[#ff4d4d]/15')}>
-                        {sig.direction}
-                      </span>
-                      <span className="mono font-semibold text-white text-[14px]">{sig.pair}</span>
-                      <span className="text-[12px] mono text-[#666]">{timeAgo(sig.created_at)}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-[13px] mono text-[#777]">R:R</div>
-                      <div className="text-[16px] mono font-bold text-[#00e5a0]">{rr}:1</div>
-                    </div>
-                  </div>
+                <button
+                  key={m.month}
+                  onClick={function() { setSelectedMonth(m); setFilterPair(''); setFilterDir(''); setSelectedTrade(null) }}
+                  className="w-full text-left border border-white/[0.04] rounded-lg overflow-hidden transition-all hover:border-white/[0.08] bg-[#0c0c0c] group"
+                >
+                  <div className="h-0.5" style={{ backgroundColor: isPos ? 'rgba(0, 229, 160, ' + (0.15 + intensity * 0.6) + ')' : 'rgba(255, 77, 77, ' + (0.15 + intensity * 0.6) + ')' }}></div>
 
-                  <div className="h-1 bg-[#161616] flex">
-                    <div className="h-full bg-[#ff4d4d]/30" style={{ width: '25%' }}></div>
-                    <div className="h-full bg-[#00e5a0]/40" style={{ width: barWidth * 0.75 + '%' }}></div>
-                  </div>
+                  <div className="px-3.5 py-3">
+                    <div className="flex items-baseline justify-between mb-2">
+                      <div>
+                        <span className="text-[14px] font-semibold text-[#ccc] group-hover:text-white transition-colors">{monthShort}</span>
+                        <span className="text-[12px] text-[#666] ml-1.5 mono">{year}</span>
+                      </div>
+                      <div className={'text-[16px] mono font-bold ' + (isPos ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                        {isPos ? '+' : ''}${m.pnl.toLocaleString()}
+                      </div>
+                    </div>
 
-                  <div className="grid grid-cols-3 gap-px bg-[#131313]">
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[12px] text-[#777] mono tracking-wider mb-1">ENTRY</div>
-                      <div className="mono text-[16px] text-white font-medium">${entry.toLocaleString()}</div>
+                    <div className="flex items-center justify-between text-[12px] mono mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[#888]">{m.trades} trades</span>
+                        <span className="text-[#333]">·</span>
+                        <span className="text-[#888]">{wr}% WR</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[#00e5a0]/60">{m.wins}W</span>
+                        <span className="text-[#ff4d4d]/60">{m.losses}L</span>
+                      </div>
                     </div>
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[12px] text-[#777] mono tracking-wider mb-1">STOP LOSS</div>
-                      <div className="mono text-[16px] text-[#ff4d4d] font-medium">${sl.toLocaleString()}</div>
-                      <div className="text-[12px] mono text-[#ff4d4d]/40">-{slPct}%</div>
-                    </div>
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[12px] text-[#777] mono tracking-wider mb-1">TAKE PROFIT</div>
-                      <div className="mono text-[16px] text-[#00e5a0] font-medium">${tp.toLocaleString()}</div>
-                      <div className="text-[12px] mono text-[#00e5a0]/40">+{tpPct}%</div>
-                    </div>
-                  </div>
 
-                  {sig.reasoning && (
-                    <div className="px-4 py-2 bg-[#0a0a0a] border-t border-[#131313]">
-                      <div className="text-[13px] text-[#888] leading-relaxed">{sig.reasoning}</div>
-                    </div>
-                  )}
-
-                  <div className="px-4 py-3 bg-[#0a0a0a] border-t border-[#131313]">
-                    <div className="text-[12px] text-[#666] mono tracking-wider mb-2">POSITION SIZING · 10% RISK · 20× LEV</div>
-                    <div className="grid grid-cols-5 gap-x-2 gap-y-1 text-[13px] mono">
-                      <div className="text-[#666] pb-0.5">ACCT</div>
-                      <div className="text-[#666] pb-0.5">RISK</div>
-                      <div className="text-[#666] pb-0.5">SIZE</div>
-                      <div className="text-[#666] pb-0.5">MARGIN</div>
-                      <div className="text-[#666] pb-0.5 text-right">TP PROFIT</div>
-                      {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-                        var riskAmt = acct * 0.10
-                        var posSize = risk > 0 ? riskAmt / (risk / entry) : 0
-                        var margin = posSize / 20
-                        var profit = (posSize / entry) * reward
-                        return [
-                          <div key={acct + 'a'} className="text-[#666]">${acct >= 1000 ? (acct / 1000) + 'K' : acct}</div>,
-                          <div key={acct + 'r'} className="text-[#c9a227]">${riskAmt >= 1000 ? (riskAmt / 1000).toFixed(1) + 'K' : riskAmt}</div>,
-                          <div key={acct + 's'} className="text-[#666]">${Math.round(posSize) >= 1000 ? (Math.round(posSize) / 1000).toFixed(0) + 'K' : Math.round(posSize)}</div>,
-                          <div key={acct + 'm'} className="text-[#777]">${Math.round(margin) >= 1000 ? (Math.round(margin) / 1000).toFixed(1) + 'K' : Math.round(margin)}</div>,
-                          <div key={acct + 'p'} className="text-[#00e5a0] text-right">+${Math.round(profit) >= 1000 ? (Math.round(profit) / 1000).toFixed(1) + 'K' : Math.round(profit)}</div>,
-                        ]
+                    <div className="flex gap-px">
+                      {(tradesByMonth[m.month] || []).slice().sort(function(a, b) {
+                        return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
+                      }).map(function(t, ti) {
+                        return (
+                          <div key={ti}
+                            className="h-1 rounded-full flex-1"
+                            style={{
+                              backgroundColor: t.pnl >= 0 ? 'rgba(0, 229, 160, 0.5)' : 'rgba(255, 77, 77, 0.4)',
+                              maxWidth: '8px'
+                            }}
+                          ></div>
+                        )
                       })}
                     </div>
                   </div>
-                </div>
+                </button>
               )
             })}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
       {/* Recent Trades */}
       <section>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">RECENT TRADES</h2>
-            {currentStreak > 1 && (
-              <span className={'text-[13px] mono px-2 py-0.5 rounded-md ' + (streakType === 'W' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>
-                {currentStreak}{streakType} STREAK
-              </span>
-            )}
-          </div>
-          <a href="/dashboard/history" className="text-[12px] mono text-[#555] hover:text-[#888] transition-colors tracking-wider">ALL TRADES →</a>
+        <div className="flex items-center gap-2.5 mb-3">
+          <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">RECENT TRADES</h2>
+          {currentStreak > 1 && (
+            <span className={'text-[13px] mono px-2 py-0.5 rounded-md ' + (streakType === 'W' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>
+              {currentStreak}{streakType} STREAK
+            </span>
+          )}
         </div>
 
         {/* Desktop table */}
@@ -583,7 +531,7 @@ export default function DashboardClientPage() {
                 </tr>
               </thead>
               <tbody>
-                {recentTrades.map(function(t: any, i: number) {
+                {recentTrades.map(function(t, i) {
                   var isWin = t.pnl >= 0
                   return (
                     <tr key={i} className={'border-t border-white/[0.02] transition-colors hover:bg-white/[0.01] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
@@ -610,7 +558,7 @@ export default function DashboardClientPage() {
 
         {/* Mobile cards */}
         <div className="md:hidden border border-white/[0.04] rounded-lg overflow-hidden divide-y divide-white/[0.02]">
-          {recentTrades.map(function(t: any, i: number) {
+          {recentTrades.map(function(t, i) {
             var isWin = t.pnl >= 0
             return (
               <div key={i} className={'px-4 py-3 ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
@@ -632,40 +580,194 @@ export default function DashboardClientPage() {
         </div>
       </section>
 
-      {/* Pair Performance */}
-      {pairList.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2.5 mb-3">
-            <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">PAIR PERFORMANCE</h2>
+      {/* Trade settings footer */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.02] rounded-lg overflow-hidden text-[12px] mono">
+        {[
+          { label: 'RISK', value: '10% FIXED ($1,000)' },
+          { label: 'LEVERAGE', value: '20x' },
+          { label: 'SIZING', value: 'RISK / STOP DISTANCE' },
+          { label: 'EXCHANGE', value: 'BITGET USDT-M' },
+        ].map(function(s, i) {
+          return (
+            <div key={i} className="bg-[#0c0c0c] px-4 py-3">
+              <div className="text-[#444] tracking-[.1em] mb-0.5">{s.label}</div>
+              <div className="text-[#888]">{s.value}</div>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Month Detail Modal */}
+      {selectedMonth && (
+        <div className="fixed inset-0 z-[100] flex items-start justify-center" onClick={function(e) { if (e.target === e.currentTarget) { setSelectedMonth(null); setSelectedTrade(null) } }}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+          <div className="relative w-full max-w-4xl mx-4 mt-[5vh] md:mt-[8vh] max-h-[85vh] flex flex-col bg-[#0c0c0c] border border-white/[0.06] rounded-xl shadow-2xl overflow-hidden">
+
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04] shrink-0">
+              <div className="flex items-center gap-4">
+                <h3 className="text-[14px] font-semibold text-white">{monthName}</h3>
+                <span className={'text-[16px] mono font-bold ' + (selectedMonth.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                  {selectedMonth.pnl >= 0 ? '+' : ''}${selectedMonth.pnl.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <select value={filterPair} onChange={function(e) { setFilterPair(e.target.value) }}
+                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[12px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
+                  <option value="">ALL PAIRS</option>
+                  {pairs.map(function(p) { return <option key={p} value={p}>{p}</option> })}
+                </select>
+                <select value={filterDir} onChange={function(e) { setFilterDir(e.target.value) }}
+                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[12px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
+                  <option value="">ALL</option>
+                  <option value="LONG">LONG</option>
+                  <option value="SHORT">SHORT</option>
+                </select>
+                <button onClick={function() { setSelectedMonth(null); setSelectedTrade(null) }} className="text-[#555] hover:text-white transition-colors p-1">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-px bg-white/[0.02] shrink-0">
+              {[
+                { l: 'TRADES', v: String(selectedMonth.trades) },
+                { l: 'WIN RATE', v: (selectedMonth.trades > 0 ? (selectedMonth.wins / selectedMonth.trades * 100).toFixed(0) : '0') + '%' },
+                { l: 'WINS / LOSSES', v: selectedMonth.wins + 'W / ' + selectedMonth.losses + 'L' },
+                { l: 'BALANCE', v: '$' + selectedMonth.balance.toLocaleString() },
+              ].map(function(s, i) {
+                return (
+                  <div key={i} className="bg-[#0a0a0a] px-4 py-3">
+                    <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-1">{s.l}</div>
+                    <div className="text-[13px] mono font-semibold text-[#ccc]">{s.v}</div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <table className="w-full text-[13px] mono hidden md:table">
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-[#0c0c0c] text-[#555] border-b border-white/[0.03]">
+                    <th className="text-left px-4 py-3 font-medium tracking-[.1em]">DATE</th>
+                    <th className="text-left px-4 py-3 font-medium tracking-[.1em]">PAIR</th>
+                    <th className="text-left px-4 py-3 font-medium tracking-[.1em]">SIDE</th>
+                    <th className="text-right px-4 py-3 font-medium tracking-[.1em]">ENTRY</th>
+                    <th className="text-right px-4 py-3 font-medium tracking-[.1em]">EXIT</th>
+                    <th className="text-right px-4 py-3 font-medium tracking-[.1em]">SIZE</th>
+                    <th className="text-right px-4 py-3 font-medium tracking-[.1em]">FEES</th>
+                    <th className="text-right px-4 py-3 font-medium tracking-[.1em]">P&L</th>
+                    <th className="text-center px-4 py-3 font-medium tracking-[.1em]">RESULT</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {modalTrades.map(function(t, ti) {
+                    var isWin = t.pnl >= 0
+                    return (
+                      <tr key={ti}
+                        onClick={function() { setSelectedTrade(selectedTrade === t ? null : t) }}
+                        className={'border-t border-white/[0.02] transition-colors cursor-pointer ' + (selectedTrade === t ? 'bg-white/[0.03]' : ti % 2 === 0 ? 'bg-[#0a0a0a] hover:bg-white/[0.01]' : 'bg-[#0b0b0b] hover:bg-white/[0.01]')}
+                      >
+                        <td className="px-4 py-3 text-[#777]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                        <td className="px-4 py-3 text-[#aaa] font-medium">{t.pair}</td>
+                        <td className="px-4 py-3"><span className={'px-1.5 py-0.5 rounded text-[11px] font-bold ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span></td>
+                        <td className="px-4 py-3 text-right text-[#777]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        <td className="px-4 py-3 text-right text-[#777]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                        <td className="px-4 py-3 text-right text-[#666]">${Math.round(Number(t.notional)).toLocaleString()}</td>
+                        <td className="px-4 py-3 text-right text-[#555]">${Number(t.fees).toFixed(0)}</td>
+                        <td className={'px-4 py-3 text-right font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                          {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={'text-[11px] font-medium tracking-wider ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+
+              <div className="md:hidden divide-y divide-white/[0.02]">
+                {modalTrades.map(function(t, ti) {
+                  var isWin = t.pnl >= 0
+                  return (
+                    <button key={ti} onClick={function() { setSelectedTrade(selectedTrade === t ? null : t) }} className={'w-full text-left px-4 py-3 transition-colors ' + (selectedTrade === t ? 'bg-white/[0.03]' : 'hover:bg-white/[0.01]')}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={'text-[14px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
+                          <span className="text-[13px] text-[#aaa] mono font-medium">{t.pair}</span>
+                        </div>
+                        <span className={'text-[16px] mono font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-[12px] mono text-[#555]">
+                        <span>{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                        <span>${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})} → ${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                        <span className={'font-medium ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
+                      </div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.04] bg-[#0b0b0b] shrink-0">
+              <span className="text-[12px] mono text-[#555]">{modalTrades.length} trades shown</span>
+              <span className="text-[12px] mono text-[#555]">Fees: ${Math.round((tradesByMonth[selectedMonth.month] || []).reduce(function(s, t) { return s + t.fees }, 0)).toLocaleString()}</span>
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-            {pairList.map(function(p) {
-              var wr = p.trades > 0 ? (p.wins / p.trades * 100).toFixed(0) : '0'
-              var best = pairList[0].pnl
-              var barW = best > 0 ? Math.max(5, (p.pnl / best) * 100) : 0
-              return (
-                <div key={p.pair} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3 hover:border-white/[0.06] transition-colors">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[14px] mono font-medium text-[#aaa]">{p.pair.replace('/USDT', '')}</span>
-                    <span className="text-[13px] mono text-[#555]">{p.trades} trades</span>
-                  </div>
-                  <div className={'text-[24px] mono font-bold mb-1.5 ' + (p.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-                    {p.pnl >= 0 ? '+' : ''}${Math.round(p.pnl).toLocaleString()}
-                  </div>
-                  <div className="h-1 rounded-full bg-white/[0.02] overflow-hidden mb-1.5">
-                    <div className="h-full rounded-full bg-[#00e5a0]/20" style={{ width: barW + '%' }}></div>
-                  </div>
-                  <div className="flex items-center justify-between text-[13px] mono">
-                    <span className="text-[#666]">{wr}% WR</span>
-                    <span className="text-[#555]">{p.wins}W / {p.trades - p.wins}L</span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
+        </div>
       )}
 
+      {/* Trade Detail Modal */}
+      {selectedTrade && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center" onClick={function(e) { if (e.target === e.currentTarget) setSelectedTrade(null) }}>
+          <div className="absolute inset-0 bg-black/60"></div>
+          <div className="relative w-full max-w-md mx-4 bg-[#0c0c0c] border border-white/[0.06] rounded-xl shadow-2xl overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
+              <div className="flex items-center gap-3">
+                <span className={'text-[12px] font-bold mono px-2 py-0.5 rounded ' + (selectedTrade.action === 'LONG' ? 'bg-[#00e5a0]/[0.08] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.08] text-[#ff4d4d]')}>{selectedTrade.action}</span>
+                <span className="text-[14px] font-bold mono text-white">{selectedTrade.pair}</span>
+              </div>
+              <button onClick={function() { setSelectedTrade(null) }} className="text-[#555] hover:text-white transition-colors p-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+            </div>
+
+            <div className="px-5 py-5 text-center border-b border-white/[0.03]">
+              <div className={'text-[28px] font-bold mono ' + (selectedTrade.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                {selectedTrade.pnl >= 0 ? '+' : ''}${Number(selectedTrade.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+              </div>
+              <div className="text-[12px] mono text-[#555] mt-1">
+                {selectedTrade.exit_reason === 'TP' ? 'Take Profit Hit' : 'Stop Loss Hit'}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-px bg-white/[0.02]">
+              {[
+                { l: 'ENTRY', v: '$' + Number(selectedTrade.entry_price).toLocaleString(undefined, {maximumFractionDigits: 4}) },
+                { l: 'EXIT', v: '$' + Number(selectedTrade.exit_price).toLocaleString(undefined, {maximumFractionDigits: 4}) },
+                { l: 'STOP LOSS', v: selectedTrade.stop_loss ? '$' + Number(selectedTrade.stop_loss).toLocaleString(undefined, {maximumFractionDigits: 4}) : '--' },
+                { l: 'TAKE PROFIT', v: selectedTrade.take_profit ? '$' + Number(selectedTrade.take_profit).toLocaleString(undefined, {maximumFractionDigits: 4}) : '--' },
+                { l: 'POSITION SIZE', v: '$' + Math.round(Number(selectedTrade.notional || 0)).toLocaleString() },
+                { l: 'RISK AMOUNT', v: '$' + Number(selectedTrade.risk_amount || 0).toLocaleString() },
+                { l: 'FEES', v: '$' + Number(selectedTrade.fees || 0).toFixed(2) },
+                { l: 'BALANCE AFTER', v: '$' + Math.round(Number(selectedTrade.balance_after || 0)).toLocaleString() },
+              ].map(function(d, i) {
+                return (
+                  <div key={i} className="bg-[#0a0a0a] px-4 py-3">
+                    <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-1">{d.l}</div>
+                    <div className="text-[13px] mono font-medium text-[#ccc]">{d.v}</div>
+                  </div>
+                )
+              })}
+            </div>
+
+            <div className="px-5 py-3 border-t border-white/[0.03] flex items-center justify-between text-[12px] mono text-[#555]">
+              <span>Entry: {new Date(selectedTrade.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} {new Date(selectedTrade.entry_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+              <span>Exit: {selectedTrade.exit_time ? new Date(selectedTrade.exit_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + new Date(selectedTrade.exit_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--'}</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
