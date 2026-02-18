@@ -78,10 +78,11 @@ export default function LandingClientPage() {
   allTrades.forEach((t:any)=>{const p=(t.pair||'').replace('/USDT','');if(!pairStats[p])pairStats[p]={pnl:0,n:0};pairStats[p].pnl+=Number(t.pnl||0);pairStats[p].n++})
   const pairList = Object.entries(pairStats).map(([p,v])=>({p,...v})).sort((a,b)=>b.pnl-a.pnl)
 
-  const equity = useCountUp(Math.round(finalBalance), 0, 2500)
-  const tradeCountUp = useCountUp(totalTrades, 0, 2000)
-  const pfUp = useCountUp(profitFactor, 2, 2000)
-  const winMoUp = useCountUp(Math.round(winMonthPct), 0, 2000)
+  const dataReady = allTrades.length > 0
+  const equity = useCountUp(dataReady ? Math.round(finalBalance) : 0, 0, 2500)
+  const tradeCountUp = useCountUp(dataReady ? totalTrades : 0, 0, 2000)
+  const pfUp = useCountUp(dataReady ? profitFactor : 0, 2, 2000)
+  const winMoUp = useCountUp(dataReady ? Math.round(winMonthPct) : 0, 0, 2000)
 
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
   const fmtK = (n:number) => n>=1000?'$'+Math.round(n).toLocaleString():n>=0?'$'+Math.round(n).toLocaleString():'-$'+Math.abs(Math.round(n)).toLocaleString()
@@ -165,7 +166,7 @@ export default function LandingClientPage() {
           <div className="fu4 t">
             <div className="grid grid-cols-2 md:grid-cols-4">
               {[
-                { label:'STARTING BALANCE', sub:'→ CURRENT', ref:equity.ref, val:'$10K → $'+equity.display, c:'#00e5a0' },
+                { label:'STARTING BALANCE', sub:'→ CURRENT', ref:equity.ref, val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
                 { label:'TOTAL TRADES', sub:'VERIFIED', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
                 { label:'PROFIT FACTOR', sub:'$'+profitFactor.toFixed(2)+' PER $1 LOST', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
                 { label:'PROFITABLE MONTHS', sub:greenMonths+' OF '+totalMonths, ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
