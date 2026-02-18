@@ -22,14 +22,14 @@ var TIME_FILTERS = [
 function EquityChart({ trades }: { trades: any[] }) {
   var containerRef = useRef(null as HTMLDivElement | null)
   var [hover, setHover] = useState(null as null | { x: number, y: number, trade: any, idx: number })
-  var [dims, setDims] = useState({ w: 800, h: 300 })
+  var [dims, setDims] = useState({ w: 800, h: 380 })
   var [timeFilter, setTimeFilter] = useState('ALL')
 
   useEffect(function() {
     function measure() {
       if (containerRef.current) {
         var rect = containerRef.current.getBoundingClientRect()
-        setDims({ w: rect.width, h: Math.min(340, Math.max(200, rect.width * 0.3)) })
+        setDims({ w: rect.width, h: Math.min(420, Math.max(260, rect.width * 0.38)) })
       }
     }
     measure()
@@ -39,49 +39,45 @@ function EquityChart({ trades }: { trades: any[] }) {
 
   if (!trades || trades.length < 2) return null
 
-  // Build equity curve from trades (sorted oldest first)
   var allSorted = trades.slice().sort(function(a: any, b: any) {
     return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
   })
 
-  // Apply time filter
   var filterDef = TIME_FILTERS.find(function(f) { return f.label === timeFilter })
   var sorted = allSorted
   if (filterDef && filterDef.days > 0) {
     var cutoff = Date.now() - filterDef.days * 86400000
     sorted = allSorted.filter(function(t: any) { return new Date(t.exit_time || t.entry_time).getTime() >= cutoff })
   }
+  if (sorted.length < 2) sorted = allSorted
 
-  if (sorted.length < 2) sorted = allSorted // fallback if filter too tight
-
-  // Calculate starting balance for filtered view
   var startingBalance = 10000
   if (filterDef && filterDef.days > 0 && sorted.length < allSorted.length) {
-    // Find the balance right before the filtered window
     var firstFilteredIdx = allSorted.indexOf(sorted[0])
-    if (firstFilteredIdx > 0) {
-      startingBalance = allSorted[firstFilteredIdx - 1].balance_after
-    }
+    if (firstFilteredIdx > 0) startingBalance = allSorted[firstFilteredIdx - 1].balance_after
   }
 
   var points = [{ balance: startingBalance, date: sorted[0].entry_time, pnl: 0, pair: '', action: '', idx: 0 }]
   for (var i = 0; i < sorted.length; i++) {
-    points.push({
-      balance: sorted[i].balance_after,
-      date: sorted[i].exit_time || sorted[i].entry_time,
-      pnl: sorted[i].pnl,
-      pair: sorted[i].pair,
-      action: sorted[i].action,
-      idx: i + 1
-    })
+    points.push({ balance: sorted[i].balance_after, date: sorted[i].exit_time || sorted[i].entry_time, pnl: sorted[i].pnl, pair: sorted[i].pair, action: sorted[i].action, idx: i + 1 })
   }
 
-  // Period stats
   var periodPnl = sorted.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
   var periodWins = sorted.filter(function(t: any) { return t.pnl > 0 }).length
+  var periodLosses = sorted.length - periodWins
   var periodWR = sorted.length > 0 ? (periodWins / sorted.length * 100).toFixed(1) : '0'
+  var lastBal = points[points.length - 1].balance
+  var periodReturn = startingBalance > 0 ? ((lastBal - startingBalance) / startingBalance * 100).toFixed(1) : '0'
 
-  var pad = { top: 20, right: 16, bottom: 28, left: 56 }
+  // Find peak balance and current drawdown
+  var peakBal = startingBalance
+  var peakIdx = 0
+  for (var pi = 0; pi < points.length; pi++) {
+    if (points[pi].balance > peakBal) { peakBal = points[pi].balance; peakIdx = pi }
+  }
+  var currentDD = peakBal > 0 ? ((peakBal - lastBal) / peakBal * 100) : 0
+
+  var pad = { top: 24, right: 20, bottom: 32, left: 60 }
   var cw = dims.w - pad.left - pad.right
   var ch = dims.h - pad.top - pad.bottom
 
@@ -89,26 +85,50 @@ function EquityChart({ trades }: { trades: any[] }) {
   var minBal = Math.min.apply(null, balances)
   var maxBal = Math.max.apply(null, balances)
   var range = maxBal - minBal || 1
-
-  // Add some padding to range
-  minBal = minBal - range * 0.05
-  maxBal = maxBal + range * 0.05
+  minBal = minBal - range * 0.06
+  maxBal = maxBal + range * 0.06
   range = maxBal - minBal
 
   function xPos(idx: number) { return pad.left + (idx / (points.length - 1)) * cw }
   function yPos(bal: number) { return pad.top + (1 - (bal - minBal) / range) * ch }
 
-  // Build SVG path
-  var pathD = points.map(function(p, i) {
-    var x = xPos(i)
-    var y = yPos(p.balance)
-    return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1)
-  }).join(' ')
+  // Smooth curve using monotone cubic interpolation
+  function buildSmoothPath(pts: { x: number, y: number }[]) {
+    if (pts.length < 2) return ''
+    if (pts.length === 2) return 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1) + 'L' + pts[1].x.toFixed(1) + ',' + pts[1].y.toFixed(1)
 
-  // Fill area
-  var areaD = pathD + ' L' + xPos(points.length - 1).toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' L' + pad.left.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' Z'
+    var d = 'M' + pts[0].x.toFixed(1) + ',' + pts[0].y.toFixed(1)
+    for (var si = 1; si < pts.length; si++) {
+      var p0 = pts[Math.max(0, si - 2)]
+      var p1 = pts[si - 1]
+      var p2 = pts[si]
+      var p3 = pts[Math.min(pts.length - 1, si + 1)]
+      var cp1x = p1.x + (p2.x - p0.x) / 6
+      var cp1y = p1.y + (p2.y - p0.y) / 6
+      var cp2x = p2.x - (p3.x - p1.x) / 6
+      var cp2y = p2.y - (p3.y - p1.y) / 6
+      d += ' C' + cp1x.toFixed(1) + ',' + cp1y.toFixed(1) + ' ' + cp2x.toFixed(1) + ',' + cp2y.toFixed(1) + ' ' + p2.x.toFixed(1) + ',' + p2.y.toFixed(1)
+    }
+    return d
+  }
 
-  // Y-axis labels
+  // Downsample points for smooth rendering if too many
+  var displayPoints = points
+  if (points.length > 200) {
+    var sampleRate = Math.ceil(points.length / 200)
+    displayPoints = points.filter(function(_, idx) { return idx === 0 || idx === points.length - 1 || idx % sampleRate === 0 })
+  }
+
+  var xyPoints = displayPoints.map(function(p, idx) {
+    var origIdx = points.indexOf(p)
+    return { x: xPos(origIdx), y: yPos(p.balance) }
+  })
+
+  var smoothPath = buildSmoothPath(xyPoints)
+  var lastPt = xyPoints[xyPoints.length - 1]
+  var areaPath = smoothPath + ' L' + lastPt.x.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' L' + xyPoints[0].x.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' Z'
+
+  // Y-axis labels (nicer ticks)
   var yTicks = 5
   var yLabels = []
   for (var t = 0; t <= yTicks; t++) {
@@ -116,7 +136,7 @@ function EquityChart({ trades }: { trades: any[] }) {
     yLabels.push({ val: val, y: yPos(val) })
   }
 
-  // X-axis labels (month markers)
+  // X-axis labels
   var xLabels: { label: string, x: number }[] = []
   var lastMonth = ''
   for (var j = 0; j < points.length; j++) {
@@ -127,25 +147,22 @@ function EquityChart({ trades }: { trades: any[] }) {
       xLabels.push({ label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }), x: xPos(j) })
     }
   }
-  // Only show every Nth label to avoid overlap
-  var step = Math.ceil(xLabels.length / 10)
+  var step = Math.ceil(xLabels.length / (dims.w > 600 ? 10 : 5))
   xLabels = xLabels.filter(function(_, i) { return i % step === 0 })
 
   // Drawdown shading
   var drawdownRegions: string[] = []
-  var peak = points[0].balance
+  var ddPeak = points[0].balance
   var ddStart = -1
   for (var k = 0; k < points.length; k++) {
-    if (points[k].balance > peak) peak = points[k].balance
-    var dd = (peak - points[k].balance) / peak
-    if (dd > 0.05 && ddStart === -1) ddStart = k
-    if ((dd <= 0.05 || k === points.length - 1) && ddStart !== -1) {
-      // Build a region path
+    if (points[k].balance > ddPeak) ddPeak = points[k].balance
+    var dd = (ddPeak - points[k].balance) / ddPeak
+    if (dd > 0.03 && ddStart === -1) ddStart = k
+    if ((dd <= 0.03 || k === points.length - 1) && ddStart !== -1) {
       var regionPath = ''
       for (var r = ddStart; r <= k; r++) {
         regionPath += (r === ddStart ? 'M' : 'L') + xPos(r).toFixed(1) + ',' + yPos(points[r].balance).toFixed(1)
       }
-      // Close to the peak line
       for (var r2 = k; r2 >= ddStart; r2--) {
         var peakAtR = points[0].balance
         for (var p2 = 0; p2 <= r2; p2++) { if (points[p2].balance > peakAtR) peakAtR = points[p2].balance }
@@ -157,28 +174,60 @@ function EquityChart({ trades }: { trades: any[] }) {
     }
   }
 
-  var handleMouseMove = useCallback(function(e: React.MouseEvent) {
+  function handleInteraction(clientX: number) {
     if (!containerRef.current) return
     var rect = containerRef.current.getBoundingClientRect()
-    var mx = e.clientX - rect.left
+    var mx = clientX - rect.left
     var idx = Math.round(((mx - pad.left) / cw) * (points.length - 1))
     idx = Math.max(0, Math.min(points.length - 1, idx))
     var pt = points[idx]
     setHover({ x: xPos(idx), y: yPos(pt.balance), trade: pt, idx: idx })
-  }, [points, cw])
+  }
+
+  var handleMouseMove = useCallback(function(e: React.MouseEvent) { handleInteraction(e.clientX) }, [points, cw])
+  var handleTouchMove = useCallback(function(e: React.TouchEvent) { if (e.touches[0]) { e.preventDefault(); handleInteraction(e.touches[0].clientX) } }, [points, cw])
 
   return (
-    <div ref={containerRef} className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
+    <div ref={containerRef} className="border border-white/[0.04] rounded-lg bg-[#0c0c0c] overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between px-5 py-3 border-b border-white/[0.03] gap-2">
         <div className="flex items-center gap-4">
-          <div className="text-[10px] mono text-[#888] tracking-widest font-medium">EQUITY CURVE</div>
-          <div className="flex items-center gap-0.5">
+          <div>
+            <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">BALANCE</div>
+            <div className="text-[22px] mono font-bold text-white leading-none">${Math.round(lastBal).toLocaleString()}</div>
+          </div>
+          <div className="h-8 w-px bg-white/[0.04]"></div>
+          <div>
+            <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">P&L</div>
+            <div className={'text-[16px] mono font-bold leading-none ' + (periodPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+              {periodPnl >= 0 ? '+' : ''}${Math.round(periodPnl).toLocaleString()}
+              <span className="text-[11px] ml-1 opacity-50">({periodReturn}%)</span>
+            </div>
+          </div>
+          {currentDD > 1 && (
+            <>
+              <div className="h-8 w-px bg-white/[0.04]"></div>
+              <div>
+                <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">DRAWDOWN</div>
+                <div className="text-[14px] mono font-bold text-[#ff4d4d] leading-none">-{currentDD.toFixed(1)}%</div>
+              </div>
+            </>
+          )}
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 text-[9px] mono mr-2 hidden md:flex">
+            <span className="text-[#666]">{sorted.length} trades</span>
+            <span className="text-[#00e5a0]/60">{periodWins}W</span>
+            <span className="text-[#ff4d4d]/60">{periodLosses}L</span>
+            <span className="text-[#777]">{periodWR}% WR</span>
+          </div>
+          <div className="flex items-center gap-0.5 bg-white/[0.02] rounded-md p-0.5">
             {TIME_FILTERS.map(function(f) {
               var active = timeFilter === f.label
               return (
                 <button key={f.label}
                   onClick={function() { setTimeFilter(f.label); setHover(null) }}
-                  className={'px-2 py-0.5 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/8' : 'text-[#666] hover:text-[#888]')}
+                  className={'px-2.5 py-1 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/[0.08]' : 'text-[#555] hover:text-[#888]')}
                 >
                   {f.label}
                 </button>
@@ -186,84 +235,104 @@ function EquityChart({ trades }: { trades: any[] }) {
             })}
           </div>
         </div>
-        <div className="flex items-center gap-4 text-[9px] mono">
-          <span className="text-[#777]">{sorted.length} TRADES</span>
-          <span className={periodPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{periodPnl >= 0 ? '+' : ''}${Math.round(periodPnl).toLocaleString()}</span>
-          <span className="text-[#888]">{periodWR}% WR</span>
-        </div>
       </div>
+
+      {/* Chart */}
       <svg
         width={dims.w}
         height={dims.h}
-        className="cursor-crosshair"
+        className="cursor-crosshair touch-none"
         onMouseMove={handleMouseMove}
         onMouseLeave={function() { setHover(null) }}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={function() { setHover(null) }}
       >
+        <defs>
+          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.15" />
+            <stop offset="50%" stopColor="#00e5a0" stopOpacity="0.05" />
+            <stop offset="100%" stopColor="#00e5a0" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#00e5a0" stopOpacity="1" />
+            <stop offset="100%" stopColor="#00e5a0" stopOpacity="1" />
+          </linearGradient>
+        </defs>
+
         {/* Grid lines */}
         {yLabels.map(function(yl, i) {
-          return <line key={i} x1={pad.left} x2={dims.w - pad.right} y1={yl.y} y2={yl.y} stroke="#141414" strokeWidth="1" />
+          return <line key={i} x1={pad.left} x2={dims.w - pad.right} y1={yl.y} y2={yl.y} stroke="rgba(255,255,255,0.02)" strokeWidth="1" />
         })}
 
         {/* Drawdown shading */}
         {drawdownRegions.map(function(d, i) {
-          return <path key={i} d={d} fill="#ff4d4d" opacity="0.04" />
+          return <path key={i} d={d} fill="#ff4d4d" opacity="0.035" />
         })}
 
         {/* Area fill */}
-        <defs>
-          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="#00e5a0" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <path d={areaD} fill="url(#eqGrad)" />
+        <path d={areaPath} fill="url(#eqGrad)" />
 
-        {/* Main line */}
-        <path d={pathD} fill="none" stroke="#00e5a0" strokeWidth="1.5" strokeLinejoin="round" />
+        {/* Main line — smooth curve */}
+        <path d={smoothPath} fill="none" stroke="url(#lineGrad)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
 
-        {/* Starting point */}
-        <circle cx={xPos(0)} cy={yPos(startingBalance)} r="2.5" fill="#0c0c0c" stroke="#00e5a0" strokeWidth="1" />
+        {/* Peak marker */}
+        <circle cx={xPos(peakIdx)} cy={yPos(peakBal)} r="3" fill="none" stroke="#00e5a0" strokeWidth="1" opacity="0.3" />
+        <text x={xPos(peakIdx)} y={yPos(peakBal) - 8} textAnchor="middle" fill="#00e5a0" opacity="0.3" fontSize="8" fontFamily="JetBrains Mono, monospace">ATH ${Math.round(peakBal / 1000)}K</text>
 
-        {/* End point */}
-        <circle cx={xPos(points.length - 1)} cy={yPos(points[points.length - 1].balance)} r="2.5" fill="#00e5a0" />
+        {/* End point with glow */}
+        <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="8" fill="#00e5a0" opacity="0.06" />
+        <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="4" fill="#00e5a0" opacity="0.15" />
+        <circle cx={xPos(points.length - 1)} cy={yPos(lastBal)} r="2.5" fill="#00e5a0" />
 
         {/* Y-axis labels */}
         {yLabels.map(function(yl, i) {
           var label = yl.val >= 1000 ? '$' + Math.round(yl.val / 1000) + 'K' : '$' + Math.round(yl.val)
-          return <text key={i} x={pad.left - 6} y={yl.y + 3} textAnchor="end" fill="#333" fontSize="9" fontFamily="JetBrains Mono, monospace">{label}</text>
+          return <text key={i} x={pad.left - 8} y={yl.y + 3} textAnchor="end" fill="#444" fontSize="9" fontFamily="JetBrains Mono, monospace">{label}</text>
         })}
 
         {/* X-axis labels */}
         {xLabels.map(function(xl, i) {
-          return <text key={i} x={xl.x} y={dims.h - 6} textAnchor="middle" fill="#333" fontSize="9" fontFamily="JetBrains Mono, monospace">{xl.label}</text>
+          return <text key={i} x={xl.x} y={dims.h - 8} textAnchor="middle" fill="#444" fontSize="9" fontFamily="JetBrains Mono, monospace">{xl.label}</text>
         })}
 
         {/* Hover crosshair */}
         {hover && (
           <>
-            <line x1={hover.x} x2={hover.x} y1={pad.top} y2={pad.top + ch} stroke="#333" strokeWidth="1" strokeDasharray="2,2" />
-            <line x1={pad.left} x2={dims.w - pad.right} y1={hover.y} y2={hover.y} stroke="#333" strokeWidth="1" strokeDasharray="2,2" />
-            <circle cx={hover.x} cy={hover.y} r="3" fill="#00e5a0" />
-            <circle cx={hover.x} cy={hover.y} r="6" fill="#00e5a0" opacity="0.15" />
+            <line x1={hover.x} x2={hover.x} y1={pad.top} y2={pad.top + ch} stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <line x1={pad.left} x2={dims.w - pad.right} y1={hover.y} y2={hover.y} stroke="rgba(255,255,255,0.04)" strokeWidth="1" strokeDasharray="3,3" />
+            <circle cx={hover.x} cy={hover.y} r="4" fill="#00e5a0" />
+            <circle cx={hover.x} cy={hover.y} r="8" fill="#00e5a0" opacity="0.1" />
+            {/* Hover balance label */}
+            <rect x={dims.w - pad.right + 2} y={hover.y - 8} width="52" height="16" rx="3" fill="#0c0c0c" stroke="rgba(255,255,255,0.06)" strokeWidth="1" />
+            <text x={dims.w - pad.right + 6} y={hover.y + 3} fill="#ccc" fontSize="9" fontFamily="JetBrains Mono, monospace">${Math.round(hover.trade.balance / 1000)}K</text>
           </>
         )}
       </svg>
 
-      {/* Hover tooltip */}
-      {hover && hover.trade && (
-        <div className="flex items-center justify-between px-4 py-1.5 border-t border-[#141414] text-[10px] mono">
-          <div className="flex items-center gap-4">
-            <span className="text-[#888]">{new Date(hover.trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</span>
-            {hover.trade.pair && <span className="text-[#888]">{hover.trade.pair}</span>}
-            {hover.trade.action && <span className={hover.trade.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.action}</span>}
-            {hover.trade.pnl !== 0 && <span className={hover.trade.pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.pnl > 0 ? '+' : ''}${Math.round(hover.trade.pnl).toLocaleString()}</span>}
-          </div>
-          <div className="text-[#888]">
-            Balance: <span className="text-white font-medium">${Math.round(hover.trade.balance).toLocaleString()}</span>
-            <span className="text-[#777] ml-2">Trade #{hover.idx}/{sorted.length}</span>
-          </div>
-        </div>
-      )}
+      {/* Tooltip bar */}
+      <div className="flex items-center justify-between px-5 py-2 border-t border-white/[0.03] text-[10px] mono min-h-[32px]">
+        {hover && hover.trade ? (
+          <>
+            <div className="flex items-center gap-4">
+              <span className="text-[#777]">{new Date(hover.trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              {hover.trade.pair && (
+                <>
+                  <span className="text-[#aaa] font-medium">{hover.trade.pair}</span>
+                  <span className={hover.trade.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.action}</span>
+                </>
+              )}
+              {hover.trade.pnl !== 0 && <span className={'font-bold ' + (hover.trade.pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{hover.trade.pnl > 0 ? '+' : ''}${Math.round(hover.trade.pnl).toLocaleString()}</span>}
+            </div>
+            <div className="flex items-center gap-3 text-[#666]">
+              <span>Balance: <span className="text-white font-medium">${Math.round(hover.trade.balance).toLocaleString()}</span></span>
+              <span>#{hover.idx}/{sorted.length}</span>
+            </div>
+          </>
+        ) : (
+          <span className="text-[#444]">Hover chart to inspect trades</span>
+        )}
+      </div>
     </div>
   )
 }
