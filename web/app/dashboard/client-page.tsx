@@ -366,7 +366,7 @@ export default function DashboardClientPage() {
         <div className="w-48 h-px bg-[#1a1a1a] rounded-full overflow-hidden mb-3">
           <div className="w-16 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent scan-line"></div>
         </div>
-        <div className="text-[#666] text-[16px] mono tracking-widest">LOADING TERMINAL</div>
+        <div className="text-[#666] text-[13px] mono tracking-widest">LOADING TERMINAL</div>
       </div>
     )
   }
@@ -451,7 +451,7 @@ export default function DashboardClientPage() {
       <section>
         <div className="flex items-center gap-2.5 mb-3">
           <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium">ACTIVE SIGNALS</h2>
-          <span className="text-[16px] mono px-2 py-0.5 rounded-md bg-white/[0.03] text-[#777]">{activeSignals.length}</span>
+          <span className="text-[13px] mono px-2 py-0.5 rounded-md bg-white/[0.03] text-[#777]">{activeSignals.length}</span>
         </div>
 
         {activeSignals.length === 0 ? (
@@ -461,7 +461,7 @@ export default function DashboardClientPage() {
                 <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
               </div>
               <div className="text-[#888] mono text-[14px] font-medium mb-1">Scanning for setups...</div>
-              <div className="text-[#444] text-[16px] mono">Signals fire instantly via Telegram when detected</div>
+              <div className="text-[#444] text-[12px] mono">Signals fire instantly via Telegram when detected</div>
             </div>
           </div>
         ) : (
@@ -483,11 +483,11 @@ export default function DashboardClientPage() {
                 <div key={sig.id} className="border border-[#161616] rounded-lg overflow-hidden">
                   <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
                     <div className="flex items-center gap-3">
-                      <span className={'px-2 py-0.5 rounded text-[16px] mono font-bold tracking-wider ' + (isLong ? 'bg-[#00e5a0]/8 text-[#00e5a0] border border-[#00e5a0]/15' : 'bg-[#ff4d4d]/8 text-[#ff4d4d] border border-[#ff4d4d]/15')}>
+                      <span className={'px-2 py-0.5 rounded text-[12px] mono font-bold tracking-wider ' + (isLong ? 'bg-[#00e5a0]/8 text-[#00e5a0] border border-[#00e5a0]/15' : 'bg-[#ff4d4d]/8 text-[#ff4d4d] border border-[#ff4d4d]/15')}>
                         {sig.direction}
                       </span>
-                      <span className="mono font-semibold text-white text-[16px]">{sig.pair}</span>
-                      <span className="text-[16px] mono text-[#666]">{timeAgo(sig.created_at)}</span>
+                      <span className="mono font-semibold text-white text-[14px]">{sig.pair}</span>
+                      <span className="text-[12px] mono text-[#666]">{timeAgo(sig.created_at)}</span>
                     </div>
                     <div className="text-right">
                       <div className="text-[13px] mono text-[#777]">R:R</div>
@@ -519,7 +519,7 @@ export default function DashboardClientPage() {
 
                   {sig.reasoning && (
                     <div className="px-4 py-2 bg-[#0a0a0a] border-t border-[#131313]">
-                      <div className="text-[16px] text-[#888] leading-relaxed">{sig.reasoning}</div>
+                      <div className="text-[13px] text-[#888] leading-relaxed">{sig.reasoning}</div>
                     </div>
                   )}
 
@@ -564,7 +564,7 @@ export default function DashboardClientPage() {
               </span>
             )}
           </div>
-          <a href="/dashboard/history" className="text-[16px] mono text-[#555] hover:text-[#888] transition-colors tracking-wider">ALL TRADES →</a>
+          <a href="/dashboard/history" className="text-[12px] mono text-[#555] hover:text-[#888] transition-colors tracking-wider">ALL TRADES →</a>
         </div>
 
         {/* Desktop table */}
@@ -617,11 +617,11 @@ export default function DashboardClientPage() {
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className={'text-[12px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
-                    <span className="text-[16px] text-[#aaa] mono font-medium">{t.pair}</span>
+                    <span className="text-[14px] text-[#aaa] mono font-medium">{t.pair}</span>
                   </div>
                   <span className={'text-[16px] mono font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                 </div>
-                <div className="flex items-center justify-between text-[16px] mono text-[#555]">
+                <div className="flex items-center justify-between text-[12px] mono text-[#555]">
                   <span>{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                   <span>${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})} → ${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                   <span className={'font-medium ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
