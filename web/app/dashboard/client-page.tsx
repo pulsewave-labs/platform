@@ -421,55 +421,28 @@ export default function DashboardClientPage() {
   return (
     <div className="space-y-4">
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
-          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">THIS MONTH</div>
-          {thisMonthData ? (
-            <>
-              <div className={'text-[20px] mono font-bold ' + (thisMonthData.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-                {thisMonthData.pnl >= 0 ? '+' : ''}${thisMonthData.pnl.toLocaleString()}
-              </div>
-              <div className="text-[9px] mono text-[#555] mt-1">{thisMonthData.trades} trades · {thisMonthData.wins}W {thisMonthData.losses}L</div>
-            </>
-          ) : <div className="text-[16px] mono text-[#333]">No data yet</div>}
-        </div>
-        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
-          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST 7 DAYS</div>
-          <div className={'text-[20px] mono font-bold ' + (weekPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-            {weekPnl >= 0 ? '+' : ''}${Math.round(weekPnl).toLocaleString()}
-          </div>
-          <div className="text-[9px] mono text-[#555] mt-1">{weekTrades.length} trades</div>
-        </div>
-        <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3">
-          <div className="text-[8px] text-[#666] mono tracking-[.15em] mb-1.5">LAST SIGNAL</div>
-          {lastSignalTime ? (
-            <>
-              <div className="text-[16px] mono font-bold text-white/80">{timeAgo(lastSignalTime)}</div>
-              <div className="text-[9px] mono text-[#555] mt-1">{allTrades[0].pair} · {allTrades[0].action}</div>
-            </>
-          ) : <div className="text-[16px] mono text-[#333]">—</div>}
-        </div>
+      {/* Stats Grid 3x3 */}
+      <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
+        {[
+          { label: 'THIS MONTH', value: thisMonthData ? (thisMonthData.pnl >= 0 ? '+' : '') + '$' + thisMonthData.pnl.toLocaleString() : '—', color: thisMonthData && thisMonthData.pnl >= 0 ? '#00e5a0' : thisMonthData ? '#ff4d4d' : '#333', sub: thisMonthData ? thisMonthData.trades + ' trades' : '' },
+          { label: 'LAST 7 DAYS', value: (weekPnl >= 0 ? '+' : '') + '$' + Math.round(weekPnl).toLocaleString(), color: weekPnl >= 0 ? '#00e5a0' : '#ff4d4d', sub: weekTrades.length + ' trades' },
+          { label: 'LAST SIGNAL', value: lastSignalTime ? timeAgo(lastSignalTime) : '—', color: '#e0e0e0', sub: allTrades[0] ? allTrades[0].pair + ' · ' + allTrades[0].action : '' },
+          { label: 'RETURN', value: stats ? '+' + stats.totalReturn.toFixed(1) + '%' : '—', color: '#00e5a0', sub: 'all time' },
+          { label: 'WIN RATE', value: stats ? stats.winRate + '%' : '—', color: '#e0e0e0', sub: stats ? stats.wins + 'W / ' + stats.losses + 'L' : '' },
+          { label: 'PROFIT FACTOR', value: stats ? stats.profitFactor.toFixed(2) : '—', color: '#e0e0e0', sub: '' },
+          { label: 'MONTHLY AVG', value: stats ? '+$' + stats.avgMonthlyPnl.toLocaleString() : '—', color: '#00e5a0', sub: stats ? stats.profitableMonths + '/' + stats.totalMonths + ' months green' : '' },
+          { label: 'BEST MONTH', value: stats && performance ? '+$' + Math.round(Math.max.apply(null, performance.monthly.map(function(m: any) { return m.pnl }))).toLocaleString() : '—', color: '#00e5a0', sub: '' },
+          { label: 'TOTAL TRADES', value: stats ? String(stats.totalTrades) : '—', color: '#e0e0e0', sub: '' },
+        ].map(function(s, i) {
+          return (
+            <div key={i} className="bg-[#0c0c0c] px-4 py-3">
+              <div className="text-[8px] text-[#555] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
+              <div className="text-[17px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
+              {s.sub && <div className="text-[9px] mono text-[#555] mt-1.5">{s.sub}</div>}
+            </div>
+          )
+        })}
       </div>
-
-      {/* Lifetime stats */}
-      {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
-          {[
-            { label: 'TOTAL P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
-            { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
-            { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
-            { label: 'PROFIT FACTOR', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
-          ].map(function(s, i) {
-            return (
-              <div key={i} className="bg-[#0c0c0c] px-4 py-3">
-                <div className="text-[8px] text-[#555] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
-                <div className="text-[17px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
-              </div>
-            )
-          })}
-        </div>
-      )}
 
       {/* Equity Chart */}
       {allTrades.length > 0 && <EquityChart trades={allTrades} />}
