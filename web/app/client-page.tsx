@@ -673,6 +673,42 @@ export default function LandingClientPage() {
       <div className="divider mx-6 md:mx-10"></div>
 
 
+      {/* ════════ 8.5. ACCOUNT SIMULATOR ════════ */}
+      <section className="py-24 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-10">
+            <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">YOUR ACCOUNT</p>
+            <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
+              What these results look like at your size.
+            </h2>
+            <p className="text-[14px] text-white/50 max-w-lg mx-auto">
+              Same signals. Same risk management. Scaled to your account.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+              var multiplier = acct / 10000
+              var tp = totalProfit * multiplier
+              var ma = avgMonthly * multiplier
+              return (
+                <div key={acct} className="t p-5 text-center lift">
+                  <div className="text-[11px] mono text-white/40 mb-3">${(acct/1000).toFixed(0)}K</div>
+                  <div className="text-[20px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
+                  <div className="text-[10px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="text-[9px] text-white/20 text-center mt-4">Based on verified results with 10% risk per trade, 20x leverage. Past performance does not guarantee future results.</p>
+        </div>
+      </section>
+
+
+      <div className="divider mx-6 md:mx-10"></div>
+
+
       {/* ════════ 9. FAQ ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-3xl mx-auto">

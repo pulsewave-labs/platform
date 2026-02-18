@@ -636,26 +636,6 @@ export default function DashboardClientPage() {
         </section>
       )}
 
-      {/* Account Simulator */}
-      <section>
-        <div className="flex items-center gap-2.5 mb-3">
-          <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">IF YOU STARTED WITH</h2>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-5 gap-2">
-          {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-            var multiplier = acct / 10000
-            var totalPnl = stats ? (stats.finalBalance - stats.startingCapital) * multiplier : 0
-            var monthlyAvg = stats ? stats.avgMonthlyPnl * multiplier : 0
-            return (
-              <div key={acct} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3 text-center">
-                <div className="text-[10px] mono text-[#555] mb-2">${(acct/1000).toFixed(0)}K ACCOUNT</div>
-                <div className="text-[16px] mono font-bold text-[#00e5a0]">+${Math.round(totalPnl).toLocaleString()}</div>
-                <div className="text-[9px] mono text-[#555] mt-1">${Math.round(monthlyAvg).toLocaleString()}/mo avg</div>
-              </div>
-            )
-          })}
-        </div>
-      </section>
     </div>
   )
 }
