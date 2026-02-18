@@ -1,7 +1,8 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '../../lib/supabase/client'
 import { ErrorBoundary } from '../../components/error-boundary'
 
 const tabs = [
@@ -12,6 +13,13 @@ const tabs = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleSignOut() {
+    const supabase = createClient()
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+  }
 
   return (
     <html lang="en">
@@ -61,9 +69,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
               <span className="text-[10px] text-[#00e5a0] mono font-medium">LIVE</span>
             </div>
-            <Link href="/auth/login" className="text-[10px] text-[#333] hover:text-[#555] transition-colors mono">
+            <button onClick={handleSignOut} className="text-[10px] text-[#333] hover:text-[#555] transition-colors mono">
               SIGN OUT
-            </Link>
+            </button>
           </div>
         </header>
 
