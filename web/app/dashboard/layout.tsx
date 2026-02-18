@@ -51,7 +51,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 var active = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href))
                 return (
                   <Link key={tab.href} href={tab.href}
-                    className={'relative px-3 py-1 text-[11px] font-medium tracking-wide transition-all duration-200 rounded ' + (active ? 'text-white' : 'text-[#555] hover:text-[#888]')}
+                    className={'relative px-3 py-1 text-[11px] font-medium tracking-wide transition-all duration-200 rounded ' + (active ? 'text-white' : 'text-[#888] hover:text-[#888]')}
                   >
                     {tab.label.toUpperCase()}
                     {active && <span className="absolute bottom-0 left-3 right-3 h-px bg-[#00e5a0]"></span>}
@@ -69,7 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </span>
               <span className="text-[10px] text-[#00e5a0] mono font-medium">LIVE</span>
             </div>
-            <button onClick={handleSignOut} className="text-[10px] text-[#333] hover:text-[#555] transition-colors mono">
+            <button onClick={handleSignOut} className="text-[10px] text-[#666] hover:text-[#888] transition-colors mono">
               SIGN OUT
             </button>
           </div>
@@ -83,7 +83,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
 
         {/* Status bar */}
-        <div className="hidden md:flex fixed bottom-0 left-0 right-0 h-6 bg-[#0c0c0c] border-t border-[#141414] items-center justify-between px-4 text-[9px] mono text-[#333] z-50">
+        <div className="hidden md:flex fixed bottom-0 left-0 right-0 h-6 bg-[#0c0c0c] border-t border-[#141414] items-center justify-between px-4 text-[9px] mono text-[#666] z-50">
           <div className="flex items-center gap-4">
             <span>PULSEWAVE SIGNALS v1.0</span>
             <span className="text-[#222]">|</span>
@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             var active = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href))
             return (
               <Link key={tab.href} href={tab.href}
-                className={'flex flex-col items-center justify-center flex-1 h-full transition-colors ' + (active ? 'text-[#00e5a0]' : 'text-[#333]')}
+                className={'flex flex-col items-center justify-center flex-1 h-full transition-colors ' + (active ? 'text-[#00e5a0]' : 'text-[#666]')}
               >
                 <span className="text-[10px] font-medium tracking-wider mono">{tab.label.toUpperCase()}</span>
                 {active && <span className="w-3 h-0.5 bg-[#00e5a0] rounded-full mt-1"></span>}

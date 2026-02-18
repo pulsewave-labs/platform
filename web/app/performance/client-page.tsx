@@ -68,13 +68,13 @@ export default function PerformanceClientPage() {
 
   if (loading) return (
     <div className="min-h-screen bg-[#060608] flex items-center justify-center">
-      <div className="text-[11px] text-white/20 mono tracking-widest">LOADING...</div>
+      <div className="text-[11px] text-white/60 mono tracking-widest">LOADING...</div>
     </div>
   )
 
   if (!data) return (
     <div className="min-h-screen bg-[#060608] flex items-center justify-center">
-      <div className="text-[11px] text-white/20 mono">Failed to load. <button onClick={() => window.location.reload()} className="text-[#00e5a0] underline">Retry</button></div>
+      <div className="text-[11px] text-white/60 mono">Failed to load. <button onClick={() => window.location.reload()} className="text-[#00e5a0] underline">Retry</button></div>
     </div>
   )
 
@@ -100,11 +100,11 @@ export default function PerformanceClientPage() {
             <Link href="/" className="flex items-center gap-2 group">
               <img src="/logo.webp" alt="PulseWave" className="h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
             </Link>
-            <span className="text-white/10">|</span>
-            <span className="text-[11px] text-white/25 mono tracking-wide">PERFORMANCE</span>
+            <span className="text-white/70">|</span>
+            <span className="text-[11px] text-white/70 mono tracking-wide">PERFORMANCE</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/auth/login" className="text-[12px] text-white/30 hover:text-white/50 transition-colors">Log In</Link>
+            <Link href="/auth/login" className="text-[12px] text-white/55 hover:text-white/70 transition-colors">Log In</Link>
             <Link href="/auth/signup" className="text-[12px] px-4 py-1.5 bg-[#00e5a0] text-black rounded-lg font-semibold hover:bg-[#00cc8e] transition-colors">Get Access</Link>
           </div>
         </div>
@@ -119,7 +119,7 @@ export default function PerformanceClientPage() {
             <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
               $10,000 → <span className="text-[#00e5a0]">${s.finalBalance.toLocaleString()}</span>
             </h1>
-            <p className="text-[14px] text-white/25">{s.totalTrades} trades · $1,000 fixed risk · 20x leverage · Market Structure</p>
+            <p className="text-[14px] text-white/70">{s.totalTrades} trades · $1,000 fixed risk · 20x leverage · Market Structure</p>
           </div>
 
           <div className="terminal">
@@ -127,7 +127,7 @@ export default function PerformanceClientPage() {
               <div className="terminal-dot bg-[#ff5f57]"></div>
               <div className="terminal-dot bg-[#febc2e]"></div>
               <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">overview</span>
+              <span className="text-[10px] text-white/55 mono ml-2">overview</span>
             </div>
             <div className="grid grid-cols-3 md:grid-cols-6 divide-x divide-white/[0.03]">
               {[
@@ -139,7 +139,7 @@ export default function PerformanceClientPage() {
                 { label: 'WIN MONTHS', val: s.profitableMonths + '/' + s.totalMonths, color: '#c8c8c8' },
               ].map((stat, i) => (
                 <div key={i} className="px-5 py-4">
-                  <div className="text-[8px] text-white/15 mono tracking-[0.15em] mb-1">{stat.label}</div>
+                  <div className="text-[8px] text-white/55 mono tracking-[0.15em] mb-1">{stat.label}</div>
                   <div className="text-lg font-bold mono" style={{ color: stat.color }}>{stat.val}</div>
                 </div>
               ))}
@@ -156,12 +156,12 @@ export default function PerformanceClientPage() {
               <div className="terminal-dot bg-[#ff5f57]"></div>
               <div className="terminal-dot bg-[#febc2e]"></div>
               <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">monthly breakdown — {data.monthly.length} months</span>
+              <span className="text-[10px] text-white/55 mono ml-2">monthly breakdown — {data.monthly.length} months</span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-[11px] mono">
                 <thead>
-                  <tr className="text-[9px] text-white/15 tracking-[0.1em] border-b border-white/[0.03]">
+                  <tr className="text-[9px] text-white/55 tracking-[0.1em] border-b border-white/[0.03]">
                     <th className="text-left px-4 py-2.5">MONTH</th>
                     <th className="text-left px-4 py-2.5">TRADES</th>
                     <th className="text-left px-4 py-2.5">W</th>
@@ -174,8 +174,8 @@ export default function PerformanceClientPage() {
                 <tbody>
                   {data.monthly.map((m: any, i: number) => (
                     <tr key={i} className={'border-b border-white/[0.02] hover:bg-white/[0.015] transition-colors ' + (i % 2 === 0 ? 'bg-white/[0.005]' : '')}>
-                      <td className="px-4 py-2.5 text-white/40">{m.month}</td>
-                      <td className="px-4 py-2.5 text-white/30">{m.trades}</td>
+                      <td className="px-4 py-2.5 text-white/60">{m.month}</td>
+                      <td className="px-4 py-2.5 text-white/55">{m.trades}</td>
                       <td className="px-4 py-2.5 text-[#00e5a0]/60">{m.wins}</td>
                       <td className="px-4 py-2.5 text-[#ff4d4d]/60">{m.losses}</td>
                       <td className={'px-4 py-2.5 text-right font-medium ' + (m.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
@@ -184,7 +184,7 @@ export default function PerformanceClientPage() {
                       <td className={'px-4 py-2.5 text-right ' + (m.pnlPct >= 0 ? 'text-[#00e5a0]/60' : 'text-[#ff4d4d]/60')}>
                         {m.pnlPct >= 0 ? '+' : ''}{m.pnlPct.toFixed(1)}%
                       </td>
-                      <td className="px-4 py-2.5 text-right text-white/25">${m.balance.toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-right text-white/70">${m.balance.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -200,12 +200,12 @@ export default function PerformanceClientPage() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {data.pairs.map((p: any, i: number) => (
               <div key={i} className="terminal p-4">
-                <div className="text-[14px] font-bold text-white/40 mono mb-2">{p.pair.replace('/USDT', '')}</div>
+                <div className="text-[14px] font-bold text-white/60 mono mb-2">{p.pair.replace('/USDT', '')}</div>
                 <div className="text-[16px] font-bold text-[#00e5a0] mono mb-3">+${p.pnl.toLocaleString()}</div>
                 <div className="space-y-1 text-[9px] mono">
-                  <div className="flex justify-between"><span className="text-white/15">TRADES</span><span className="text-white/30">{p.trades}</span></div>
-                  <div className="flex justify-between"><span className="text-white/15">WIN RATE</span><span className="text-white/30">{p.winRate}%</span></div>
-                  <div className="flex justify-between"><span className="text-white/15">AVG P&L</span><span className="text-white/30">${p.avgPnl}</span></div>
+                  <div className="flex justify-between"><span className="text-white/55">TRADES</span><span className="text-white/55">{p.trades}</span></div>
+                  <div className="flex justify-between"><span className="text-white/55">WIN RATE</span><span className="text-white/55">{p.winRate}%</span></div>
+                  <div className="flex justify-between"><span className="text-white/55">AVG P&L</span><span className="text-white/55">${p.avgPnl}</span></div>
                 </div>
               </div>
             ))}
@@ -218,7 +218,7 @@ export default function PerformanceClientPage() {
           <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-4">TRADE PARAMETERS</p>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="terminal p-6">
-              <div className="text-[12px] text-white/40 font-semibold mb-4">Settings</div>
+              <div className="text-[12px] text-white/60 font-semibold mb-4">Settings</div>
               <div className="space-y-2.5">
                 {[
                   ['Starting Capital', '$10,000'],
@@ -231,21 +231,21 @@ export default function PerformanceClientPage() {
                   ['Strategy', 'Market Structure (BOS + OB)'],
                 ].map(([label, val], i) => (
                   <div key={i} className="flex justify-between items-center py-1.5 border-b border-white/[0.02] last:border-b-0">
-                    <span className="text-[11px] text-white/20">{label}</span>
-                    <span className="text-[11px] text-white/50 mono font-medium">{val}</span>
+                    <span className="text-[11px] text-white/60">{label}</span>
+                    <span className="text-[11px] text-white/70 mono font-medium">{val}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="terminal p-6">
-              <div className="text-[12px] text-white/40 font-semibold mb-4">Position Sizing Formula</div>
+              <div className="text-[12px] text-white/60 font-semibold mb-4">Position Sizing Formula</div>
               <div className="bg-white/[0.02] rounded-lg p-4 mono text-[11px] space-y-1.5 mb-4">
                 <div className="text-[#00e5a0]/60">risk_amount = account × 10%</div>
-                <div className="text-white/30">stop_distance = |entry − stop_loss| ÷ entry</div>
-                <div className="text-white/30">position_size = risk_amount ÷ stop_distance</div>
-                <div className="text-white/30">margin = position_size ÷ leverage</div>
+                <div className="text-white/55">stop_distance = |entry − stop_loss| ÷ entry</div>
+                <div className="text-white/55">position_size = risk_amount ÷ stop_distance</div>
+                <div className="text-white/55">margin = position_size ÷ leverage</div>
               </div>
-              <p className="text-[11px] text-white/15 leading-relaxed">Tighter stop → larger position. Wider stop → smaller position. Risk stays constant at $1,000 regardless of setup.</p>
+              <p className="text-[11px] text-white/55 leading-relaxed">Tighter stop → larger position. Wider stop → smaller position. Risk stays constant at $1,000 regardless of setup.</p>
             </div>
           </div>
         </div>
@@ -258,7 +258,7 @@ export default function PerformanceClientPage() {
               <p className="text-[11px] text-[#00e5a0]/50 mono tracking-wide mb-3">TRADE LOG</p>
               <h2 className="text-2xl font-bold tracking-tight">Complete Trade History</h2>
             </div>
-            <div className="text-[10px] text-white/15 mono tracking-wide hidden md:block">
+            <div className="text-[10px] text-white/55 mono tracking-wide hidden md:block">
               {filtered.length} TRADES · 7-DAY DELAY
             </div>
           </div>
@@ -266,23 +266,23 @@ export default function PerformanceClientPage() {
           {/* Filters */}
           <div className="terminal p-4 mb-4">
             <div className="flex flex-wrap gap-2 items-center">
-              <span className="text-[9px] text-white/15 mono tracking-wider mr-1">FILTER</span>
+              <span className="text-[9px] text-white/55 mono tracking-wider mr-1">FILTER</span>
 
               <select value={filterPair} onChange={e => { setFilterPair(e.target.value); setPage(1) }}
-                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/50 focus:outline-none focus:border-[#00e5a0]/30">
+                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/70 focus:outline-none focus:border-[#00e5a0]/30">
                 <option value="">All Pairs</option>
                 {uniquePairs.map((p: string) => <option key={p} value={p}>{p}</option>)}
               </select>
 
               <select value={filterDirection} onChange={e => { setFilterDirection(e.target.value); setPage(1) }}
-                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/50 focus:outline-none focus:border-[#00e5a0]/30">
+                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/70 focus:outline-none focus:border-[#00e5a0]/30">
                 <option value="">All Sides</option>
                 <option value="LONG">Long</option>
                 <option value="SHORT">Short</option>
               </select>
 
               <select value={filterResult} onChange={e => { setFilterResult(e.target.value); setPage(1) }}
-                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/50 focus:outline-none focus:border-[#00e5a0]/30">
+                className="text-[11px] mono bg-white/[0.03] border border-white/[0.05] rounded-lg px-3 py-1.5 text-white/70 focus:outline-none focus:border-[#00e5a0]/30">
                 <option value="">All Results</option>
                 <option value="WIN">Winners</option>
                 <option value="LOSS">Losers</option>
@@ -290,12 +290,12 @@ export default function PerformanceClientPage() {
 
               {(filterPair || filterDirection || filterResult) && (
                 <button onClick={() => { setFilterPair(''); setFilterDirection(''); setFilterResult(''); setPage(1) }}
-                  className="text-[10px] mono text-white/20 hover:text-white/40 transition-colors px-2">
+                  className="text-[10px] mono text-white/60 hover:text-white/60 transition-colors px-2">
                   CLEAR
                 </button>
               )}
 
-              <div className="ml-auto text-[10px] text-white/10 mono md:hidden">
+              <div className="ml-auto text-[10px] text-white/70 mono md:hidden">
                 {filtered.length} trades · 7-day delay
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function PerformanceClientPage() {
               <div className="terminal-dot bg-[#ff5f57]"></div>
               <div className="terminal-dot bg-[#febc2e]"></div>
               <div className="terminal-dot bg-[#28c840]"></div>
-              <span className="text-[10px] text-white/15 mono ml-2">trade log · page {page}/{totalPages || 1}</span>
+              <span className="text-[10px] text-white/55 mono ml-2">trade log · page {page}/{totalPages || 1}</span>
               <span className="flex items-center gap-1.5 ml-auto">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pulse-dot"></span>
                 <span className="text-[9px] text-[#00e5a0]/40 mono">7-DAY DELAY</span>
@@ -317,7 +317,7 @@ export default function PerformanceClientPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[11px] mono">
                 <thead>
-                  <tr className="text-[8px] text-white/12 tracking-[0.12em] border-b border-white/[0.03]">
+                  <tr className="text-[8px] text-white/55 tracking-[0.12em] border-b border-white/[0.03]">
                     {[
                       { key: 'entry_time', label: 'DATE' },
                       { key: 'pair', label: 'PAIR' },
@@ -332,7 +332,7 @@ export default function PerformanceClientPage() {
                       { key: 'balance_after', label: 'BALANCE' },
                     ].map(col => (
                       <th key={col.key} onClick={() => sort(col.key)}
-                        className={'text-left px-4 py-2.5 cursor-pointer hover:text-white/25 transition-colors select-none ' + (col.key === 'pnl' || col.key === 'balance_after' ? 'text-right' : '')}>
+                        className={'text-left px-4 py-2.5 cursor-pointer hover:text-white/70 transition-colors select-none ' + (col.key === 'pnl' || col.key === 'balance_after' ? 'text-right' : '')}>
                         {col.label}
                         {sortField === col.key && <span className="text-[#00e5a0]/40 ml-1">{sortDir === 'asc' ? '↑' : '↓'}</span>}
                       </th>
@@ -342,16 +342,16 @@ export default function PerformanceClientPage() {
                 <tbody>
                   {paginated.map((t: Trade, i: number) => (
                     <tr key={i} className={'border-b border-white/[0.015] hover:bg-white/[0.015] transition-colors ' + (i % 2 === 0 ? 'bg-white/[0.003]' : '')}>
-                      <td className="px-4 py-2.5 text-white/20">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</td>
-                      <td className="px-4 py-2.5 text-white/50 font-medium">{t.pair.replace('/USDT', '')}</td>
+                      <td className="px-4 py-2.5 text-white/60">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</td>
+                      <td className="px-4 py-2.5 text-white/70 font-medium">{t.pair.replace('/USDT', '')}</td>
                       <td className="px-4 py-2.5">
                         <span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span>
                       </td>
-                      <td className="px-4 py-2.5 text-white/20">${t.entry_price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2.5 text-white/20">${t.exit_price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                      <td className="px-4 py-2.5 text-white/15">${Math.round(t.notional).toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-white/60">${t.entry_price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2.5 text-white/60">${t.exit_price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
+                      <td className="px-4 py-2.5 text-white/55">${Math.round(t.notional).toLocaleString()}</td>
                       <td className="px-4 py-2.5 text-[#c9a227]/50">${t.risk_amount.toLocaleString()}</td>
-                      <td className="px-4 py-2.5 text-white/10">${Math.round(t.fees)}</td>
+                      <td className="px-4 py-2.5 text-white/70">${Math.round(t.fees)}</td>
                       <td className={'px-4 py-2.5 text-right font-medium ' + (t.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
                         {t.pnl >= 0 ? '+' : ''}${Math.round(t.pnl).toLocaleString()}
                       </td>
@@ -360,7 +360,7 @@ export default function PerformanceClientPage() {
                           {t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-right text-white/15">${Math.round(t.balance_after).toLocaleString()}</td>
+                      <td className="px-4 py-2.5 text-right text-white/55">${Math.round(t.balance_after).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -370,16 +370,16 @@ export default function PerformanceClientPage() {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-white/[0.03]">
-                <span className="text-[10px] text-white/10 mono">Page {page} of {totalPages}</span>
+                <span className="text-[10px] text-white/70 mono">Page {page} of {totalPages}</span>
                 <div className="flex gap-1">
                   <button onClick={() => setPage(1)} disabled={page === 1}
-                    className="px-2.5 py-1 text-[10px] mono text-white/20 hover:text-white/40 disabled:text-white/5 transition-colors">FIRST</button>
+                    className="px-2.5 py-1 text-[10px] mono text-white/60 hover:text-white/60 disabled:text-white/5 transition-colors">FIRST</button>
                   <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                    className="px-2.5 py-1 text-[10px] mono text-white/20 hover:text-white/40 disabled:text-white/5 transition-colors">PREV</button>
+                    className="px-2.5 py-1 text-[10px] mono text-white/60 hover:text-white/60 disabled:text-white/5 transition-colors">PREV</button>
                   <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}
-                    className="px-2.5 py-1 text-[10px] mono text-white/20 hover:text-white/40 disabled:text-white/5 transition-colors">NEXT</button>
+                    className="px-2.5 py-1 text-[10px] mono text-white/60 hover:text-white/60 disabled:text-white/5 transition-colors">NEXT</button>
                   <button onClick={() => setPage(totalPages)} disabled={page === totalPages}
-                    className="px-2.5 py-1 text-[10px] mono text-white/20 hover:text-white/40 disabled:text-white/5 transition-colors">LAST</button>
+                    className="px-2.5 py-1 text-[10px] mono text-white/60 hover:text-white/60 disabled:text-white/5 transition-colors">LAST</button>
                 </div>
               </div>
             )}
@@ -390,12 +390,12 @@ export default function PerformanceClientPage() {
         {/* CTA */}
         <div className="terminal p-8 text-center mb-8">
           <h3 className="text-xl font-bold mb-2">Get real-time signals.</h3>
-          <p className="text-[13px] text-white/25 mb-6">Public trades are delayed 7 days. Subscribers get signals the moment they fire.</p>
+          <p className="text-[13px] text-white/70 mb-6">Public trades are delayed 7 days. Subscribers get signals the moment they fire.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
             <Link href="/auth/signup" className="flex-1 py-3 bg-[#00e5a0] text-black text-[12px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors text-center">
               Get Access — $97/mo
             </Link>
-            <Link href="/" className="flex-1 py-3 border border-white/[0.07] text-white/35 text-[12px] font-semibold rounded-lg hover:border-white/[0.12] hover:text-white/50 transition-all text-center">
+            <Link href="/" className="flex-1 py-3 border border-white/[0.07] text-white/55 text-[12px] font-semibold rounded-lg hover:border-white/[0.12] hover:text-white/70 transition-all text-center">
               Learn More
             </Link>
           </div>
@@ -406,11 +406,11 @@ export default function PerformanceClientPage() {
       {/* Footer */}
       <footer className="border-t border-white/[0.03] py-6 px-6 md:px-10">
         <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-          <span className="text-[10px] text-white/10">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
-          <div className="flex gap-5 text-[10px] text-white/10">
-            <Link href="/disclaimer" className="hover:text-white/25 transition-colors">Disclaimer</Link>
-            <Link href="/privacy" className="hover:text-white/25 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/25 transition-colors">Terms</Link>
+          <span className="text-[10px] text-white/70">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
+          <div className="flex gap-5 text-[10px] text-white/70">
+            <Link href="/disclaimer" className="hover:text-white/70 transition-colors">Disclaimer</Link>
+            <Link href="/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/70 transition-colors">Terms</Link>
           </div>
         </div>
       </footer>

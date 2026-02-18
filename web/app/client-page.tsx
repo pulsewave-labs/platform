@@ -68,24 +68,24 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto px-5 md:px-8 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.webp" alt="PulseWave" className="h-5" />
-            <span className="hidden md:inline text-[9px] text-white/10 mono tracking-[.2em] mt-px">SIGNAL ENGINE</span>
+            <span className="hidden md:inline text-[9px] text-white/70 mono tracking-[.2em] mt-px">SIGNAL ENGINE</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
-            <button onClick={()=>scrollTo('proof')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Performance</button>
-            <button onClick={()=>scrollTo('how')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">How It Works</button>
-            <button onClick={()=>scrollTo('pricing')} className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Pricing</button>
-            <Link href="/auth/login" className="text-[12px] text-white/25 hover:text-white/50 transition-colors">Log In</Link>
+            <button onClick={()=>scrollTo('proof')} className="text-[12px] text-white/70 hover:text-white/70 transition-colors">Performance</button>
+            <button onClick={()=>scrollTo('how')} className="text-[12px] text-white/70 hover:text-white/70 transition-colors">How It Works</button>
+            <button onClick={()=>scrollTo('pricing')} className="text-[12px] text-white/70 hover:text-white/70 transition-colors">Pricing</button>
+            <Link href="/auth/login" className="text-[12px] text-white/70 hover:text-white/70 transition-colors">Log In</Link>
             <Link href="/auth/signup" className="text-[11px] px-4 py-1.5 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
           </div>
-          <button className="md:hidden text-white/40" onClick={()=>setMenu(!menu)}>
+          <button className="md:hidden text-white/60" onClick={()=>setMenu(!menu)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={menu?"M18 6L6 18M6 6l12 12":"M4 8h16M4 16h16"}/></svg>
           </button>
         </div>
         {menu&&<div className="md:hidden px-5 pb-4 space-y-3 border-t border-white/5 mt-1 bg-[#08080a]">
-          <button onClick={()=>scrollTo('proof')} className="block text-white/30 text-[13px]">Performance</button>
-          <button onClick={()=>scrollTo('how')} className="block text-white/30 text-[13px]">How It Works</button>
-          <button onClick={()=>scrollTo('pricing')} className="block text-white/30 text-[13px]">Pricing</button>
-          <Link href="/auth/login" className="block text-white/30 text-[13px]">Log In</Link>
+          <button onClick={()=>scrollTo('proof')} className="block text-white/55 text-[13px]">Performance</button>
+          <button onClick={()=>scrollTo('how')} className="block text-white/55 text-[13px]">How It Works</button>
+          <button onClick={()=>scrollTo('pricing')} className="block text-white/55 text-[13px]">Pricing</button>
+          <Link href="/auth/login" className="block text-white/55 text-[13px]">Log In</Link>
           <Link href="/auth/signup" className="inline-block px-4 py-1.5 bg-[#00e5a0] text-black rounded font-bold text-[11px]">GET ACCESS</Link>
         </div>}
       </nav>
@@ -99,14 +99,14 @@ export default function LandingClientPage() {
           {/* Status bar */}
           <div className="fu flex items-center gap-2 mb-8">
             <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
-            <span className="text-[10px] text-white/20 mono tracking-[.15em]">LIVE ENGINE · MARKET STRUCTURE · 6 PAIRS</span>
+            <span className="text-[10px] text-white/60 mono tracking-[.15em]">LIVE ENGINE · MARKET STRUCTURE · 6 PAIRS</span>
           </div>
 
           {/* Headline */}
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-bold leading-[1.1] tracking-tight mb-4">
             The signals that turned $10K<br/>into <span className="text-[#00e5a0] glow">$218,418</span>
           </h1>
-          <p className="fu2 text-[15px] text-white/25 leading-relaxed max-w-md mb-10">
+          <p className="fu2 text-[15px] text-white/70 leading-relaxed max-w-md mb-10">
             Institutional Market Structure analysis across 6 crypto pairs. 2 years of verified results. Now delivering signals to you.
           </p>
 
@@ -115,7 +115,7 @@ export default function LandingClientPage() {
             <Link href="/auth/signup" className="px-7 py-3 bg-[#00e5a0] text-black rounded font-bold text-[13px] hover:bg-[#00cc8e] transition-colors text-center">
               Get signals — $97/mo
             </Link>
-            <Link href="/performance" className="px-7 py-3 rounded text-[13px] font-semibold text-white/30 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/45 transition-all text-center">
+            <Link href="/performance" className="px-7 py-3 rounded text-[13px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/65 transition-all text-center">
               View trade log
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default function LandingClientPage() {
           <div className="fu4 t">
             <div className="th">
               <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-              <span className="text-[9px] text-white/12 mono ml-1">performance_summary</span>
+              <span className="text-[9px] text-white/55 mono ml-1">performance_summary</span>
               <span className="text-[9px] text-white/8 mono ml-auto hidden sm:inline">{time}</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4">
@@ -135,7 +135,7 @@ export default function LandingClientPage() {
                 { label:'WIN MONTHS', ref:winMo.ref, val:winMo.display+'%', c:'#c8c8c8' },
               ].map((s,i)=>(
                 <div key={i} ref={s.ref} className="px-4 py-3.5 border-r border-b border-white/[0.02] last:border-r-0 md:[&:nth-child(n+3)]:border-b-0 [&:nth-child(n+3)]:border-b-0 md:[&:nth-child(n+3)]:border-b md:[&:nth-child(4)]:border-b-0">
-                  <div className="text-[8px] text-white/12 mono tracking-[.15em] mb-1">{s.label}</div>
+                  <div className="text-[8px] text-white/55 mono tracking-[.15em] mb-1">{s.label}</div>
                   <div className="text-[18px] font-bold mono" style={{color:s.c}}>{s.val}</div>
                 </div>
               ))}
@@ -153,7 +153,7 @@ export default function LandingClientPage() {
               <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">VERIFIED RESULTS</p>
               <h2 className="text-2xl md:text-3xl font-bold tracking-tight">Every month. Every trade.</h2>
             </div>
-            <Link href="/performance" className="text-[10px] text-white/15 mono tracking-wider hover:text-white/30 transition-colors hidden md:block">FULL TRADE LOG →</Link>
+            <Link href="/performance" className="text-[10px] text-white/55 mono tracking-wider hover:text-white/55 transition-colors hidden md:block">FULL TRADE LOG →</Link>
           </div>
 
           {/* Monthly heatmap */}
@@ -161,7 +161,7 @@ export default function LandingClientPage() {
             <div className="t mb-8">
               <div className="th">
                 <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-                <span className="text-[9px] text-white/12 mono ml-1">monthly_returns — {perf.monthly.length} months</span>
+                <span className="text-[9px] text-white/55 mono ml-1">monthly_returns — {perf.monthly.length} months</span>
               </div>
               <div className="p-4">
                 <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-13 gap-1">
@@ -170,13 +170,13 @@ export default function LandingClientPage() {
                     const bg=pnl>0?`rgba(0,229,160,${.06+int*.3})`:`rgba(255,77,77,${.06+int*.3})`
                     return(
                       <div key={i} className="aspect-square rounded flex flex-col items-center justify-center" style={{background:bg}}>
-                        <div className="text-[7px] text-white/20 mono">{m.month.slice(5)}</div>
+                        <div className="text-[7px] text-white/60 mono">{m.month.slice(5)}</div>
                         <div className={'text-[9px] font-semibold mono mt-px '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
                       </div>
                     )
                   })}
                 </div>
-                <div className="flex gap-4 mt-3 text-[9px] text-white/12 mono">
+                <div className="flex gap-4 mt-3 text-[9px] text-white/55 mono">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#00e5a0]/20"></span>Profit</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#ff4d4d]/20"></span>Loss</span>
                   <span className="text-white/8">|</span>
@@ -199,7 +199,7 @@ export default function LandingClientPage() {
                   {l:'WORST MONTH',v:'-$'+Math.abs(Math.round(worst.pnl)).toLocaleString(),c:'#ff4d4d'},
                 ].map((s,i)=>(
                   <div key={i} className="t px-4 py-3.5">
-                    <div className="text-[8px] text-white/10 mono tracking-[.12em] mb-1">{s.l}</div>
+                    <div className="text-[8px] text-white/70 mono tracking-[.12em] mb-1">{s.l}</div>
                     <div className="text-lg font-bold mono" style={{color:s.c}}>{s.v}</div>
                   </div>
                 ))}
@@ -211,26 +211,26 @@ export default function LandingClientPage() {
           <div className="t">
             <div className="th">
               <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-              <span className="text-[9px] text-white/12 mono ml-1">recent_executions · 7-day delay</span>
+              <span className="text-[9px] text-white/55 mono ml-1">recent_executions · 7-day delay</span>
               <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/30 mono">LIVE</span></span>
             </div>
             {/* Header row */}
-            <div className="hidden md:grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/10 mono tracking-[.1em] px-4 py-2 border-b border-white/[0.02]">
+            <div className="hidden md:grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/70 mono tracking-[.1em] px-4 py-2 border-b border-white/[0.02]">
               <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
             </div>
             {trades.map((t,i)=>(
               <div key={i} className={'grid grid-cols-[1fr_50px_70px] md:grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-4 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
-                <div className="text-[10px] text-white/15 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-                <div className="text-[11px] text-white/45 mono font-medium">{t.pair.replace('/USDT','')}</div>
+                <div className="text-[10px] text-white/55 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+                <div className="text-[11px] text-white/65 mono font-medium">{t.pair.replace('/USDT','')}</div>
                 <div className="hidden md:block"><span className={'text-[9px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
-                <div className="text-[10px] text-white/12 mono hidden md:block">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                <div className="text-[10px] text-white/12 mono hidden md:block">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div className="text-[10px] text-white/55 mono hidden md:block">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div className="text-[10px] text-white/55 mono hidden md:block">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                 <div className={'text-[11px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
                 <div className="text-right"><span className={'text-[8px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/35':'text-[#ff4d4d]/35')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
               </div>
             ))}
             <div className="px-4 py-2.5 text-center">
-              <Link href="/performance" className="text-[10px] text-white/15 mono tracking-wider hover:text-white/30 transition-colors">VIEW ALL TRADES →</Link>
+              <Link href="/performance" className="text-[10px] text-white/55 mono tracking-wider hover:text-white/55 transition-colors">VIEW ALL TRADES →</Link>
             </div>
           </div>
         </div>
@@ -254,12 +254,12 @@ export default function LandingClientPage() {
               <div key={i} className="t lift">
                 <div className="th">
                   <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-                  <span className="text-[9px] text-white/12 mono ml-1">step_{s.n}</span>
+                  <span className="text-[9px] text-white/55 mono ml-1">step_{s.n}</span>
                 </div>
                 <div className="p-5">
                   <div className="text-[22px] font-bold text-white/[.04] mono mb-3">{s.n}</div>
                   <h3 className="text-[15px] font-semibold mb-2">{s.t}</h3>
-                  <p className="text-[12px] text-white/20 leading-relaxed">{s.d}</p>
+                  <p className="text-[12px] text-white/60 leading-relaxed">{s.d}</p>
                 </div>
               </div>
             ))}
@@ -276,12 +276,12 @@ export default function LandingClientPage() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
               Every signal. Fully calculated.
             </h2>
-            <p className="text-[13px] text-white/20 leading-relaxed mb-8">
+            <p className="text-[13px] text-white/60 leading-relaxed mb-8">
               Each signal includes exact entry, stop loss, take profit, and position sizing for your account. No guesswork, no interpretation — just execute.
             </p>
             <div className="space-y-2.5">
               {['Exact entry, SL, and TP levels','Position sizing for any account size','Risk:reward ratio calculated','Instant Telegram notification','Confidence score and reasoning'].map((f,i)=>(
-                <div key={i} className="flex items-center gap-2.5 text-[12px] text-white/25">
+                <div key={i} className="flex items-center gap-2.5 text-[12px] text-white/70">
                   <span className="text-[#00e5a0]/50 mono text-[10px]">→</span>{f}
                 </div>
               ))}
@@ -292,7 +292,7 @@ export default function LandingClientPage() {
           <div className="t">
             <div className="th">
               <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-              <span className="text-[9px] text-white/12 mono ml-1">signal — live</span>
+              <span className="text-[9px] text-white/55 mono ml-1">signal — live</span>
               <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span></span>
             </div>
             <div className="p-5 space-y-4">
@@ -301,25 +301,25 @@ export default function LandingClientPage() {
                   <span className="text-[9px] font-bold mono text-black bg-[#00e5a0] px-1.5 py-px rounded">LONG</span>
                   <span className="text-lg font-bold mono">SOL/USDT</span>
                 </div>
-                <span className="text-[9px] text-white/15 mono">82% conf</span>
+                <span className="text-[9px] text-white/55 mono">82% conf</span>
               </div>
               <div className="grid grid-cols-3 gap-3">
                 {[{l:'ENTRY',v:'$195.40',c:''},{l:'STOP LOSS',v:'$188.20',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:'$213.50',c:'text-[#00e5a0]'}].map((x,i)=>(
-                  <div key={i}><div className="text-[8px] text-white/12 mono tracking-wider mb-1">{x.l}</div><div className={'text-[14px] font-bold mono '+x.c}>{x.v}</div></div>
+                  <div key={i}><div className="text-[8px] text-white/55 mono tracking-wider mb-1">{x.l}</div><div className={'text-[14px] font-bold mono '+x.c}>{x.v}</div></div>
                 ))}
               </div>
               {/* R:R bar */}
               <div>
-                <div className="flex justify-between text-[8px] mono text-white/10 mb-1"><span>Risk 3.7%</span><span>Reward 9.3%</span></div>
+                <div className="flex justify-between text-[8px] mono text-white/70 mb-1"><span>Risk 3.7%</span><span>Reward 9.3%</span></div>
                 <div className="h-1 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/30 rounded-l-full" style={{width:'28%'}}></div><div className="bg-[#00e5a0]/30 rounded-r-full" style={{width:'72%'}}></div></div>
                 <div className="text-right text-[9px] text-[#00e5a0]/40 mono mt-1">2.5:1 R:R</div>
               </div>
               {/* Position sizing */}
               <div className="border-t border-white/[0.03] pt-3">
-                <div className="text-[8px] text-white/10 mono tracking-wider mb-2">POSITION SIZE</div>
+                <div className="text-[8px] text-white/70 mono tracking-wider mb-2">POSITION SIZE</div>
                 <div className="grid grid-cols-3 gap-1.5 text-[9px] mono">
                   {[{a:'$1K',s:'$2.7K',r:'$100'},{a:'$10K',s:'$27K',r:'$1,000'},{a:'$50K',s:'$135K',r:'$5,000'}].map((r,i)=>(
-                    <div key={i} className="bg-white/[0.02] rounded px-2.5 py-2"><div className="text-white/20 mb-0.5">{r.a} acct</div><div className="text-white/50 font-medium">{r.s}</div><div className="text-white/10 text-[8px]">risk {r.r}</div></div>
+                    <div key={i} className="bg-white/[0.02] rounded px-2.5 py-2"><div className="text-white/60 mb-0.5">{r.a} acct</div><div className="text-white/70 font-medium">{r.s}</div><div className="text-white/70 text-[8px]">risk {r.r}</div></div>
                   ))}
                 </div>
               </div>
@@ -339,9 +339,9 @@ export default function LandingClientPage() {
               {p:'AVAX',pnl:33648,n:152},{p:'SOL',pnl:24239,n:98},{p:'ETH',pnl:25678,n:202},{p:'XRP',pnl:14378,n:87},{p:'BTC',pnl:6266,n:85},
             ].map((x,i)=>(
               <div key={i} className="t lift p-4">
-                <div className="text-[15px] font-bold text-white/30 mono mb-2">{x.p}</div>
+                <div className="text-[15px] font-bold text-white/55 mono mb-2">{x.p}</div>
                 <div className="text-[15px] font-bold text-[#00e5a0] mono mb-2">+${(x.pnl/1000).toFixed(1)}K</div>
-                <div className="text-[9px] text-white/10 mono">{x.n} trades</div>
+                <div className="text-[9px] text-white/70 mono">{x.n} trades</div>
               </div>
             ))}
           </div>
@@ -355,7 +355,7 @@ export default function LandingClientPage() {
           <div className="t">
             <div className="th">
               <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-              <span className="text-[9px] text-white/12 mono ml-1">system_status</span>
+              <span className="text-[9px] text-white/55 mono ml-1">system_status</span>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4">
               {[
@@ -363,7 +363,7 @@ export default function LandingClientPage() {
               ].map((s,i)=>(
                 <div key={i} className="px-4 py-4 text-center border-r border-white/[0.02] last:border-r-0">
                   <div className="text-lg font-bold mono mb-0.5">{s.v}</div>
-                  <div className="text-[9px] text-white/12 mono">{s.l}</div>
+                  <div className="text-[9px] text-white/55 mono">{s.l}</div>
                 </div>
               ))}
             </div>
@@ -378,7 +378,7 @@ export default function LandingClientPage() {
           <div className="text-center mb-10">
             <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">PRICING</p>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">One plan. Full access.</h2>
-            <p className="text-[13px] text-white/20">Same signals behind $218K in verified profits.</p>
+            <p className="text-[13px] text-white/60">Same signals behind $218K in verified profits.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-3 max-w-xl mx-auto">
@@ -386,19 +386,19 @@ export default function LandingClientPage() {
             <div className="t">
               <div className="th">
                 <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-                <span className="text-[9px] text-white/12 mono ml-1">plan_monthly</span>
+                <span className="text-[9px] text-white/55 mono ml-1">plan_monthly</span>
               </div>
               <div className="p-6">
                 <div className="flex items-baseline gap-1 mb-5">
                   <span className="text-3xl font-bold mono">$97</span>
-                  <span className="text-white/15 text-[12px]">/mo</span>
+                  <span className="text-white/55 text-[12px]">/mo</span>
                 </div>
-                <div className="space-y-2 text-[11px] text-white/20 mb-6">
+                <div className="space-y-2 text-[11px] text-white/60 mb-6">
                   {['All signals, all pairs','Telegram instant alerts','Performance dashboard','Position sizing','Cancel anytime'].map((f,i)=>(
                     <div key={i} className="flex items-center gap-2"><span className="text-[#00e5a0]/40 mono text-[9px]">→</span>{f}</div>
                   ))}
                 </div>
-                <Link href="/auth/signup" className="block w-full py-2.5 rounded border border-white/[0.07] text-white/40 text-[11px] font-bold text-center hover:border-white/[0.12] hover:text-white/60 transition-all mono tracking-wide">SUBSCRIBE</Link>
+                <Link href="/auth/signup" className="block w-full py-2.5 rounded border border-white/[0.07] text-white/60 text-[11px] font-bold text-center hover:border-white/[0.12] hover:text-white/60 transition-all mono tracking-wide">SUBSCRIBE</Link>
               </div>
             </div>
 
@@ -407,15 +407,15 @@ export default function LandingClientPage() {
               <div className="absolute -top-2 right-4 px-2 py-px bg-[#00e5a0] text-black text-[8px] font-bold mono tracking-wider rounded">SAVE $194</div>
               <div className="th">
                 <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-                <span className="text-[9px] text-white/12 mono ml-1">plan_annual</span>
+                <span className="text-[9px] text-white/55 mono ml-1">plan_annual</span>
               </div>
               <div className="p-6">
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-3xl font-bold mono text-[#00e5a0]">$970</span>
-                  <span className="text-white/15 text-[12px]">/yr</span>
+                  <span className="text-white/55 text-[12px]">/yr</span>
                 </div>
                 <div className="text-[10px] text-[#00e5a0]/30 mono mb-5">2 months free</div>
-                <div className="space-y-2 text-[11px] text-white/20 mb-6">
+                <div className="space-y-2 text-[11px] text-white/60 mb-6">
                   {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support line','Early feature access'].map((f,i)=>(
                     <div key={i} className="flex items-center gap-2"><span className="text-[#00e5a0]/40 mono text-[9px]">→</span>{f}</div>
                   ))}
@@ -437,16 +437,16 @@ export default function LandingClientPage() {
           </div>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
             Stop watching charts.<br/>
-            <span className="text-white/25">Let the engine find the trades.</span>
+            <span className="text-white/70">Let the engine find the trades.</span>
           </h2>
-          <p className="text-[13px] text-white/20 mb-8">
+          <p className="text-[13px] text-white/60 mb-8">
             Public trades are delayed 7 days. Subscribers get signals the moment they fire.
           </p>
           <div className="flex flex-col sm:flex-row gap-2.5 justify-center max-w-sm mx-auto">
             <Link href="/auth/signup" className="flex-1 py-3 bg-[#00e5a0] text-black rounded font-bold text-[12px] hover:bg-[#00cc8e] transition-colors text-center">
               Get access — $97/mo
             </Link>
-            <Link href="/performance" className="flex-1 py-3 rounded text-[12px] font-semibold text-white/25 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/40 transition-all text-center">
+            <Link href="/performance" className="flex-1 py-3 rounded text-[12px] font-semibold text-white/70 border border-white/[0.06] hover:border-white/[0.1] hover:text-white/60 transition-all text-center">
               Verify every trade
             </Link>
           </div>
@@ -457,7 +457,7 @@ export default function LandingClientPage() {
       {/* DISCLAIMER */}
       <section className="py-8 px-5 md:px-8 border-t border-white/[0.02]">
         <div className="max-w-xl mx-auto text-center">
-          <p className="text-[9px] text-white/8 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/20 transition-colors">Full risk disclosure</Link>.</p>
+          <p className="text-[9px] text-white/8 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/60 transition-colors">Full risk disclosure</Link>.</p>
         </div>
       </section>
 
@@ -469,10 +469,10 @@ export default function LandingClientPage() {
             <span className="text-[9px] text-white/8">© 2026 PulseWave Labs</span>
           </div>
           <div className="flex gap-5 text-[9px] text-white/8">
-            <Link href="/performance" className="hover:text-white/20 transition-colors">Trades</Link>
-            <Link href="/privacy" className="hover:text-white/20 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/20 transition-colors">Terms</Link>
-            <Link href="/disclaimer" className="hover:text-white/20 transition-colors">Disclaimer</Link>
+            <Link href="/performance" className="hover:text-white/60 transition-colors">Trades</Link>
+            <Link href="/privacy" className="hover:text-white/60 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/60 transition-colors">Terms</Link>
+            <Link href="/disclaimer" className="hover:text-white/60 transition-colors">Disclaimer</Link>
           </div>
         </div>
       </footer>

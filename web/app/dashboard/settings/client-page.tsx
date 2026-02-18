@@ -55,10 +55,10 @@ export default function SettingsClientPage() {
 
       {/* Telegram Connection */}
       <section>
-        <div className="text-[10px] mono text-[#555] tracking-widest font-medium mb-2">TELEGRAM</div>
+        <div className="text-[10px] mono text-[#888] tracking-widest font-medium mb-2">TELEGRAM</div>
         <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] px-4 py-3">
           {checkingLink ? (
-            <div className="text-[11px] text-[#444] mono">Checking...</div>
+            <div className="text-[11px] text-[#777] mono">Checking...</div>
           ) : telegramLinked ? (
             <div>
               <div className="flex items-center justify-between mb-2">
@@ -74,7 +74,7 @@ export default function SettingsClientPage() {
                 </button>
               </div>
               {telegramLinkedAt && (
-                <div className="text-[10px] text-[#444] mono">
+                <div className="text-[10px] text-[#777] mono">
                   Linked {new Date(telegramLinkedAt).toLocaleDateString()}
                 </div>
               )}
@@ -91,12 +91,12 @@ export default function SettingsClientPage() {
               >
                 Open in Telegram →
               </a>
-              <div className="text-[10px] text-[#333] mono mt-2 text-center">
+              <div className="text-[10px] text-[#666] mono mt-2 text-center">
                 Then come back here — it updates automatically
               </div>
               <button
                 onClick={function() { setCheckingLink(true); fetch('/api/telegram/link').then(r => r.json()).then(d => { setTelegramLinked(d.linked); if(d.linked_at) setTelegramLinkedAt(d.linked_at); if(d.linked) setDeepLink(''); setCheckingLink(false); }).catch(() => setCheckingLink(false)); }}
-                className="block w-full text-center mt-2 text-[10px] mono text-[#555] hover:text-[#888] transition-colors"
+                className="block w-full text-center mt-2 text-[10px] mono text-[#888] hover:text-[#888] transition-colors"
               >
                 CHECK STATUS
               </button>
@@ -106,7 +106,7 @@ export default function SettingsClientPage() {
               <div className="flex items-center justify-between mb-1">
                 <div>
                   <div className="text-sm text-[#ccc] font-medium">Telegram Alerts</div>
-                  <div className="text-[10px] text-[#444] mono">Get instant signal notifications</div>
+                  <div className="text-[10px] text-[#777] mono">Get instant signal notifications</div>
                 </div>
               </div>
               <button
@@ -123,12 +123,12 @@ export default function SettingsClientPage() {
 
       {/* Notifications */}
       <section>
-        <div className="text-[10px] mono text-[#555] tracking-widest font-medium mb-2">NOTIFICATIONS</div>
+        <div className="text-[10px] mono text-[#888] tracking-widest font-medium mb-2">NOTIFICATIONS</div>
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
             <div>
               <div className="text-sm text-[#ccc] font-medium">Signal Alerts</div>
-              <div className="text-[10px] text-[#444] mono">New signal notifications</div>
+              <div className="text-[10px] text-[#777] mono">New signal notifications</div>
             </div>
             <button
               onClick={function() { setTelegramEnabled(!telegramEnabled) }}
@@ -140,7 +140,7 @@ export default function SettingsClientPage() {
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414]">
             <div>
               <div className="text-sm text-[#ccc] font-medium">Email Digest</div>
-              <div className="text-[10px] text-[#444] mono">Daily performance summary</div>
+              <div className="text-[10px] text-[#777] mono">Daily performance summary</div>
             </div>
             <button
               onClick={function() { setEmailEnabled(!emailEnabled) }}
@@ -154,12 +154,12 @@ export default function SettingsClientPage() {
 
       {/* Subscription */}
       <section>
-        <div className="text-[10px] mono text-[#555] tracking-widest font-medium mb-2">SUBSCRIPTION</div>
+        <div className="text-[10px] mono text-[#888] tracking-widest font-medium mb-2">SUBSCRIPTION</div>
         <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-[#ccc] font-medium">Pro Plan</div>
-              <div className="text-[10px] text-[#444] mono">$97/month</div>
+              <div className="text-[10px] text-[#777] mono">$97/month</div>
             </div>
             <span className="text-[9px] mono text-[#00e5a0] px-2 py-0.5 bg-[#00e5a0]/8 border border-[#00e5a0]/15 rounded tracking-wider">ACTIVE</span>
           </div>
@@ -168,14 +168,14 @@ export default function SettingsClientPage() {
 
       {/* Account */}
       <section>
-        <div className="text-[10px] mono text-[#555] tracking-widest font-medium mb-2">ACCOUNT</div>
+        <div className="text-[10px] mono text-[#888] tracking-widest font-medium mb-2">ACCOUNT</div>
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-2.5 bg-[#0c0c0c]">
-            <span className="text-[11px] text-[#555]">Email</span>
+            <span className="text-[11px] text-[#888]">Email</span>
             <span className="text-[11px] text-[#888] mono">—</span>
           </div>
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-[#141414]">
-            <span className="text-[11px] text-[#555]">Member since</span>
+            <span className="text-[11px] text-[#888]">Member since</span>
             <span className="text-[11px] text-[#888] mono">—</span>
           </div>
         </div>

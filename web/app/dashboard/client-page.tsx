@@ -171,14 +171,14 @@ function EquityChart({ trades }: { trades: any[] }) {
     <div ref={containerRef} className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
       <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
         <div className="flex items-center gap-4">
-          <div className="text-[10px] mono text-[#555] tracking-widest font-medium">EQUITY CURVE</div>
+          <div className="text-[10px] mono text-[#888] tracking-widest font-medium">EQUITY CURVE</div>
           <div className="flex items-center gap-0.5">
             {TIME_FILTERS.map(function(f) {
               var active = timeFilter === f.label
               return (
                 <button key={f.label}
                   onClick={function() { setTimeFilter(f.label); setHover(null) }}
-                  className={'px-2 py-0.5 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/8' : 'text-[#333] hover:text-[#555]')}
+                  className={'px-2 py-0.5 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/8' : 'text-[#666] hover:text-[#888]')}
                 >
                   {f.label}
                 </button>
@@ -187,9 +187,9 @@ function EquityChart({ trades }: { trades: any[] }) {
           </div>
         </div>
         <div className="flex items-center gap-4 text-[9px] mono">
-          <span className="text-[#444]">{sorted.length} TRADES</span>
+          <span className="text-[#777]">{sorted.length} TRADES</span>
           <span className={periodPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{periodPnl >= 0 ? '+' : ''}${Math.round(periodPnl).toLocaleString()}</span>
-          <span className="text-[#555]">{periodWR}% WR</span>
+          <span className="text-[#888]">{periodWR}% WR</span>
         </div>
       </div>
       <svg
@@ -253,14 +253,14 @@ function EquityChart({ trades }: { trades: any[] }) {
       {hover && hover.trade && (
         <div className="flex items-center justify-between px-4 py-1.5 border-t border-[#141414] text-[10px] mono">
           <div className="flex items-center gap-4">
-            <span className="text-[#555]">{new Date(hover.trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</span>
+            <span className="text-[#888]">{new Date(hover.trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</span>
             {hover.trade.pair && <span className="text-[#888]">{hover.trade.pair}</span>}
             {hover.trade.action && <span className={hover.trade.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.action}</span>}
             {hover.trade.pnl !== 0 && <span className={hover.trade.pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.pnl > 0 ? '+' : ''}${Math.round(hover.trade.pnl).toLocaleString()}</span>}
           </div>
           <div className="text-[#888]">
             Balance: <span className="text-white font-medium">${Math.round(hover.trade.balance).toLocaleString()}</span>
-            <span className="text-[#444] ml-2">Trade #{hover.idx}/{sorted.length}</span>
+            <span className="text-[#777] ml-2">Trade #{hover.idx}/{sorted.length}</span>
           </div>
         </div>
       )}
@@ -290,7 +290,7 @@ export default function DashboardClientPage() {
         <div className="w-48 h-px bg-[#1a1a1a] rounded-full overflow-hidden mb-3">
           <div className="w-16 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent scan-line"></div>
         </div>
-        <div className="text-[#333] text-[10px] mono tracking-widest">LOADING TERMINAL</div>
+        <div className="text-[#666] text-[10px] mono tracking-widest">LOADING TERMINAL</div>
       </div>
     )
   }
@@ -329,7 +329,7 @@ export default function DashboardClientPage() {
           ].map(function(s, i) {
             return (
               <div key={i} className="bg-[#0c0c0c] px-3 py-2.5">
-                <div className="text-[9px] text-[#444] mono tracking-widest leading-none mb-1.5">{s.label}</div>
+                <div className="text-[9px] text-[#777] mono tracking-widest leading-none mb-1.5">{s.label}</div>
                 <div className="text-base mono font-semibold leading-none" style={{ color: s.color }}>{s.value}</div>
               </div>
             )
@@ -343,8 +343,8 @@ export default function DashboardClientPage() {
       {/* Active Signals */}
       <section>
         <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">ACTIVE SIGNALS</h2>
-          <span className="text-[10px] mono px-1.5 py-0.5 rounded bg-[#161616] text-[#444]">{activeSignals.length}</span>
+          <h2 className="text-[10px] mono text-[#888] tracking-widest font-medium">ACTIVE SIGNALS</h2>
+          <span className="text-[10px] mono px-1.5 py-0.5 rounded bg-[#161616] text-[#777]">{activeSignals.length}</span>
         </div>
 
         {activeSignals.length === 0 ? (
@@ -352,7 +352,7 @@ export default function DashboardClientPage() {
             <div className="w-32 h-px bg-[#161616] rounded-full overflow-hidden mb-4">
               <div className="w-10 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
             </div>
-            <div className="text-[#444] mono text-xs mb-0.5">SCANNING FOR SETUPS</div>
+            <div className="text-[#777] mono text-xs mb-0.5">SCANNING FOR SETUPS</div>
             <div className="text-[#282828] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
           </div>
         ) : (
@@ -378,10 +378,10 @@ export default function DashboardClientPage() {
                         {sig.direction}
                       </span>
                       <span className="mono font-semibold text-white text-sm">{sig.pair}</span>
-                      <span className="text-[10px] mono text-[#333]">{timeAgo(sig.created_at)}</span>
+                      <span className="text-[10px] mono text-[#666]">{timeAgo(sig.created_at)}</span>
                     </div>
                     <div className="text-right">
-                      <div className="text-[9px] mono text-[#444]">R:R</div>
+                      <div className="text-[9px] mono text-[#777]">R:R</div>
                       <div className="text-sm mono font-bold text-[#00e5a0]">{rr}:1</div>
                     </div>
                   </div>
@@ -393,16 +393,16 @@ export default function DashboardClientPage() {
 
                   <div className="grid grid-cols-3 gap-px bg-[#131313]">
                     <div className="bg-[#0a0a0a] px-4 py-2.5">
-                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">ENTRY</div>
+                      <div className="text-[9px] text-[#777] mono tracking-wider mb-1">ENTRY</div>
                       <div className="mono text-sm text-white font-medium">${entry.toLocaleString()}</div>
                     </div>
                     <div className="bg-[#0a0a0a] px-4 py-2.5">
-                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">STOP LOSS</div>
+                      <div className="text-[9px] text-[#777] mono tracking-wider mb-1">STOP LOSS</div>
                       <div className="mono text-sm text-[#ff4d4d] font-medium">${sl.toLocaleString()}</div>
                       <div className="text-[9px] mono text-[#ff4d4d]/40">-{slPct}%</div>
                     </div>
                     <div className="bg-[#0a0a0a] px-4 py-2.5">
-                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">TAKE PROFIT</div>
+                      <div className="text-[9px] text-[#777] mono tracking-wider mb-1">TAKE PROFIT</div>
                       <div className="mono text-sm text-[#00e5a0] font-medium">${tp.toLocaleString()}</div>
                       <div className="text-[9px] mono text-[#00e5a0]/40">+{tpPct}%</div>
                     </div>
@@ -410,18 +410,18 @@ export default function DashboardClientPage() {
 
                   {sig.reasoning && (
                     <div className="px-4 py-2 bg-[#0a0a0a] border-t border-[#131313]">
-                      <div className="text-[10px] text-[#555] leading-relaxed">{sig.reasoning}</div>
+                      <div className="text-[10px] text-[#888] leading-relaxed">{sig.reasoning}</div>
                     </div>
                   )}
 
                   <div className="px-4 py-2.5 bg-[#0a0a0a] border-t border-[#131313]">
-                    <div className="text-[9px] text-[#333] mono tracking-wider mb-2">POSITION SIZING · 10% RISK · 20× LEV</div>
+                    <div className="text-[9px] text-[#666] mono tracking-wider mb-2">POSITION SIZING · 10% RISK · 20× LEV</div>
                     <div className="grid grid-cols-5 gap-x-2 gap-y-0.5 text-[10px] mono">
-                      <div className="text-[#333] pb-0.5">ACCT</div>
-                      <div className="text-[#333] pb-0.5">RISK</div>
-                      <div className="text-[#333] pb-0.5">SIZE</div>
-                      <div className="text-[#333] pb-0.5">MARGIN</div>
-                      <div className="text-[#333] pb-0.5 text-right">TP PROFIT</div>
+                      <div className="text-[#666] pb-0.5">ACCT</div>
+                      <div className="text-[#666] pb-0.5">RISK</div>
+                      <div className="text-[#666] pb-0.5">SIZE</div>
+                      <div className="text-[#666] pb-0.5">MARGIN</div>
+                      <div className="text-[#666] pb-0.5 text-right">TP PROFIT</div>
                       {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
                         var riskAmt = acct * 0.10
                         var posSize = risk > 0 ? riskAmt / (risk / entry) : 0
@@ -431,7 +431,7 @@ export default function DashboardClientPage() {
                           <div key={acct + 'a'} className="text-[#666]">${acct >= 1000 ? (acct / 1000) + 'K' : acct}</div>,
                           <div key={acct + 'r'} className="text-[#c9a227]">${riskAmt >= 1000 ? (riskAmt / 1000).toFixed(1) + 'K' : riskAmt}</div>,
                           <div key={acct + 's'} className="text-[#666]">${Math.round(posSize) >= 1000 ? (Math.round(posSize) / 1000).toFixed(0) + 'K' : Math.round(posSize)}</div>,
-                          <div key={acct + 'm'} className="text-[#444]">${Math.round(margin) >= 1000 ? (Math.round(margin) / 1000).toFixed(1) + 'K' : Math.round(margin)}</div>,
+                          <div key={acct + 'm'} className="text-[#777]">${Math.round(margin) >= 1000 ? (Math.round(margin) / 1000).toFixed(1) + 'K' : Math.round(margin)}</div>,
                           <div key={acct + 'p'} className="text-[#00e5a0] text-right">+${Math.round(profit) >= 1000 ? (Math.round(profit) / 1000).toFixed(1) + 'K' : Math.round(profit)}</div>,
                         ]
                       })}
@@ -448,21 +448,21 @@ export default function DashboardClientPage() {
       <section>
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-3">
-            <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">RECENT TRADES</h2>
+            <h2 className="text-[10px] mono text-[#888] tracking-widest font-medium">RECENT TRADES</h2>
             {currentStreak > 1 && (
               <span className={'text-[9px] mono px-1.5 py-0.5 rounded ' + (streakType === 'W' ? 'bg-[#00e5a0]/8 text-[#00e5a0]' : 'bg-[#ff4d4d]/8 text-[#ff4d4d]')}>
                 {currentStreak}{streakType} STREAK
               </span>
             )}
           </div>
-          <a href="/dashboard/history" className="text-[10px] mono text-[#333] hover:text-[#555] transition-colors">ALL TRADES →</a>
+          <a href="/dashboard/history" className="text-[10px] mono text-[#666] hover:text-[#888] transition-colors">ALL TRADES →</a>
         </div>
 
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="overflow-x-auto scrollbar-none">
             <table className="w-full text-[11px] mono">
               <thead>
-                <tr className="bg-[#0c0c0c] text-[#333]">
+                <tr className="bg-[#0c0c0c] text-[#666]">
                   <th className="text-left px-3 py-2 font-medium tracking-wider">DATE</th>
                   <th className="text-left px-3 py-2 font-medium tracking-wider">PAIR</th>
                   <th className="text-left px-3 py-2 font-medium tracking-wider">SIDE</th>
@@ -477,7 +477,7 @@ export default function DashboardClientPage() {
                   var isWin = t.pnl >= 0
                   return (
                     <tr key={i} className={'border-t border-[#111] transition-colors hover:bg-[#0e0e0e] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
-                      <td className="px-3 py-2 text-[#444]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                      <td className="px-3 py-2 text-[#777]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
                       <td className="px-3 py-2 text-[#999] font-medium">{t.pair}</td>
                       <td className="px-3 py-2">
                         <span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span>
