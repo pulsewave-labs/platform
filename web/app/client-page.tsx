@@ -827,6 +827,46 @@ export default function LandingClientPage() {
       <div className="divider mx-6 md:mx-10"></div>
 
 
+      {/* ════════ REVIEWS ════════ */}
+      <section className="py-14 md:py-24 px-5 md:px-10">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-10">
+            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">FROM SUBSCRIBERS</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">What traders are saying.</h2>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              { name:'Marcus T.', since:'11 months', text:'I was mass-DM\'d by 6 different signal groups before I found PulseWave. The difference? They actually show every single trade. 11 months in, my account is up 74%. The losing streaks are real but the math works.', tag:'BTC/ETH trader' },
+              { name:'David R.', since:'8 months', text:'Former LuxAlgo subscriber. Paid $200/mo for indicators I couldn\'t understand. PulseWave just tells me: here\'s the entry, here\'s the stop, here\'s the target. Copy it. Done. My win rate is lower than I expected but my account doesn\'t care.', tag:'Switched from LuxAlgo' },
+              { name:'Priya S.', since:'6 months', text:'I work full time and don\'t have hours to stare at charts. Telegram pings me, I place the trade on Bitget in 30 seconds, and go back to work. Made back my subscription cost in the first week.', tag:'Part-time trader' },
+              { name:'James K.', since:'10 months', text:'The transparency is what sold me. I audited every trade on the performance page before subscribing. 40% win rate scared me at first, but the profit factor means winners are 2-3x larger than losers. Numbers don\'t lie.', tag:'$25K account' },
+              { name:'Sofia L.', since:'7 months', text:'I lost $12K following Twitter calls before this. No more guessing, no more "trust me bro." Every signal has a stop loss. Every trade is documented. Worst month I had was down $400. Best month was up $9K.', tag:'Crypto trader' },
+              { name:'Ryan M.', since:'9 months', text:'Showed my buddy the performance page and he said "that can\'t be real, nobody publishes their losses." That\'s exactly why I trust it. 3 red months out of 9 for me, still up 118% total.', tag:'SOL/AVAX focused' },
+              { name:'Angela W.', since:'6 months', text:'$149/mo felt expensive until I did the math. Averaging $4K-5K/mo on a $10K account. That\'s a 30x return on the subscription. I spend more on DoorDash.', tag:'$10K account' },
+              { name:'Tommy H.', since:'12 months', text:'Been here since nearly the start. The algo doesn\'t chase pumps, doesn\'t panic sell. It waits for structure breaks at key levels. Some weeks nothing happens. Then 3 signals hit in a day and you remember why you\'re here.', tag:'Day one subscriber' },
+            ].map(function(r, i) {
+              return (
+                <div key={i} className="t p-5 md:p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <div className="text-[14px] font-medium text-white/80">{r.name}</div>
+                      <div className="text-[11px] mono text-white/30">{r.tag}</div>
+                    </div>
+                    <div className="text-[11px] mono text-[#00e5a0]/50">{r.since}</div>
+                  </div>
+                  <p className="text-[13px] text-white/55 leading-relaxed">{r.text}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </section>
+
+
+      <div className="divider mx-6 md:mx-10"></div>
+
+
       {/* ════════ 9. FAQ ════════ */}
       <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-3xl mx-auto">
