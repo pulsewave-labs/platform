@@ -66,7 +66,7 @@ export default function LandingClientPage() {
 
       {/* NAV */}
       <nav className={'fixed top-0 left-0 right-0 z-50 transition-all duration-300 '+(scrolled?'bg-[#08080a]/90 backdrop-blur-xl border-b border-white/[0.04]':'')}>
-        <div className="max-w-6xl mx-auto px-5 md:px-8 h-12 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 md:px-10 h-12 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/logo.webp" alt="PulseWave" className="h-5" />
           </div>
@@ -92,10 +92,10 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 1. HOOK — Pattern interrupt + mechanism ════════ */}
-      <section className="min-h-[100svh] flex flex-col items-center justify-center px-5 md:px-8 pt-14 relative grid-bg">
+      <section className="min-h-[100svh] flex flex-col items-center justify-center px-6 md:px-10 pt-14 relative grid-bg">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
 
-        <div className="w-full max-w-3xl mx-auto relative z-10">
+        <div className="w-full max-w-4xl mx-auto relative z-10">
           <div className="fu flex items-center gap-2 mb-8">
             <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
             <span className="text-[10px] text-white/40 mono tracking-[.15em]">LIVE · SCANNING 6 PAIRS · 24/7</span>
@@ -148,13 +148,13 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 2. PROBLEM AGITATION ════════ */}
-      <section className="py-20 px-5 md:px-8">
-        <div className="max-w-3xl mx-auto text-center">
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto text-center">
           <p className="text-[10px] text-[#ff4d4d]/40 mono tracking-[.15em] mb-4">THE PROBLEM</p>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-6">
             You already know most signal services are garbage.
           </h2>
-          <div className="grid md:grid-cols-3 gap-3 text-left mb-10">
+          <div className="grid md:grid-cols-3 gap-4 text-left mb-10">
             {[
               {icon:'01',title:'Cherry-picked screenshots',desc:'They show you their wins. They hide 80% of their trades. You never see the full picture until you\'ve already paid.'},
               {icon:'02',title:'"Trust me bro" track records',desc:'No verified data. No timestamps. No stop losses. Just Lamborghinis and vague "10x this week" posts.'},
@@ -176,8 +176,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 3. MECHANISM — What makes us different ════════ */}
-      <section id="how" className="py-20 px-5 md:px-8">
-        <div className="max-w-5xl mx-auto">
+      <section id="how" className="py-20 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto">
           <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">THE MECHANISM</p>
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
             Market Structure — the method institutions use<br/><span className="text-white/30">that retail traders don't even know exists.</span>
@@ -210,8 +210,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 4. PROOF — Overwhelming evidence ════════ */}
-      <section id="proof" className="py-20 px-5 md:px-8">
-        <div className="max-w-5xl mx-auto">
+      <section id="proof" className="py-20 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto">
           <div className="flex items-end justify-between mb-6">
             <div>
               <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">THE PROOF</p>
@@ -315,8 +315,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 5. WHAT YOU GET — Signal preview ════════ */}
-      <section className="py-20 px-5 md:px-8">
-        <div className="max-w-5xl mx-auto grid md:grid-cols-[1fr_1.1fr] gap-10 items-center">
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_1.1fr] gap-10 items-center">
           <div>
             <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-4">
@@ -379,8 +379,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 6. PAIRS + AUTHORITY ════════ */}
-      <section className="py-20 px-5 md:px-8">
-        <div className="max-w-5xl mx-auto">
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-6xl mx-auto">
           <div className="grid md:grid-cols-[1fr_1fr] gap-8">
             {/* Pairs */}
             <div>
@@ -435,8 +435,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 7. PRICING — Offer + Urgency ════════ */}
-      <section id="pricing" className="py-20 px-5 md:px-8">
-        <div className="max-w-3xl mx-auto">
+      <section id="pricing" className="py-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
           <div className="text-center mb-10">
             <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">PRICING</p>
             <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-3">
@@ -447,7 +447,7 @@ export default function LandingClientPage() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-3 max-w-xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
             <div className="t">
               <div className="th">
                 <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
@@ -500,8 +500,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 8. OBJECTION HANDLING ════════ */}
-      <section className="py-20 px-5 md:px-8">
-        <div className="max-w-3xl mx-auto">
+      <section className="py-20 px-6 md:px-10">
+        <div className="max-w-4xl mx-auto">
           <p className="text-[10px] text-white/25 mono tracking-[.15em] mb-2 text-center">COMMON QUESTIONS</p>
           <h2 className="text-2xl font-bold tracking-tight mb-8 text-center">Before you decide.</h2>
 
@@ -524,9 +524,9 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 9. FINAL CTA — Emotional close ════════ */}
-      <section className="py-24 px-5 md:px-8 relative">
+      <section className="py-24 px-6 md:px-10 relative">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.025) 0%,transparent 65%)'}}/>
-        <div className="max-w-xl mx-auto text-center relative z-10">
+        <div className="max-w-2xl mx-auto text-center relative z-10">
           <div className="t inline-block px-6 py-2.5 mb-6">
             <span className="text-[32px] md:text-[40px] font-bold mono text-[#00e5a0] glow">+$208,418</span>
           </div>
@@ -552,15 +552,15 @@ export default function LandingClientPage() {
 
 
       {/* DISCLAIMER */}
-      <section className="py-8 px-5 md:px-8 border-t border-white/[0.02]">
-        <div className="max-w-xl mx-auto text-center">
+      <section className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
+        <div className="max-w-2xl mx-auto text-center">
           <p className="text-[9px] text-white/15 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/30 transition-colors">Full risk disclosure</Link>.</p>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-6 px-5 md:px-8 border-t border-white/[0.02]">
-        <div className="max-w-5xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+      <footer className="py-6 px-6 md:px-10 border-t border-white/[0.02]">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
           <div className="flex items-center gap-2.5"><img src="/logo.webp" alt="PulseWave" className="h-3 opacity-20"/><span className="text-[9px] text-white/15">© 2026 PulseWave Labs</span></div>
           <div className="flex gap-5 text-[9px] text-white/15">
             <Link href="/performance" className="hover:text-white/30 transition-colors">Trades</Link>
