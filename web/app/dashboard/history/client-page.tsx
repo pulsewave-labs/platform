@@ -24,7 +24,7 @@ export default function HistoryClientPage() {
         <div className="w-48 h-px bg-white/[0.04] rounded-full overflow-hidden mb-3">
           <div className="w-16 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent scan-line"></div>
         </div>
-        <div className="text-[#666] text-[10px] mono tracking-widest">LOADING HISTORY</div>
+        <div className="text-[#666] text-[12px] mono tracking-widest">LOADING HISTORY</div>
       </div>
     )
   }
@@ -72,7 +72,7 @@ export default function HistoryClientPage() {
         ].map(function(s, i) {
           return (
             <div key={i} className="bg-[#0c0c0c] px-4 py-3">
-              <div className="text-[8px] text-[#666] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
+              <div className="text-[11px] text-[#666] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
               <div className="text-[17px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
             </div>
           )
@@ -83,7 +83,7 @@ export default function HistoryClientPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">MONTHLY BREAKDOWN</h2>
-          <span className="text-[10px] mono text-[#555]">{monthly.length} months</span>
+          <span className="text-[12px] mono text-[#555]">{monthly.length} months</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
@@ -109,14 +109,14 @@ export default function HistoryClientPage() {
                   <div className="flex items-baseline justify-between mb-2">
                     <div>
                       <span className="text-[14px] font-semibold text-[#ccc] group-hover:text-white transition-colors">{monthShort}</span>
-                      <span className="text-[10px] text-[#666] ml-1.5 mono">{year}</span>
+                      <span className="text-[12px] text-[#666] ml-1.5 mono">{year}</span>
                     </div>
                     <div className={'text-[14px] mono font-bold ' + (isPos ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
                       {isPos ? '+' : ''}${m.pnl.toLocaleString()}
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between text-[9px] mono mb-2">
+                  <div className="flex items-center justify-between text-[11px] mono mb-2">
                     <div className="flex items-center gap-2">
                       <span className="text-[#888]">{m.trades} trades</span>
                       <span className="text-[#333]">·</span>
@@ -152,7 +152,7 @@ export default function HistoryClientPage() {
       </div>
 
       {/* Trade settings footer */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.02] rounded-lg overflow-hidden text-[9px] mono">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.02] rounded-lg overflow-hidden text-[11px] mono">
         {[
           { label: 'RISK', value: '10% FIXED ($1,000)' },
           { label: 'LEVERAGE', value: '20x' },
@@ -188,12 +188,12 @@ export default function HistoryClientPage() {
               <div className="flex items-center gap-3">
                 {/* Filters */}
                 <select value={filterPair} onChange={function(e) { setFilterPair(e.target.value) }}
-                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[10px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
+                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[12px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
                   <option value="">ALL PAIRS</option>
                   {pairs.map(function(p) { return <option key={p} value={p}>{p}</option> })}
                 </select>
                 <select value={filterDir} onChange={function(e) { setFilterDir(e.target.value) }}
-                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[10px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
+                  className="px-2 py-1 bg-[#0a0a0a] border border-white/[0.06] rounded-md text-[12px] mono text-[#888] focus:outline-none focus:border-white/[0.1]">
                   <option value="">ALL</option>
                   <option value="LONG">LONG</option>
                   <option value="SHORT">SHORT</option>
@@ -214,7 +214,7 @@ export default function HistoryClientPage() {
               ].map(function(s, i) {
                 return (
                   <div key={i} className="bg-[#0a0a0a] px-4 py-2.5">
-                    <div className="text-[8px] text-[#555] mono tracking-[.12em] mb-1">{s.l}</div>
+                    <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-1">{s.l}</div>
                     <div className="text-[13px] mono font-semibold text-[#ccc]">{s.v}</div>
                   </div>
                 )
@@ -248,7 +248,7 @@ export default function HistoryClientPage() {
                       >
                         <td className="px-4 py-2.5 text-[#777]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
                         <td className="px-4 py-2.5 text-[#aaa] font-medium">{t.pair}</td>
-                        <td className="px-4 py-2.5"><span className={'px-1.5 py-0.5 rounded text-[9px] font-bold ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span></td>
+                        <td className="px-4 py-2.5"><span className={'px-1.5 py-0.5 rounded text-[11px] font-bold ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span></td>
                         <td className="px-4 py-2.5 text-right text-[#777]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                         <td className="px-4 py-2.5 text-right text-[#777]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
                         <td className="px-4 py-2.5 text-right text-[#666]">${Math.round(Number(t.notional)).toLocaleString()}</td>
@@ -257,7 +257,7 @@ export default function HistoryClientPage() {
                           {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
                         </td>
                         <td className="px-4 py-2.5 text-center">
-                          <span className={'text-[9px] font-medium tracking-wider ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
+                          <span className={'text-[11px] font-medium tracking-wider ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
                         </td>
                       </tr>
                     )
@@ -273,12 +273,12 @@ export default function HistoryClientPage() {
                     <button key={ti} onClick={function() { setSelectedTrade(selectedTrade === t ? null : t) }} className={'w-full text-left px-4 py-3 transition-colors ' + (selectedTrade === t ? 'bg-white/[0.03]' : 'hover:bg-white/[0.01]')}>
                       <div className="flex items-center justify-between mb-1.5">
                         <div className="flex items-center gap-2">
-                          <span className={'text-[9px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
+                          <span className={'text-[11px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
                           <span className="text-[13px] text-[#aaa] mono font-medium">{t.pair}</span>
                         </div>
                         <span className={'text-[14px] mono font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] mono text-[#555]">
+                      <div className="flex items-center justify-between text-[12px] mono text-[#555]">
                         <span>{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                         <span>${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})} → ${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                         <span className={'font-medium ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
@@ -291,8 +291,8 @@ export default function HistoryClientPage() {
 
             {/* Footer */}
             <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.04] bg-[#0b0b0b] shrink-0">
-              <span className="text-[10px] mono text-[#555]">{modalTrades.length} trades shown</span>
-              <span className="text-[10px] mono text-[#555]">Fees: ${Math.round((tradesByMonth[selectedMonth.month] || []).reduce(function(s: number, t: any) { return s + t.fees }, 0)).toLocaleString()}</span>
+              <span className="text-[12px] mono text-[#555]">{modalTrades.length} trades shown</span>
+              <span className="text-[12px] mono text-[#555]">Fees: ${Math.round((tradesByMonth[selectedMonth.month] || []).reduce(function(s: number, t: any) { return s + t.fees }, 0)).toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -306,7 +306,7 @@ export default function HistoryClientPage() {
             {/* Trade header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.04]">
               <div className="flex items-center gap-3">
-                <span className={'text-[10px] font-bold mono px-2 py-0.5 rounded ' + (selectedTrade.action === 'LONG' ? 'bg-[#00e5a0]/[0.08] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.08] text-[#ff4d4d]')}>{selectedTrade.action}</span>
+                <span className={'text-[12px] font-bold mono px-2 py-0.5 rounded ' + (selectedTrade.action === 'LONG' ? 'bg-[#00e5a0]/[0.08] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.08] text-[#ff4d4d]')}>{selectedTrade.action}</span>
                 <span className="text-[16px] font-bold mono text-white">{selectedTrade.pair}</span>
               </div>
               <button onClick={function() { setSelectedTrade(null) }} className="text-[#555] hover:text-white transition-colors p-1">
@@ -319,7 +319,7 @@ export default function HistoryClientPage() {
               <div className={'text-[28px] font-bold mono ' + (selectedTrade.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
                 {selectedTrade.pnl >= 0 ? '+' : ''}${Number(selectedTrade.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
               </div>
-              <div className="text-[10px] mono text-[#555] mt-1">
+              <div className="text-[12px] mono text-[#555] mt-1">
                 {selectedTrade.exit_reason === 'TP' ? 'Take Profit Hit' : 'Stop Loss Hit'}
               </div>
             </div>
@@ -338,7 +338,7 @@ export default function HistoryClientPage() {
               ].map(function(d, i) {
                 return (
                   <div key={i} className="bg-[#0a0a0a] px-4 py-3">
-                    <div className="text-[8px] text-[#555] mono tracking-[.12em] mb-1">{d.l}</div>
+                    <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-1">{d.l}</div>
                     <div className="text-[13px] mono font-medium text-[#ccc]">{d.v}</div>
                   </div>
                 )
@@ -346,7 +346,7 @@ export default function HistoryClientPage() {
             </div>
 
             {/* Timing */}
-            <div className="px-5 py-3 border-t border-white/[0.03] flex items-center justify-between text-[10px] mono text-[#555]">
+            <div className="px-5 py-3 border-t border-white/[0.03] flex items-center justify-between text-[12px] mono text-[#555]">
               <span>Entry: {new Date(selectedTrade.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} {new Date(selectedTrade.entry_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
               <span>Exit: {selectedTrade.exit_time ? new Date(selectedTrade.exit_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + new Date(selectedTrade.exit_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '—'}</span>
             </div>

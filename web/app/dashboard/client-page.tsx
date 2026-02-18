@@ -193,12 +193,12 @@ function EquityChart({ trades }: { trades: any[] }) {
       <div className="flex flex-col md:flex-row md:items-center justify-between px-5 py-3 border-b border-white/[0.03] gap-2">
         <div className="flex items-center gap-4">
           <div>
-            <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">BALANCE</div>
+            <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-0.5">BALANCE</div>
             <div className="text-[22px] mono font-bold text-white leading-none">${Math.round(lastBal).toLocaleString()}</div>
           </div>
           <div className="h-8 w-px bg-white/[0.04]"></div>
           <div>
-            <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">P&L</div>
+            <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-0.5">P&L</div>
             <div className={'text-[16px] mono font-bold leading-none ' + (periodPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
               {periodPnl >= 0 ? '+' : ''}${Math.round(periodPnl).toLocaleString()}
               <span className="text-[11px] ml-1 opacity-50">({periodReturn}%)</span>
@@ -208,14 +208,14 @@ function EquityChart({ trades }: { trades: any[] }) {
             <>
               <div className="h-8 w-px bg-white/[0.04]"></div>
               <div>
-                <div className="text-[9px] text-[#555] mono tracking-[.12em] mb-0.5">DRAWDOWN</div>
+                <div className="text-[11px] text-[#555] mono tracking-[.12em] mb-0.5">DRAWDOWN</div>
                 <div className="text-[14px] mono font-bold text-[#ff4d4d] leading-none">-{currentDD.toFixed(1)}%</div>
               </div>
             </>
           )}
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-3 text-[9px] mono mr-2 hidden md:flex">
+          <div className="flex items-center gap-3 text-[11px] mono mr-2 hidden md:flex">
             <span className="text-[#666]">{sorted.length} trades</span>
             <span className="text-[#00e5a0]/60">{periodWins}W</span>
             <span className="text-[#ff4d4d]/60">{periodLosses}L</span>
@@ -227,7 +227,7 @@ function EquityChart({ trades }: { trades: any[] }) {
               return (
                 <button key={f.label}
                   onClick={function() { setTimeFilter(f.label); setHover(null) }}
-                  className={'px-2.5 py-1 text-[9px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/[0.08]' : 'text-[#555] hover:text-[#888]')}
+                  className={'px-2.5 py-1 text-[11px] mono font-medium rounded transition-all ' + (active ? 'text-[#00e5a0] bg-[#00e5a0]/[0.08]' : 'text-[#555] hover:text-[#888]')}
                 >
                   {f.label}
                 </button>
@@ -311,7 +311,7 @@ function EquityChart({ trades }: { trades: any[] }) {
       </svg>
 
       {/* Tooltip bar */}
-      <div className="flex items-center justify-between px-5 py-2 border-t border-white/[0.03] text-[10px] mono min-h-[32px]">
+      <div className="flex items-center justify-between px-5 py-2 border-t border-white/[0.03] text-[12px] mono min-h-[32px]">
         {hover && hover.trade ? (
           <>
             <div className="flex items-center gap-4">
@@ -366,7 +366,7 @@ export default function DashboardClientPage() {
         <div className="w-48 h-px bg-[#1a1a1a] rounded-full overflow-hidden mb-3">
           <div className="w-16 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent scan-line"></div>
         </div>
-        <div className="text-[#666] text-[10px] mono tracking-widest">LOADING TERMINAL</div>
+        <div className="text-[#666] text-[12px] mono tracking-widest">LOADING TERMINAL</div>
       </div>
     )
   }
@@ -436,7 +436,7 @@ export default function DashboardClientPage() {
         ].map(function(s, i) {
           return (
             <div key={i} className="bg-[#0c0c0c] px-4 py-3.5">
-              <div className="text-[10px] text-[#555] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
+              <div className="text-[12px] text-[#555] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
               <div className="text-[20px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
               {s.sub && <div className="text-[11px] mono text-[#555] mt-1.5">{s.sub}</div>}
             </div>

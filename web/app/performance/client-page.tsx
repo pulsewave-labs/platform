@@ -122,7 +122,7 @@ export default function PerformanceClientPage() {
               { label: 'GREEN MONTHS', val: s.profitableMonths + '/' + s.totalMonths, color: '#e0e0e0' },
             ].map((stat, i) => (
               <div key={i} className="bg-[#0c0c0c] px-5 py-4">
-                <div className="text-[10px] text-[#555] mono tracking-[.12em] mb-2">{stat.label}</div>
+                <div className="text-[12px] text-[#555] mono tracking-[.12em] mb-2">{stat.label}</div>
                 <div className="text-[20px] font-bold mono leading-none" style={{ color: stat.color }}>{stat.val}</div>
               </div>
             ))}
