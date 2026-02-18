@@ -574,13 +574,13 @@ export default function DashboardClientPage() {
             <table className="w-full text-[14px] mono">
               <thead>
                 <tr className="bg-[#0c0c0c] text-[#555]">
-                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[12px]">DATE</th>
-                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[12px]">PAIR</th>
-                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[12px]">SIDE</th>
-                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[12px]">ENTRY</th>
-                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[12px]">EXIT</th>
-                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[12px]">P&L</th>
-                  <th className="text-center px-4 py-3 font-medium tracking-[.1em] text-[12px]">RESULT</th>
+                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[11px]">DATE</th>
+                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[11px]">PAIR</th>
+                  <th className="text-left px-4 py-3 font-medium tracking-[.1em] text-[11px]">SIDE</th>
+                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[11px]">ENTRY</th>
+                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[11px]">EXIT</th>
+                  <th className="text-right px-4 py-3 font-medium tracking-[.1em] text-[11px]">P&L</th>
+                  <th className="text-center px-4 py-3 font-medium tracking-[.1em] text-[11px]">RESULT</th>
                 </tr>
               </thead>
               <tbody>
@@ -647,7 +647,7 @@ export default function DashboardClientPage() {
               return (
                 <div key={p.pair} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-4 py-3 hover:border-white/[0.06] transition-colors">
                   <div className="flex items-center justify-between mb-1.5">
-                    <span className="text-[16px] mono font-medium text-[#aaa]">{p.pair.replace('/USDT', '')}</span>
+                    <span className="text-[14px] mono font-medium text-[#aaa]">{p.pair.replace('/USDT', '')}</span>
                     <span className="text-[13px] mono text-[#555]">{p.trades} trades</span>
                   </div>
                   <div className={'text-[24px] mono font-bold mb-1.5 ' + (p.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>

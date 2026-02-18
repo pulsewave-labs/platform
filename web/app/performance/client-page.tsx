@@ -123,7 +123,7 @@ export default function PerformanceClientPage() {
             ].map((stat, i) => (
               <div key={i} className="bg-[#0c0c0c] px-5 py-4">
                 <div className="text-[16px] text-[#555] mono tracking-[.12em] mb-2">{stat.label}</div>
-                <div className="text-[24px] font-bold mono leading-none" style={{ color: stat.color }}>{stat.val}</div>
+                <div className="text-[20px] font-bold mono leading-none" style={{ color: stat.color }}>{stat.val}</div>
               </div>
             ))}
           </div>
@@ -132,10 +132,10 @@ export default function PerformanceClientPage() {
 
         {/* Monthly Performance */}
         <div className="mb-14">
-          <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium mb-4">MONTHLY RETURNS</h2>
+          <h2 className="text-[13px] mono text-[#888] tracking-[.15em] font-medium mb-4">MONTHLY RETURNS</h2>
           <div className="border border-white/[0.04] rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-[14px] mono">
+              <table className="w-full text-[11px] mono">
                 <thead>
                   <tr className="bg-[#0c0c0c] text-[#555] text-[14px]">
                     <th className="text-left px-4 py-3 font-medium tracking-[.1em]">MONTH</th>
@@ -172,18 +172,18 @@ export default function PerformanceClientPage() {
 
         {/* Pairs */}
         <div className="mb-14">
-          <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium mb-4">PERFORMANCE BY PAIR</h2>
+          <h2 className="text-[13px] mono text-[#888] tracking-[.15em] font-medium mb-4">PERFORMANCE BY PAIR</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
             {data.pairs.map((p: any, i: number) => (
               <div key={i} className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg px-5 py-4 hover:border-white/[0.06] transition-colors">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[16px] mono font-medium text-[#aaa]">{p.pair.replace('/USDT', '')}</span>
-                  <span className="text-[14px] mono text-[#555]">{p.trades} trades</span>
+                  <span className="text-[11px] mono text-[#555]">{p.trades} trades</span>
                 </div>
-                <div className={'text-[24px] mono font-bold mb-3 ' + (p.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                <div className={'text-[18px] mono font-bold mb-3 ' + (p.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
                   +${p.pnl.toLocaleString()}
                 </div>
-                <div className="space-y-1 text-[14px] mono">
+                <div className="space-y-1 text-[11px] mono">
                   <div className="flex justify-between"><span className="text-[#555]">Win Rate</span><span className="text-[#777]">{p.winRate}%</span></div>
                   <div className="flex justify-between"><span className="text-[#555]">Avg P&L</span><span className="text-[#777]">${p.avgPnl}</span></div>
                 </div>
@@ -195,7 +195,7 @@ export default function PerformanceClientPage() {
 
         {/* Trade Settings */}
         <div className="mb-14">
-          <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium mb-4">TRADE PARAMETERS</h2>
+          <h2 className="text-[13px] mono text-[#888] tracking-[.15em] font-medium mb-4">TRADE PARAMETERS</h2>
           <div className="grid md:grid-cols-2 gap-4">
             <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg p-6">
               <div className="text-[14px] text-white/70 font-semibold mb-4">Settings</div>
@@ -211,8 +211,8 @@ export default function PerformanceClientPage() {
                   ['Strategy', 'Market Structure (BOS + OB)'],
                 ].map(([label, val], i) => (
                   <div key={i} className="flex justify-between items-center py-3 border-b border-white/[0.02] last:border-b-0">
-                    <span className="text-[16px] text-[#777]">{label}</span>
-                    <span className="text-[16px] text-[#aaa] mono font-medium">{val}</span>
+                    <span className="text-[13px] text-[#777]">{label}</span>
+                    <span className="text-[13px] text-[#aaa] mono font-medium">{val}</span>
                   </div>
                 ))}
               </div>
@@ -235,7 +235,7 @@ export default function PerformanceClientPage() {
         <div className="mb-14">
           <div className="flex items-end justify-between mb-4">
             <div>
-              <h2 className="text-[14px] mono text-[#888] tracking-[.15em] font-medium mb-2">COMPLETE TRADE LOG</h2>
+              <h2 className="text-[13px] mono text-[#888] tracking-[.15em] font-medium mb-2">COMPLETE TRADE LOG</h2>
               <p className="text-[16px] text-[#555] mono">{filtered.length} trades · Public trades delayed 48 hours</p>
             </div>
           </div>
@@ -273,7 +273,7 @@ export default function PerformanceClientPage() {
           {/* Desktop Table */}
           <div className="hidden md:block border border-white/[0.04] rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-[14px] mono">
+              <table className="w-full text-[11px] mono">
                 <thead>
                   <tr className="bg-[#0c0c0c] text-[#555] text-[14px]">
                     {[
@@ -329,7 +329,7 @@ export default function PerformanceClientPage() {
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className={'text-[14px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
-                    <span className="text-[16px] text-[#aaa] mono font-medium">{t.pair.replace('/USDT', '')}</span>
+                    <span className="text-[13px] text-[#aaa] mono font-medium">{t.pair.replace('/USDT', '')}</span>
                   </div>
                   <span className={'text-[14px] mono font-bold ' + (t.pnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{t.pnl >= 0 ? '+' : ''}${Math.round(t.pnl).toLocaleString()}</span>
                 </div>
@@ -383,8 +383,8 @@ export default function PerformanceClientPage() {
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-6 px-6 md:px-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-          <span className="text-[14px] text-white/30">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
-          <div className="flex gap-5 text-[14px] text-white/30">
+          <span className="text-[11px] text-white/30">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
+          <div className="flex gap-5 text-[11px] text-white/30">
             <Link href="/disclaimer" className="hover:text-white/50 transition-colors">Disclaimer</Link>
             <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>
             <Link href="/terms" className="hover:text-white/50 transition-colors">Terms</Link>
