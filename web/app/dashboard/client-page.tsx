@@ -71,7 +71,7 @@ export default function DashboardClientPage() {
           <div className="text-center py-8">
             <div className="text-4xl mb-3">📡</div>
             <p className="text-zinc-400 mb-1">No active signals right now</p>
-            <p className="text-zinc-500 text-sm">The bot scans 6 pairs across 4h, 6h, and 12h timeframes. New signals are sent instantly via Telegram.</p>
+            <p className="text-zinc-500 text-sm">The bot is actively scanning for setups. New signals are sent instantly via Telegram.</p>
           </div>
         ) : (
           <div className="space-y-4">
