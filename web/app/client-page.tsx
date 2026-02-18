@@ -6,12 +6,14 @@ import Link from 'next/link'
 function useCountUp(end: number, decimals = 0, duration = 2200) {
   const [value, setValue] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
-  const started = useRef(false)
+  const animated = useRef(false)
+  const visible = useRef(false)
   useEffect(() => {
-    if (!ref.current || started.current) return
+    if (!ref.current) return
     const obs = new IntersectionObserver(([e]) => {
-      if (e.isIntersecting && !started.current) {
-        started.current = true
+      visible.current = e.isIntersecting
+      if (e.isIntersecting && end > 0 && !animated.current) {
+        animated.current = true
         let s: number
         const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
         requestAnimationFrame(step)
@@ -19,6 +21,15 @@ function useCountUp(end: number, decimals = 0, duration = 2200) {
     }, { threshold: 0.3 })
     obs.observe(ref.current)
     return () => obs.disconnect()
+  }, [end, duration])
+  // If data arrives after element is already visible, animate now
+  useEffect(() => {
+    if (end > 0 && visible.current && !animated.current) {
+      animated.current = true
+      let s: number
+      const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
+      requestAnimationFrame(step)
+    }
   }, [end, duration])
   return { display: decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString(), ref }
 }
