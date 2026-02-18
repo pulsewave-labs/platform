@@ -72,21 +72,21 @@ export default function LandingClientPage() {
             <img src="/logo.webp" alt="PulseWave" className="h-7" />
           </div>
           <div className="hidden md:flex items-center gap-7">
-            <button onClick={()=>scrollTo('proof')} className="text-[12px] text-white/40 hover:text-white/70 transition-colors">Performance</button>
-            <button onClick={()=>scrollTo('how')} className="text-[12px] text-white/40 hover:text-white/70 transition-colors">How It Works</button>
-            <button onClick={()=>scrollTo('pricing')} className="text-[12px] text-white/40 hover:text-white/70 transition-colors">Pricing</button>
-            <Link href="/auth/login" className="text-[12px] text-white/40 hover:text-white/70 transition-colors">Log In</Link>
+            <button onClick={()=>scrollTo('proof')} className="text-[12px] text-white/55 hover:text-white/85 transition-colors">Performance</button>
+            <button onClick={()=>scrollTo('how')} className="text-[12px] text-white/55 hover:text-white/85 transition-colors">How It Works</button>
+            <button onClick={()=>scrollTo('pricing')} className="text-[12px] text-white/55 hover:text-white/85 transition-colors">Pricing</button>
+            <Link href="/auth/login" className="text-[12px] text-white/55 hover:text-white/85 transition-colors">Log In</Link>
             <Link href="/auth/signup" className="text-[11px] px-5 py-2 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
           </div>
-          <button className="md:hidden text-white/50" onClick={()=>setMenu(!menu)}>
+          <button className="md:hidden text-white/65" onClick={()=>setMenu(!menu)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={menu?"M18 6L6 18M6 6l12 12":"M4 8h16M4 16h16"}/></svg>
           </button>
         </div>
         {menu&&<div className="md:hidden px-6 pb-4 space-y-3 border-t border-white/5 mt-1 bg-[#08080a]">
-          <button onClick={()=>scrollTo('proof')} className="block text-white/40 text-[13px]">Performance</button>
-          <button onClick={()=>scrollTo('how')} className="block text-white/40 text-[13px]">How It Works</button>
-          <button onClick={()=>scrollTo('pricing')} className="block text-white/40 text-[13px]">Pricing</button>
-          <Link href="/auth/login" className="block text-white/40 text-[13px]">Log In</Link>
+          <button onClick={()=>scrollTo('proof')} className="block text-white/55 text-[13px]">Performance</button>
+          <button onClick={()=>scrollTo('how')} className="block text-white/55 text-[13px]">How It Works</button>
+          <button onClick={()=>scrollTo('pricing')} className="block text-white/55 text-[13px]">Pricing</button>
+          <Link href="/auth/login" className="block text-white/55 text-[13px]">Log In</Link>
           <Link href="/auth/signup" className="inline-block px-5 py-2 bg-[#00e5a0] text-black rounded font-bold text-[11px]">GET ACCESS</Link>
         </div>}
       </nav>
@@ -99,16 +99,16 @@ export default function LandingClientPage() {
         <div className="w-full max-w-4xl mx-auto relative z-10">
           <div className="fu flex items-center gap-2 mb-8">
             <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
-            <span className="text-[10px] text-white/40 mono tracking-[.15em]">LIVE · SCANNING 6 PAIRS · 24/7</span>
+            <span className="text-[10px] text-white/55 mono tracking-[.15em]">LIVE · SCANNING 6 PAIRS · 24/7</span>
           </div>
 
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
             While you were sleeping,<br/>our engine made <span className="text-[#00e5a0] glow">$218,418</span>
           </h1>
-          <p className="fu2 text-[16px] text-white/45 leading-relaxed max-w-xl mb-4">
+          <p className="fu2 text-[16px] text-white/85 leading-relaxed max-w-xl mb-4">
             Most traders lose because they trade on emotion. Our Market Structure engine doesn't have emotions. It scans. It waits. It strikes.
           </p>
-          <p className="fu2 text-[13px] text-white/25 max-w-md mb-10 leading-relaxed">
+          <p className="fu2 text-[13px] text-white/65 max-w-md mb-10 leading-relaxed">
             624 verified trades. 88% profitable months. Now it sends you the exact same signals — straight to Telegram.
           </p>
 
@@ -116,7 +116,7 @@ export default function LandingClientPage() {
             <Link href="/auth/signup" className="px-8 py-3.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[13px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
               Start receiving signals
             </Link>
-            <Link href="/performance" className="px-8 py-3.5 rounded-lg text-[13px] font-semibold text-white/40 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/60 transition-all text-center">
+            <Link href="/performance" className="px-8 py-3.5 rounded-lg text-[13px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
               See all 624 trades
             </Link>
           </div>
@@ -131,7 +131,7 @@ export default function LandingClientPage() {
                 { label:'PROFITABLE MONTHS', sub:'22 OF 25', ref:winMo.ref, val:winMo.display+'%', c:'#e0e0e0' },
               ].map((s,i)=>(
                 <div key={i} ref={s.ref} className="px-5 py-4 border-r border-b border-white/[0.02] last:border-r-0 md:last:border-b-0 md:[&:nth-child(n+3)]:border-b-0">
-                  <div className="text-[8px] text-white/20 mono tracking-[.12em] mb-0.5">{s.label}</div>
+                  <div className="text-[8px] text-white/55 mono tracking-[.12em] mb-0.5">{s.label}</div>
                   <div className="text-[18px] font-bold mono" style={{color:s.c}}>{s.val}</div>
                 </div>
               ))}
@@ -139,7 +139,7 @@ export default function LandingClientPage() {
           </div>
 
           {/* Trust strip */}
-          <div className="fu4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 text-[10px] text-white/20">
+          <div className="fu4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 text-[10px] text-white/55">
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>No hidden fees</span>
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>Cancel anytime</span>
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>All trades public</span>
@@ -160,7 +160,7 @@ export default function LandingClientPage() {
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
             You already know most signal<br className="hidden md:block"/> services are garbage.
           </h2>
-          <p className="text-[14px] text-white/30 mb-10 max-w-lg mx-auto">Here's what they don't want you to see.</p>
+          <p className="text-[14px] text-white/55 mb-10 max-w-lg mx-auto">Here's what they don't want you to see.</p>
 
           <div className="grid md:grid-cols-3 gap-4 text-left mb-10">
             {[
@@ -170,13 +170,13 @@ export default function LandingClientPage() {
             ].map((p,i)=>(
               <div key={i} className="t p-6 lift">
                 <div className="text-[28px] font-bold mono text-white/[0.04] mb-3">{p.n}</div>
-                <h3 className="text-[14px] font-semibold mb-2.5 text-white/80">{p.title}</h3>
-                <p className="text-[12px] text-white/35 leading-relaxed">{p.desc}</p>
+                <h3 className="text-[14px] font-semibold mb-2.5 text-white/85">{p.title}</h3>
+                <p className="text-[12px] text-white/65 leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
-          <p className="text-[14px] text-white/30 max-w-xl mx-auto leading-relaxed">
-            You've been burned before. We know — because so have we. That's why we publish <strong className="text-white/60">every single trade</strong> — wins AND losses — with timestamps, entries, exits, and exact P&L. 
+          <p className="text-[14px] text-white/55 max-w-xl mx-auto leading-relaxed">
+            You've been burned before. We know — because so have we. That's why we publish <strong className="text-white/85">every single trade</strong> — wins AND losses — with timestamps, entries, exits, and exact P&L. 
             <Link href="/performance" className="text-[#00e5a0]/60 hover:text-[#00e5a0] ml-1 underline underline-offset-2 transition-colors">All 624 of them.</Link>
           </p>
         </div>
@@ -194,8 +194,8 @@ export default function LandingClientPage() {
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
               Market Structure — the method<br className="hidden md:block"/> institutions use to move markets.
             </h2>
-            <p className="text-[14px] text-white/35 leading-relaxed">
-              While retail chases RSI crossovers and YouTube indicators, institutional traders follow <strong className="text-white/60">Break of Structure</strong> and <strong className="text-white/60">Order Blocks</strong> — the price levels where real money enters. Our engine automates this across 5 crypto pairs, 24 hours a day.
+            <p className="text-[14px] text-white/65 leading-relaxed">
+              While retail chases RSI crossovers and YouTube indicators, institutional traders follow <strong className="text-white/85">Break of Structure</strong> and <strong className="text-white/85">Order Blocks</strong> — the price levels where real money enters. Our engine automates this across 5 crypto pairs, 24 hours a day.
             </p>
           </div>
 
@@ -207,8 +207,8 @@ export default function LandingClientPage() {
             ].map((s,i)=>(
               <div key={i} className="t lift p-6">
                 <div className="text-[32px] font-bold text-white/[0.03] mono mb-4">{s.n}</div>
-                <h3 className="text-[15px] font-semibold mb-2 text-white/80">{s.t}</h3>
-                <p className="text-[12px] text-white/35 leading-relaxed">{s.d}</p>
+                <h3 className="text-[15px] font-semibold mb-2 text-white/85">{s.t}</h3>
+                <p className="text-[12px] text-white/65 leading-relaxed">{s.d}</p>
               </div>
             ))}
           </div>
@@ -228,9 +228,9 @@ export default function LandingClientPage() {
               <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight">
                 624 trades. Every one public.
               </h2>
-              <p className="text-[14px] text-white/30 mt-2">Not screenshots. Not highlights. The complete, unedited record.</p>
+              <p className="text-[14px] text-white/55 mt-2">Not screenshots. Not highlights. The complete, unedited record.</p>
             </div>
-            <Link href="/performance" className="text-[11px] text-white/25 mono tracking-wider hover:text-white/50 transition-colors shrink-0">VIEW FULL LOG →</Link>
+            <Link href="/performance" className="text-[11px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors shrink-0">VIEW FULL LOG →</Link>
           </div>
 
           {/* Monthly returns grid */}
@@ -241,8 +241,8 @@ export default function LandingClientPage() {
             return(
             <div className="t mb-5">
               <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-                <span className="text-[10px] text-white/30 mono">MONTHLY P&L</span>
-                <span className="text-[10px] text-white/20 mono">{perf.monthly.length} months tracked</span>
+                <span className="text-[10px] text-white/55 mono">MONTHLY P&L</span>
+                <span className="text-[10px] text-white/55 mono">{perf.monthly.length} months tracked</span>
               </div>
               <div className="p-5 space-y-4">
                 {years.map((year:string)=>{
@@ -250,19 +250,19 @@ export default function LandingClientPage() {
                   return(
                     <div key={year}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-[11px] text-white/50 mono font-semibold">{year}</span>
+                        <span className="text-[11px] text-white/65 mono font-semibold">{year}</span>
                         <span className={'text-[11px] mono font-bold '+(yearTotal>=0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{yearTotal>=0?'+':''}${(yearTotal/1000).toFixed(1)}K</span>
                       </div>
                       <div className="grid grid-cols-6 md:grid-cols-12 gap-1.5">
                         {Array.from({length:12},(_,mi)=>{
                           const monthKey=`${year}-${String(mi+1).padStart(2,'0')}`
                           const md=byYear[year].find((x:any)=>x.month===monthKey)
-                          if(!md) return <div key={mi} className="rounded-md bg-white/[0.015] py-2.5 px-1 text-center"><div className="text-[8px] text-white/15 mono">{months[mi]}</div><div className="text-[9px] text-white/10 mono mt-0.5">—</div></div>
+                          if(!md) return <div key={mi} className="rounded-md bg-white/[0.015] py-2.5 px-1 text-center"><div className="text-[8px] text-white/55 mono">{months[mi]}</div><div className="text-[9px] text-white/55 mono mt-0.5">—</div></div>
                           const pnl=md.pnl, int=Math.min(Math.abs(pnl)/12000,1)
                           const bg=pnl>0?`rgba(0,229,160,${.05+int*.25})`:`rgba(255,77,77,${.05+int*.25})`
                           return(
                             <div key={mi} className="rounded-md py-2.5 px-1 text-center" style={{background:bg}}>
-                              <div className="text-[8px] text-white/50 mono">{months[mi]}</div>
+                              <div className="text-[8px] text-white/65 mono">{months[mi]}</div>
                               <div className={'text-[10px] font-bold mono mt-0.5 '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
                             </div>
                           )
@@ -288,7 +288,7 @@ export default function LandingClientPage() {
                 {l:'WORST MONTH',v:'-$'+Math.abs(Math.round(worst.pnl)).toLocaleString(),c:'#ff4d4d'},
               ].map((s,i)=>(
                 <div key={i} className="t px-5 py-4">
-                  <div className="text-[8px] text-white/20 mono tracking-[.12em] mb-1">{s.l}</div>
+                  <div className="text-[8px] text-white/55 mono tracking-[.12em] mb-1">{s.l}</div>
                   <div className="text-[20px] font-bold mono" style={{color:s.c}}>{s.v}</div>
                 </div>
               ))
@@ -298,24 +298,24 @@ export default function LandingClientPage() {
           {/* Trade feed */}
           <div className="t">
             <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-              <span className="text-[10px] text-white/30 mono">RECENT TRADES</span>
+              <span className="text-[10px] text-white/55 mono">RECENT TRADES</span>
               <div className="flex items-center gap-3">
-                <span className="text-[9px] text-white/15 mono">7-day delay</span>
+                <span className="text-[9px] text-white/55 mono">7-day delay</span>
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/40 mono">LIVE</span></span>
               </div>
             </div>
             {/* Desktop */}
             <div className="hidden md:block">
-              <div className="grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/20 mono tracking-[.1em] px-5 py-2 border-b border-white/[0.02]">
+              <div className="grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/55 mono tracking-[.1em] px-5 py-2 border-b border-white/[0.02]">
                 <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
               </div>
               {trades.map((t,i)=>(
                 <div key={'d'+i} className={'grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-5 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
-                  <div className="text-[10px] text-white/25 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-                  <div className="text-[11px] text-white/60 mono font-medium">{t.pair.replace('/USDT','')}</div>
+                  <div className="text-[10px] text-white/65 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+                  <div className="text-[11px] text-white/85 mono font-medium">{t.pair.replace('/USDT','')}</div>
                   <div><span className={'text-[9px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
-                  <div className="text-[10px] text-white/20 mono">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                  <div className="text-[10px] text-white/20 mono">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                  <div className="text-[10px] text-white/55 mono">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                  <div className="text-[10px] text-white/55 mono">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                   <div className={'text-[11px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
                   <div className="text-right"><span className={'text-[8px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/50':'text-[#ff4d4d]/50')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
                 </div>
@@ -328,11 +328,11 @@ export default function LandingClientPage() {
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2.5">
                       <span className={'text-[9px] mono font-bold px-2 py-0.5 rounded '+(t.action==='LONG'?'bg-[#00e5a0]/10 text-[#00e5a0]':'bg-[#ff4d4d]/10 text-[#ff4d4d]')}>{t.action}</span>
-                      <span className="text-[13px] text-white/60 mono font-medium">{t.pair.replace('/USDT','')}</span>
+                      <span className="text-[13px] text-white/85 mono font-medium">{t.pair.replace('/USDT','')}</span>
                     </div>
                     <span className={'text-[14px] mono font-bold '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[10px] mono text-white/20">
+                  <div className="flex items-center justify-between text-[10px] mono text-white/55">
                     <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
                     <span>${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})} → ${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</span>
                     <span className={'tracking-wider font-medium '+(t.exit_reason==='TP'?'text-[#00e5a0]/40':'text-[#ff4d4d]/40')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
@@ -341,7 +341,7 @@ export default function LandingClientPage() {
               ))}
             </div>
             <div className="px-5 py-3 text-center border-t border-white/[0.02]">
-              <Link href="/performance" className="text-[11px] text-white/25 mono tracking-wider hover:text-white/50 transition-colors">VERIFY ALL 624 TRADES →</Link>
+              <Link href="/performance" className="text-[11px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors">VERIFY ALL 624 TRADES →</Link>
             </div>
           </div>
         </div>
@@ -357,9 +357,9 @@ export default function LandingClientPage() {
           <div>
             <p className="text-[10px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-              Not "buy BTC."<br/><span className="text-white/30">The full trade, calculated for you.</span>
+              Not "buy BTC."<br/><span className="text-white/55">The full trade, calculated for you.</span>
             </h2>
-            <p className="text-[14px] text-white/35 leading-relaxed mb-8">
+            <p className="text-[14px] text-white/65 leading-relaxed mb-8">
               Every signal comes with the exact entry, exit, and position size — calculated for YOUR account. No vague calls. No "I think it'll go up." Just math.
             </p>
             <div className="space-y-3">
@@ -372,8 +372,8 @@ export default function LandingClientPage() {
                 <div key={i} className="flex items-start gap-3">
                   <span className="text-[#00e5a0]/50 mono text-[10px] mt-1 shrink-0">→</span>
                   <div>
-                    <div className="text-[13px] text-white/50 font-medium">{f[0]}</div>
-                    <div className="text-[11px] text-white/20 mt-0.5">{f[1]}</div>
+                    <div className="text-[13px] text-white/65 font-medium">{f[0]}</div>
+                    <div className="text-[11px] text-white/55 mt-0.5">{f[1]}</div>
                   </div>
                 </div>
               ))}
@@ -382,7 +382,7 @@ export default function LandingClientPage() {
 
           {(()=>{
             const win = trades.find((t:any) => t.pnl > 0) || null
-            if (!win) return <div className="t p-10 text-center text-white/15 mono text-[11px]">Loading latest trade...</div>
+            if (!win) return <div className="t p-10 text-center text-white/55 mono text-[11px]">Loading latest trade...</div>
             const ep = Number(win.entry_price), xp = Number(win.exit_price), sl = Number(win.stop_loss||0), tp = Number(win.take_profit||xp)
             const isLong = win.action === 'LONG'
             const riskPct = ep > 0 ? Math.abs((ep - sl) / ep * 100) : 0
@@ -398,7 +398,7 @@ export default function LandingClientPage() {
             return (
           <div className="t">
             <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-              <span className="text-[10px] text-white/30 mono">LATEST WINNER</span>
+              <span className="text-[10px] text-white/55 mono">LATEST WINNER</span>
               <span className="text-[11px] text-[#00e5a0] mono font-bold">+${Number(win.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
             </div>
             <div className="p-5 space-y-5">
@@ -407,34 +407,34 @@ export default function LandingClientPage() {
                   <span className={'text-[10px] font-bold mono px-2 py-0.5 rounded '+(isLong?'text-black bg-[#00e5a0]':'text-black bg-[#ff4d4d]')}>{win.action}</span>
                   <span className="text-xl font-bold mono">{win.pair}</span>
                 </div>
-                <span className="text-[10px] text-white/25 mono">{new Date(win.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                <span className="text-[10px] text-white/65 mono">{new Date(win.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 {[{l:'ENTRY',v:fmt(ep),c:''},{l:'STOP LOSS',v:sl>0?fmt(sl):'—',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:fmt(tp),c:'text-[#00e5a0]'}].map((x,i)=>(
-                  <div key={i}><div className="text-[8px] text-white/20 mono tracking-wider mb-1.5">{x.l}</div><div className={'text-[15px] font-bold mono '+x.c}>{x.v}</div></div>
+                  <div key={i}><div className="text-[8px] text-white/55 mono tracking-wider mb-1.5">{x.l}</div><div className={'text-[15px] font-bold mono '+x.c}>{x.v}</div></div>
                 ))}
               </div>
 
               <div>
-                <div className="flex justify-between text-[9px] mono text-white/20 mb-1.5"><span>Risk {riskPct.toFixed(1)}%</span><span>Reward {rewPct.toFixed(1)}%</span></div>
+                <div className="flex justify-between text-[9px] mono text-white/55 mb-1.5"><span>Risk {riskPct.toFixed(1)}%</span><span>Reward {rewPct.toFixed(1)}%</span></div>
                 <div className="h-2 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/25 rounded-l-full" style={{width:riskFrac+'%'}}></div><div className="bg-[#00e5a0]/25 rounded-r-full" style={{width:(100-riskFrac)+'%'}}></div></div>
                 <div className="text-right text-[10px] text-[#00e5a0]/50 mono mt-1 font-medium">{rr.toFixed(1)}:1 R:R</div>
               </div>
 
               <div className="border-t border-white/[0.03] pt-4">
-                <div className="text-[9px] text-white/20 mono tracking-wider mb-2.5">POSITION SIZE BY ACCOUNT</div>
+                <div className="text-[9px] text-white/55 mono tracking-wider mb-2.5">POSITION SIZE BY ACCOUNT</div>
                 <div className="grid grid-cols-3 gap-2 text-[10px] mono">
                   {posSizes.map((r,i)=>(
-                    <div key={i} className="bg-white/[0.02] rounded-md px-3 py-2.5"><div className="text-white/35 text-[9px]">{r.a}</div><div className="text-white/70 font-medium mt-0.5">{r.s}</div><div className="text-white/15 text-[8px] mt-0.5">{r.r}</div></div>
+                    <div key={i} className="bg-white/[0.02] rounded-md px-3 py-2.5"><div className="text-white/65 text-[9px]">{r.a}</div><div className="text-white/85 font-medium mt-0.5">{r.s}</div><div className="text-white/55 text-[8px] mt-0.5">{r.r}</div></div>
                   ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-2 pt-1">
                 <span className="text-[9px] mono text-[#00e5a0]/40 font-medium tracking-wider">RESULT: TP HIT</span>
-                <span className="text-[9px] mono text-white/10">|</span>
-                <span className="text-[9px] mono text-white/20">{win.exit_time ? new Date(win.exit_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
+                <span className="text-[9px] mono text-white/55">|</span>
+                <span className="text-[9px] mono text-white/55">{win.exit_time ? new Date(win.exit_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
               </div>
             </div>
           </div>
@@ -450,7 +450,7 @@ export default function LandingClientPage() {
       {/* ════════ 6. WHO THIS IS FOR ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <p className="text-[10px] text-white/25 mono tracking-[.15em] mb-2 text-center">FIT CHECK</p>
+          <p className="text-[10px] text-white/65 mono tracking-[.15em] mb-2 text-center">FIT CHECK</p>
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-10 text-center leading-tight">This isn't for everyone.</h2>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -464,7 +464,7 @@ export default function LandingClientPage() {
                   'You want a system with verified, auditable results',
                   'You understand that risk management matters more than win rate',
                 ].map((t,i)=>(
-                  <div key={i} className="flex items-start gap-2.5 text-[12px] text-white/45 leading-relaxed">
+                  <div key={i} className="flex items-start gap-2.5 text-[12px] text-white/85 leading-relaxed">
                     <span className="text-[#00e5a0]/50 mono text-[10px] mt-0.5 shrink-0">+</span>{t}
                   </div>
                 ))}
@@ -481,7 +481,7 @@ export default function LandingClientPage() {
                   'You expect to turn $100 into $100K overnight',
                   'You won\'t follow the position sizing and risk rules',
                 ].map((t,i)=>(
-                  <div key={i} className="flex items-start gap-2.5 text-[12px] text-white/45 leading-relaxed">
+                  <div key={i} className="flex items-start gap-2.5 text-[12px] text-white/85 leading-relaxed">
                     <span className="text-[#ff4d4d]/50 mono text-[10px] mt-0.5 shrink-0">−</span>{t}
                   </div>
                 ))}
@@ -508,8 +508,8 @@ export default function LandingClientPage() {
                 ].map((x,i)=>(
                   <div key={i} className="t lift p-4">
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[14px] font-bold text-white/40 mono">{x.p}</span>
-                      <span className="text-[9px] text-white/20 mono">{x.n} trades</span>
+                      <span className="text-[14px] font-bold text-white/55 mono">{x.p}</span>
+                      <span className="text-[9px] text-white/55 mono">{x.n} trades</span>
                     </div>
                     <div className="text-[16px] font-bold text-[#00e5a0] mono">+${(x.pnl/1000).toFixed(1)}K</div>
                   </div>
@@ -531,10 +531,10 @@ export default function LandingClientPage() {
                   ].map((s,i)=>(
                     <div key={i} className="px-5 py-3.5 flex items-center justify-between">
                       <div>
-                        <div className="text-[12px] text-white/50 font-medium">{s.l}</div>
-                        <div className="text-[10px] text-white/20 mt-0.5">{s.d}</div>
+                        <div className="text-[12px] text-white/65 font-medium">{s.l}</div>
+                        <div className="text-[10px] text-white/55 mt-0.5">{s.d}</div>
                       </div>
-                      <div className="text-[14px] font-bold mono text-white/70 shrink-0 ml-4">{s.v}</div>
+                      <div className="text-[14px] font-bold mono text-white/85 shrink-0 ml-4">{s.v}</div>
                     </div>
                   ))}
                 </div>
@@ -556,14 +556,14 @@ export default function LandingClientPage() {
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
               Less than one winning trade.
             </h2>
-            <p className="text-[14px] text-white/35 max-w-lg mx-auto">
+            <p className="text-[14px] text-white/65 max-w-lg mx-auto">
               Our average winning trade returns +$2,400 on a $10K account. Your subscription pays for itself on the first signal that hits.
             </p>
           </div>
 
           {/* Price comparison anchor */}
           <div className="t p-5 mb-6 max-w-2xl mx-auto">
-            <div className="text-[9px] text-white/20 mono tracking-wider mb-3">WHAT TRADERS TYPICALLY SPEND</div>
+            <div className="text-[9px] text-white/55 mono tracking-wider mb-3">WHAT TRADERS TYPICALLY SPEND</div>
             <div className="space-y-2">
               {[
                 {n:'Trading courses',v:'$500 – $5,000',s:'One-time. No ongoing signals.'},
@@ -572,10 +572,10 @@ export default function LandingClientPage() {
                 {n:'Trading indicators',v:'$30 – $100/mo',s:'Still requires you to interpret and trade.'},
               ].map((c,i)=>(
                 <div key={i} className="flex items-center justify-between text-[11px]">
-                  <div className="text-white/35">{c.n}</div>
+                  <div className="text-white/65">{c.n}</div>
                   <div className="flex items-center gap-3">
-                    <span className="text-white/15 text-[10px] hidden sm:inline">{c.s}</span>
-                    <span className="text-white/50 mono font-medium text-right min-w-[110px]">{c.v}</span>
+                    <span className="text-white/55 text-[10px] hidden sm:inline">{c.s}</span>
+                    <span className="text-white/65 mono font-medium text-right min-w-[110px]">{c.v}</span>
                   </div>
                 </div>
               ))}
@@ -585,17 +585,17 @@ export default function LandingClientPage() {
           <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
             <div className="t lift">
               <div className="p-7">
-                <div className="text-[10px] text-white/25 mono tracking-wider mb-4">MONTHLY</div>
+                <div className="text-[10px] text-white/65 mono tracking-wider mb-4">MONTHLY</div>
                 <div className="flex items-baseline gap-1 mb-6">
                   <span className="text-[36px] font-bold mono">$149</span>
-                  <span className="text-white/25 text-[13px]">/mo</span>
+                  <span className="text-white/65 text-[13px]">/mo</span>
                 </div>
-                <div className="space-y-2.5 text-[12px] text-white/40 mb-8">
+                <div className="space-y-2.5 text-[12px] text-white/55 mb-8">
                   {['Every signal, every pair','Instant Telegram alerts','Full performance dashboard','Position sizing calculator','Cancel anytime — no lock-in'].map((f,i)=>(
                     <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/40 mono text-[10px]">→</span>{f}</div>
                   ))}
                 </div>
-                <Link href="/auth/signup" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/50 text-[12px] font-bold text-center hover:border-white/[0.15] hover:text-white/70 transition-all mono tracking-wide">GET STARTED</Link>
+                <Link href="/auth/signup" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/65 text-[12px] font-bold text-center hover:border-white/[0.15] hover:text-white/85 transition-all mono tracking-wide">GET STARTED</Link>
               </div>
             </div>
 
@@ -605,10 +605,10 @@ export default function LandingClientPage() {
                 <div className="text-[10px] text-[#00e5a0]/40 mono tracking-wider mb-4">ANNUAL</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-[36px] font-bold mono text-[#00e5a0]">$1,490</span>
-                  <span className="text-white/25 text-[13px]">/yr</span>
+                  <span className="text-white/65 text-[13px]">/yr</span>
                 </div>
                 <div className="text-[11px] text-[#00e5a0]/30 mono mb-6">2 months free</div>
-                <div className="space-y-2.5 text-[12px] text-white/40 mb-8">
+                <div className="space-y-2.5 text-[12px] text-white/55 mb-8">
                   {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support channel','Early access to new features'].map((f,i)=>(
                     <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/40 mono text-[10px]">→</span>{f}</div>
                   ))}
@@ -621,22 +621,22 @@ export default function LandingClientPage() {
           {/* ROI math */}
           <div className="mt-8 max-w-2xl mx-auto">
             <div className="t p-5">
-              <div className="text-[9px] text-white/20 mono tracking-wider mb-3">THE MATH</div>
+              <div className="text-[9px] text-white/55 mono tracking-wider mb-3">THE MATH</div>
               <div className="grid grid-cols-3 gap-4 text-center">
                 <div>
-                  <div className="text-[20px] font-bold mono text-white/60">$149</div>
-                  <div className="text-[10px] text-white/20 mt-1">Monthly cost</div>
+                  <div className="text-[20px] font-bold mono text-white/85">$149</div>
+                  <div className="text-[10px] text-white/55 mt-1">Monthly cost</div>
                 </div>
                 <div>
                   <div className="text-[20px] font-bold mono text-[#00e5a0]">$8,337</div>
-                  <div className="text-[10px] text-white/20 mt-1">Avg monthly profit*</div>
+                  <div className="text-[10px] text-white/55 mt-1">Avg monthly profit*</div>
                 </div>
                 <div>
                   <div className="text-[20px] font-bold mono text-[#00e5a0]">56x</div>
-                  <div className="text-[10px] text-white/20 mt-1">Return on subscription</div>
+                  <div className="text-[10px] text-white/55 mt-1">Return on subscription</div>
                 </div>
               </div>
-              <div className="text-[9px] text-white/10 mt-3 text-center">*Based on $10K account, 10% risk, 20x leverage. Past results don't guarantee future performance.</div>
+              <div className="text-[9px] text-white/55 mt-3 text-center">*Based on $10K account, 10% risk, 20x leverage. Past results don't guarantee future performance.</div>
             </div>
           </div>
         </div>
@@ -649,7 +649,7 @@ export default function LandingClientPage() {
       {/* ════════ 9. FAQ ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-3xl mx-auto">
-          <p className="text-[10px] text-white/25 mono tracking-[.15em] mb-2 text-center">FAQ</p>
+          <p className="text-[10px] text-white/65 mono tracking-[.15em] mb-2 text-center">FAQ</p>
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-10 text-center leading-tight">Before you decide.</h2>
 
           <div className="space-y-2">
@@ -663,12 +663,12 @@ export default function LandingClientPage() {
             ].map((faq,i)=>(
               <button key={i} onClick={()=>setOpenFaq(openFaq===i?null:i)} className="w-full text-left t transition-all">
                 <div className="px-5 py-4 flex items-center justify-between gap-4">
-                  <h3 className="text-[13px] font-semibold text-white/70">{faq.q}</h3>
-                  <span className="text-white/20 mono text-[14px] shrink-0 transition-transform" style={{transform:openFaq===i?'rotate(45deg)':'rotate(0deg)'}}>+</span>
+                  <h3 className="text-[13px] font-semibold text-white/85">{faq.q}</h3>
+                  <span className="text-white/55 mono text-[14px] shrink-0 transition-transform" style={{transform:openFaq===i?'rotate(45deg)':'rotate(0deg)'}}>+</span>
                 </div>
                 {openFaq===i&&(
                   <div className="px-5 pb-4 -mt-1">
-                    <p className="text-[12px] text-white/35 leading-relaxed">{faq.a}</p>
+                    <p className="text-[12px] text-white/65 leading-relaxed">{faq.a}</p>
                   </div>
                 )}
               </button>
@@ -691,17 +691,17 @@ export default function LandingClientPage() {
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
             Two kinds of traders read this page.
           </h2>
-          <p className="text-[15px] text-white/40 mb-4 max-w-md mx-auto leading-relaxed">
+          <p className="text-[15px] text-white/55 mb-4 max-w-md mx-auto leading-relaxed">
             Those who keep losing money trying to figure it out alone. And those who plug into a system that's already proven it works.
           </p>
-          <p className="text-[12px] text-white/25 mb-10 max-w-sm mx-auto leading-relaxed">
+          <p className="text-[12px] text-white/65 mb-10 max-w-sm mx-auto leading-relaxed">
             The public trade log is delayed 7 days. Subscribers get signals the instant they fire. The next one could be tonight.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
             <Link href="/auth/signup" className="flex-1 py-3.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[13px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
               Start receiving signals
             </Link>
-            <Link href="/performance" className="flex-1 py-3.5 rounded-lg text-[12px] font-semibold text-white/35 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/50 transition-all text-center">
+            <Link href="/performance" className="flex-1 py-3.5 rounded-lg text-[12px] font-semibold text-white/65 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/65 transition-all text-center">
               Audit every trade
             </Link>
           </div>
@@ -712,19 +712,19 @@ export default function LandingClientPage() {
       {/* DISCLAIMER */}
       <section className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[9px] text-white/15 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/30 transition-colors">Full risk disclosure</Link>.</p>
+          <p className="text-[9px] text-white/55 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/55 transition-colors">Full risk disclosure</Link>.</p>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3"><img src="/logo.webp" alt="PulseWave" className="h-4 opacity-20"/><span className="text-[10px] text-white/15">© 2026 PulseWave Labs</span></div>
-          <div className="flex gap-6 text-[10px] text-white/15">
-            <Link href="/performance" className="hover:text-white/30 transition-colors">Trades</Link>
-            <Link href="/privacy" className="hover:text-white/30 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/30 transition-colors">Terms</Link>
-            <Link href="/disclaimer" className="hover:text-white/30 transition-colors">Disclaimer</Link>
+          <div className="flex items-center gap-3"><img src="/logo.webp" alt="PulseWave" className="h-4 opacity-20"/><span className="text-[10px] text-white/55">© 2026 PulseWave Labs</span></div>
+          <div className="flex gap-6 text-[10px] text-white/55">
+            <Link href="/performance" className="hover:text-white/55 transition-colors">Trades</Link>
+            <Link href="/privacy" className="hover:text-white/55 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/55 transition-colors">Terms</Link>
+            <Link href="/disclaimer" className="hover:text-white/55 transition-colors">Disclaimer</Link>
           </div>
         </div>
       </footer>
