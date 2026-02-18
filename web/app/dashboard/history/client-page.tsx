@@ -5,10 +5,10 @@ import { useState, useEffect } from 'react'
 export default function HistoryClientPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [selectedMonth, setSelectedMonth] = useState(null as any)
+  const [selectedMonth, setSelectedMonth] = useState(null)
   const [filterPair, setFilterPair] = useState('')
   const [filterDir, setFilterDir] = useState('')
-  const [selectedTrade, setSelectedTrade] = useState(null as any)
+  const [selectedTrade, setSelectedTrade] = useState(null)
 
   useEffect(function load() {
     fetch('/api/performance')
@@ -30,25 +30,25 @@ export default function HistoryClientPage() {
   }
   if (!data) return <div className="text-center py-20 text-[#ff4d4d] mono text-sm">FAILED TO LOAD</div>
 
-  var stats = (data as any).stats
-  var allTrades = (data as any).trades || []
-  var monthly = (data as any).monthly || []
+  var stats = data.stats
+  var allTrades = data.trades || []
+  var monthly = data.monthly || []
 
   // Group trades by month
-  var tradesByMonth: any = {}
-  allTrades.forEach(function(t: any) {
+  var tradesByMonth = {}
+  allTrades.forEach(function(t) {
     var d = new Date(t.entry_time)
     var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
     if (!tradesByMonth[key]) tradesByMonth[key] = []
     tradesByMonth[key].push(t)
   })
 
-  var pairs = Array.from(new Set(allTrades.map(function(t: any) { return t.pair }))).sort()
+  var pairs = Array.from(new Set(allTrades.map(function(t) { return t.pair }))).sort()
 
   // Get trades for selected month
-  var modalTrades = selectedMonth ? (tradesByMonth[selectedMonth.month] || []).slice().sort(function(a: any, b: any) {
+  var modalTrades = selectedMonth ? (tradesByMonth[selectedMonth.month] || []).slice().sort(function(a, b) {
     return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime()
-  }).filter(function(t: any) {
+  }).filter(function(t) {
     if (filterPair && t.pair !== filterPair) return false
     if (filterDir && t.action !== filterDir) return false
     return true
@@ -83,17 +83,17 @@ export default function HistoryClientPage() {
       <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[12px] mono text-[#888] tracking-[.15em] font-medium">MONTHLY BREAKDOWN</h2>
-          <span className="text-[12px] mono text-[#555]">{monthly.length months</span>
+          <span className="text-[12px] mono text-[#555]">{monthly.length} months</span>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-          {monthly.slice().reverse().map(function(m: any) {
+          {monthly.slice().reverse().map(function(m) {
             var isPos = m.pnl >= 0
             var monthD = new Date(m.month + '-01')
             var monthShort = monthD.toLocaleDateString('en-US', { month: 'short' })
             var year = monthD.getFullYear()
             var wr = m.trades > 0 ? (m.wins / m.trades * 100).toFixed(0) : '0'
-            var maxPnl = Math.max.apply(null, monthly.map(function(x: any) { return Math.abs(x.pnl) }))
+            var maxPnl = Math.max.apply(null, monthly.map(function(x) { return Math.abs(x.pnl) }))
             var intensity = Math.min(Math.abs(m.pnl) / maxPnl, 1)
 
             return (
@@ -130,9 +130,9 @@ export default function HistoryClientPage() {
 
                   {/* Win/loss dots */}
                   <div className="flex gap-px">
-                    {(tradesByMonth[m.month] || []).slice().sort(function(a: any, b: any) {
+                    {(tradesByMonth[m.month] || []).slice().sort(function(a, b) {
                       return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
-                    }).map(function(t: any, ti: number) {
+                    }).map(function(t, ti) {
                       return (
                         <div key={ti}
                           className="h-1 rounded-full flex-1"
@@ -239,7 +239,7 @@ export default function HistoryClientPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {modalTrades.map(function(t: any, ti: number) {
+                  {modalTrades.map(function(t, ti) {
                     var isWin = t.pnl >= 0
                     return (
                       <tr key={ti}
@@ -267,7 +267,7 @@ export default function HistoryClientPage() {
 
               {/* Mobile cards */}
               <div className="md:hidden divide-y divide-white/[0.02]">
-                {modalTrades.map(function(t: any, ti: number) {
+                {modalTrades.map(function(t, ti) {
                   var isWin = t.pnl >= 0
                   return (
                     <button key={ti} onClick={function() { setSelectedTrade(selectedTrade === t ? null : t) }} className={'w-full text-left px-4 py-3 transition-colors ' + (selectedTrade === t ? 'bg-white/[0.03]' : 'hover:bg-white/[0.01]')}>
@@ -292,7 +292,7 @@ export default function HistoryClientPage() {
             {/* Footer */}
             <div className="flex items-center justify-between px-5 py-3 border-t border-white/[0.04] bg-[#0b0b0b] shrink-0">
               <span className="text-[12px] mono text-[#555]">{modalTrades.length} trades shown</span>
-              <span className="text-[12px] mono text-[#555]">Fees: ${Math.round((tradesByMonth[selectedMonth.month] || []).reduce(function(s: number, t: any) { return s + t.fees }, 0)).toLocaleString()}</span>
+              <span className="text-[12px] mono text-[#555]">Fees: ${Math.round((tradesByMonth[selectedMonth.month] || []).reduce(function(s, t) { return s + t.fees }, 0)).toLocaleString()}</span>
             </div>
           </div>
         </div>
