@@ -134,7 +134,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 1. HERO ════════ */}
-      <section className="min-h-[100svh] flex flex-col items-center justify-center px-6 md:px-10 pt-16 relative grid-bg">
+      <section className="min-h-[100svh] flex flex-col items-center justify-center px-5 md:px-10 pt-16 pb-[15px] md:pb-0 relative grid-bg">
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
 
         <div className="w-full max-w-4xl mx-auto relative z-10">
