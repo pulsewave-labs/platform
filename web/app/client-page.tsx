@@ -340,40 +340,66 @@ export default function LandingClientPage() {
             </div>
           </div>
 
+          {(()=>{
+            const win = trades.find((t:any) => t.pnl > 0) || null
+            if (!win) return null
+            const ep = Number(win.entry_price), xp = Number(win.exit_price), sl = Number(win.stop_loss||0), tp = Number(win.take_profit||xp)
+            const isLong = win.action === 'LONG'
+            const riskPct = ep > 0 ? Math.abs((ep - sl) / ep * 100) : 0
+            const rewPct = ep > 0 ? Math.abs((tp - ep) / ep * 100) : 0
+            const rr = riskPct > 0 ? (rewPct / riskPct) : 0
+            const riskFrac = riskPct + rewPct > 0 ? riskPct / (riskPct + rewPct) * 100 : 30
+            const fmt = (n:number) => n >= 1000 ? '$'+n.toLocaleString(undefined,{maximumFractionDigits:0}) : n >= 1 ? '$'+n.toFixed(2) : '$'+n.toFixed(4)
+            // Position sizes: risk / (entry - sl) * entry * leverage conceptually, simplified as risk% based
+            const posSizes = [1000,10000,50000].map(acct => {
+              const risk = acct * 0.1
+              const posSize = sl > 0 && riskPct > 0 ? (risk / (riskPct/100)) : acct * 2
+              return { a: '$'+(acct/1000)+'K acct', s: '$'+(posSize/1000).toFixed(1)+'K', r: 'risk $'+risk.toLocaleString() }
+            })
+            return (
           <div className="t">
             <div className="th">
               <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
-              <span className="text-[9px] text-white/30 mono ml-1">new_signal</span>
-              <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span></span>
+              <span className="text-[9px] text-white/30 mono ml-1">recent_winner</span>
+              <span className="flex items-center gap-1.5 ml-auto">
+                <span className="text-[9px] text-[#00e5a0]/50 mono font-bold">+${Number(win.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+              </span>
             </div>
             <div className="p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <span className="text-[9px] font-bold mono text-black bg-[#00e5a0] px-1.5 py-px rounded">LONG</span>
-                  <span className="text-lg font-bold mono">SOL/USDT</span>
+                  <span className={'text-[9px] font-bold mono px-1.5 py-px rounded '+(isLong?'text-black bg-[#00e5a0]':'text-black bg-[#ff4d4d]')}>{win.action}</span>
+                  <span className="text-lg font-bold mono">{win.pair}</span>
                 </div>
-                <span className="text-[9px] text-white/30 mono">82% confidence</span>
+                <span className="text-[9px] text-white/25 mono">{new Date(win.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
               </div>
               <div className="grid grid-cols-3 gap-3">
-                {[{l:'ENTRY',v:'$195.40',c:''},{l:'STOP LOSS',v:'$188.20',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:'$213.50',c:'text-[#00e5a0]'}].map((x,i)=>(
+                {[{l:'ENTRY',v:fmt(ep),c:''},{l:'STOP LOSS',v:sl>0?fmt(sl):'—',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:fmt(tp),c:'text-[#00e5a0]'}].map((x,i)=>(
                   <div key={i}><div className="text-[8px] text-white/25 mono tracking-wider mb-1">{x.l}</div><div className={'text-[14px] font-bold mono '+x.c}>{x.v}</div></div>
                 ))}
               </div>
               <div>
-                <div className="flex justify-between text-[8px] mono text-white/20 mb-1"><span>Risk 3.7%</span><span>Reward 9.3%</span></div>
-                <div className="h-1.5 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/30 rounded-l-full" style={{width:'28%'}}></div><div className="bg-[#00e5a0]/30 rounded-r-full" style={{width:'72%'}}></div></div>
-                <div className="text-right text-[9px] text-[#00e5a0]/50 mono mt-1">2.5:1 R:R</div>
+                <div className="flex justify-between text-[8px] mono text-white/20 mb-1"><span>Risk {riskPct.toFixed(1)}%</span><span>Reward {rewPct.toFixed(1)}%</span></div>
+                <div className="h-1.5 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/30 rounded-l-full" style={{width:riskFrac+'%'}}></div><div className="bg-[#00e5a0]/30 rounded-r-full" style={{width:(100-riskFrac)+'%'}}></div></div>
+                <div className="text-right text-[9px] text-[#00e5a0]/50 mono mt-1">{rr.toFixed(1)}:1 R:R</div>
               </div>
               <div className="border-t border-white/[0.03] pt-3">
                 <div className="text-[8px] text-white/20 mono tracking-wider mb-2">YOUR POSITION SIZE</div>
                 <div className="grid grid-cols-3 gap-1.5 text-[9px] mono">
-                  {[{a:'$1K acct',s:'$2.7K',r:'risk $100'},{a:'$10K acct',s:'$27K',r:'risk $1,000'},{a:'$50K acct',s:'$135K',r:'risk $5,000'}].map((r,i)=>(
+                  {posSizes.map((r,i)=>(
                     <div key={i} className="bg-white/[0.02] rounded px-2.5 py-2"><div className="text-white/35">{r.a}</div><div className="text-white/70 font-medium">{r.s}</div><div className="text-white/20 text-[8px]">{r.r}</div></div>
                   ))}
                 </div>
               </div>
+              <div className="flex items-center gap-1.5 pt-1">
+                <span className="text-[8px] mono text-[#00e5a0]/30 tracking-wider">RESULT: TP HIT</span>
+                <span className="text-[8px] mono text-white/15">·</span>
+                <span className="text-[8px] mono text-white/20">{win.exit_time ? new Date(win.exit_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
+              </div>
             </div>
           </div>
+            )
+          })()}
         </div>
       </section>
 
