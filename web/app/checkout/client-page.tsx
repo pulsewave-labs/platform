@@ -18,7 +18,6 @@ export default function CheckoutClientPage() {
   const [perf, setPerf] = useState<any>(null)
 
   // Account fields
-  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -41,7 +40,6 @@ export default function CheckoutClientPage() {
       if (res.data.user) {
         setAccountReady(true)
         setEmail(res.data.user.email || '')
-        setFirstName(res.data.user.user_metadata?.first_name || '')
       }
     })
   }, [])
@@ -50,7 +48,7 @@ export default function CheckoutClientPage() {
   const stats = perf?.stats
   const returnUrl = typeof window !== 'undefined' ? window.location.origin + '/checkout/complete' : ''
 
-  const formValid = firstName.trim() && email.trim() && password.length >= 8 && password === confirmPassword
+  const formValid = email.trim() && password.length >= 8 && password === confirmPassword
 
   async function handleCreateAccount(e: React.FormEvent) {
     e.preventDefault()
@@ -66,11 +64,7 @@ export default function CheckoutClientPage() {
     }
 
     setCreating(true)
-    var result = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { first_name: firstName } }
-    })
+    var result = await supabase.auth.signUp({ email, password })
 
     if (result.error) {
       setAccountError(result.error.message)
@@ -169,9 +163,6 @@ export default function CheckoutClientPage() {
                     </div>
                   )}
                   <div>
-                    <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">FIRST NAME</label>
-                    <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className={inputClass} placeholder="First name" required />
-                  </div>
                   <div>
                     <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">EMAIL</label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="you@example.com" required />
