@@ -198,7 +198,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#ff4d4d]/40 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
+            <div className="text-[11px] text-[#ff4d4d]/75 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
               90% of signal services exist to<br className="hidden md:block"/> take your money, not make it.
             </h2>
@@ -239,7 +239,7 @@ export default function LandingClientPage() {
       <section id="how" className="py-24 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
+            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
               The same method institutions use.<br className="hidden md:block"/> Automated. Delivered to your phone.
             </h2>
@@ -264,7 +264,7 @@ export default function LandingClientPage() {
                       <span className="text-[14px] mono font-bold text-[#00e5a0]/60">{s.n}</span>
                     </div>
                     <h3 className="text-[18px] font-bold text-white/90 mb-0.5">{s.t}</h3>
-                    <p className="text-[14px] text-[#00e5a0]/40 mono mb-3">{s.sub}</p>
+                    <p className="text-[14px] text-[#00e5a0]/60 mono mb-3">{s.sub}</p>
                     <p className="text-[14px] text-white/45 leading-relaxed">{s.d}</p>
                   </div>
                 </div>
@@ -283,7 +283,7 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-              <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">THE PROOF</p>
+              <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">THE PROOF</p>
               <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight">
                 {totalTrades} trades. Every one public.
               </h2>
@@ -360,7 +360,7 @@ export default function LandingClientPage() {
               <span className="text-[14px] text-white/55 mono">RECENT TRADES</span>
               <div className="flex items-center gap-3">
                 <span className="text-[14px] text-white/55 mono">2-day delay</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[14px] text-[#00e5a0]/40 mono">LIVE</span></span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[14px] text-[#00e5a0]/60 mono">LIVE</span></span>
               </div>
             </div>
             {/* Desktop */}
@@ -376,7 +376,7 @@ export default function LandingClientPage() {
                   <div className="text-[14px] text-white/55 mono">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                   <div className="text-[14px] text-white/55 mono">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                   <div className={'text-[14px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                  <div className="text-right"><span className={'text-[14px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/50':'text-[#ff4d4d]/50')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
+                  <div className="text-right"><span className={'text-[14px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/70':'text-[#ff4d4d]/70')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
                 </div>
               ))}
             </div>
@@ -394,7 +394,7 @@ export default function LandingClientPage() {
                   <div className="flex items-center justify-between text-[16px] mono text-white/55">
                     <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
                     <span>${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})} → ${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</span>
-                    <span className={'tracking-wider font-medium '+(t.exit_reason==='TP'?'text-[#00e5a0]/40':'text-[#ff4d4d]/40')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
+                    <span className={'tracking-wider font-medium '+(t.exit_reason==='TP'?'text-[#00e5a0]/60':'text-[#ff4d4d]/75')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
                   </div>
                 </div>
               ))}
@@ -414,7 +414,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_1.2fr] gap-12 items-center">
           <div>
-            <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
+            <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
               Not "buy BTC."<br/><span className="text-white/55">The full trade, calculated for you.</span>
             </h2>
@@ -429,7 +429,7 @@ export default function LandingClientPage() {
                 ['Instant Telegram delivery','Signals arrive in under 60 seconds.'],
               ].map((f,i)=>(
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-[#00e5a0]/50 mono text-[16px] mt-1 shrink-0">→</span>
+                  <span className="text-[#00e5a0]/70 mono text-[16px] mt-1 shrink-0">→</span>
                   <div>
                     <div className="text-[14px] text-white/65 font-medium">{f[0]}</div>
                     <div className="text-[14px] text-white/55 mt-0.5">{f[1]}</div>
@@ -478,7 +478,7 @@ export default function LandingClientPage() {
               <div>
                 <div className="flex justify-between text-[14px] mono text-white/55 mb-1.5"><span>Risk {riskPct.toFixed(1)}%</span><span>Reward {rewPct.toFixed(1)}%</span></div>
                 <div className="h-2 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/25 rounded-l-full" style={{width:riskFrac+'%'}}></div><div className="bg-[#00e5a0]/25 rounded-r-full" style={{width:(100-riskFrac)+'%'}}></div></div>
-                <div className="text-right text-[16px] text-[#00e5a0]/50 mono mt-1 font-medium">{rr.toFixed(1)}:1 R:R</div>
+                <div className="text-right text-[16px] text-[#00e5a0]/70 mono mt-1 font-medium">{rr.toFixed(1)}:1 R:R</div>
               </div>
 
               <div className="border-t border-white/[0.03] pt-4">
@@ -491,7 +491,7 @@ export default function LandingClientPage() {
               </div>
 
               <div className="flex items-center gap-2 pt-1">
-                <span className="text-[14px] mono text-[#00e5a0]/40 font-medium tracking-wider">RESULT: TP HIT</span>
+                <span className="text-[14px] mono text-[#00e5a0]/60 font-medium tracking-wider">RESULT: TP HIT</span>
                 <span className="text-[14px] mono text-white/55">|</span>
                 <span className="text-[14px] mono text-white/55">{win.exit_time ? new Date(win.exit_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
               </div>
@@ -520,9 +520,9 @@ export default function LandingClientPage() {
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#ff4d4d]/20 to-transparent"></div>
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-5 h-5 rounded-full border border-[#ff4d4d]/20 flex items-center justify-center">
-                  <span className="text-[#ff4d4d]/50 text-[12px] mono font-bold">X</span>
+                  <span className="text-[#ff4d4d]/70 text-[12px] mono font-bold">X</span>
                 </div>
-                <span className="text-[13px] mono text-[#ff4d4d]/50 tracking-wider font-semibold">WALK AWAY IF</span>
+                <span className="text-[13px] mono text-[#ff4d4d]/70 tracking-wider font-semibold">WALK AWAY IF</span>
               </div>
               <div className="space-y-4">
                 {[
@@ -545,9 +545,9 @@ export default function LandingClientPage() {
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
               <div className="flex items-center gap-2 mb-6">
                 <div className="w-5 h-5 rounded-full border border-[#00e5a0]/20 flex items-center justify-center">
-                  <span className="text-[#00e5a0]/60 text-[12px] mono font-bold">✓</span>
+                  <span className="text-[#00e5a0]/70 text-[12px] mono font-bold">✓</span>
                 </div>
-                <span className="text-[13px] mono text-[#00e5a0]/50 tracking-wider font-semibold">BUILT FOR YOU IF</span>
+                <span className="text-[13px] mono text-[#00e5a0]/70 tracking-wider font-semibold">BUILT FOR YOU IF</span>
               </div>
               <div className="space-y-4">
                 {[
@@ -576,7 +576,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
+            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
               5 pairs. 24/7 monitoring.<br className="hidden md:block"/> Built like a hedge fund. Priced like a subscription.
             </h2>
@@ -626,7 +626,7 @@ export default function LandingClientPage() {
       <section id="pricing" className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">PRICING</p>
+            <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">PRICING</p>
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
               Less than one winning trade.
             </h2>
@@ -649,7 +649,7 @@ export default function LandingClientPage() {
                   <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff4d4d]/[0.02] rounded-bl-full"></div>
                   <div className="flex items-start justify-between mb-2">
                     <span className="text-[14px] text-white/70 font-medium">{c.n}</span>
-                    <span className="text-[14px] mono font-bold text-[#ff4d4d]/60 text-right leading-none">{c.v}</span>
+                    <span className="text-[14px] mono font-bold text-[#ff4d4d]/75 text-right leading-none">{c.v}</span>
                   </div>
                   <p className="text-[13px] text-white/35 leading-relaxed">{c.s}</p>
                   <div className="mt-3 h-px bg-gradient-to-r from-[#ff4d4d]/10 to-transparent"></div>
@@ -675,7 +675,7 @@ export default function LandingClientPage() {
                 </div>
                 <div className="space-y-2.5 text-[14px] text-white/55 mb-8">
                   {['Every signal, every pair','Instant Telegram alerts','Full performance dashboard','Position sizing calculator','Cancel anytime, no lock-in'].map((f,i)=>(
-                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/40 mono text-[16px]">→</span>{f}</div>
+                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
                   ))}
                 </div>
                 <Link href="/checkout" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/65 text-[16px] font-bold text-center hover:border-white/[0.15] hover:text-white/85 transition-all mono tracking-wide">GET STARTED</Link>
@@ -685,15 +685,15 @@ export default function LandingClientPage() {
             <div className="t-visible lift relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
               <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[14px] font-bold mono tracking-wider rounded-sm z-10">SAVE $298</div>
               <div className="p-7">
-                <div className="text-[12px] text-[#00e5a0]/40 mono tracking-wider mb-4">ANNUAL</div>
+                <div className="text-[12px] text-[#00e5a0]/60 mono tracking-wider mb-4">ANNUAL</div>
                 <div className="flex items-baseline gap-1 mb-1">
                   <span className="text-[36px] font-bold mono text-[#00e5a0]">$1,490</span>
                   <span className="text-white/65 text-[14px]">/yr</span>
                 </div>
-                <div className="text-[14px] text-[#00e5a0]/30 mono mb-6">2 months free</div>
+                <div className="text-[14px] text-[#00e5a0]/50 mono mb-6">2 months free</div>
                 <div className="space-y-2.5 text-[14px] text-white/55 mb-8">
                   {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support channel','Early access to new features'].map((f,i)=>(
-                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/40 mono text-[16px]">→</span>{f}</div>
+                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
                   ))}
                 </div>
                 <Link href="/checkout?plan=annual" className="block w-full py-3 rounded-lg bg-[#00e5a0] text-black text-[16px] font-bold text-center hover:bg-[#00cc8e] transition-colors mono tracking-wide">GET STARTED</Link>
@@ -707,7 +707,7 @@ export default function LandingClientPage() {
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
 
               <div className="text-center mb-8">
-                <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
+                <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
                 <p className="text-[14px] text-white/40">What $149/mo looks like on a $10K account</p>
               </div>
 
@@ -725,7 +725,7 @@ export default function LandingClientPage() {
                 <div className="text-center">
                   <div className="text-[13px] text-white/30 mono mb-1">Avg return</div>
                   <div className="text-[28px] font-bold mono text-[#00e5a0]">+${Math.round(avgMonthly).toLocaleString()}</div>
-                  <div className="text-[11px] text-[#00e5a0]/30 mono">/month</div>
+                  <div className="text-[11px] text-[#00e5a0]/50 mono">/month</div>
                 </div>
 
                 <div className="text-[20px] text-white/15 mono">=</div>
@@ -752,7 +752,7 @@ export default function LandingClientPage() {
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">SCALE IT</div>
+            <div className="text-[11px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">SCALE IT</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
               Same signals. Your account size.
             </h2>
@@ -771,7 +771,7 @@ export default function LandingClientPage() {
                 return (
                   <div key={acct} className={'p-5 text-center relative ' + (isBase ? 'bg-[#00e5a0]/[0.03]' : 'bg-[#0a0a0c]')}>
                     {isBase && <div className="absolute top-0 left-0 right-0 h-px bg-[#00e5a0]/20"></div>}
-                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/50 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
+                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/70 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
                     <div className={'text-[16px] mono font-bold mb-4 ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
                     <div className="text-[22px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
                     <div className="text-[11px] mono text-white/25 mb-3">total profit</div>
