@@ -196,30 +196,38 @@ export default function LandingClientPage() {
 
       {/* ════════ 2. PROBLEM AGITATION ════════ */}
       <section className="py-24 px-6 md:px-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <p className="text-[16px] text-[#ff4d4d]/50 mono tracking-[.15em] mb-4">THE PROBLEM</p>
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-            You already know most signal<br className="hidden md:block"/> services are garbage.
-          </h2>
-          <p className="text-[14px] text-white/55 mb-10 max-w-lg mx-auto">Here's what they don't want you to see.</p>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] text-[#ff4d4d]/40 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
+              90% of signal services exist to<br className="hidden md:block"/> take your money — not make it.
+            </h2>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-4 text-left mb-10">
+          <div className="space-y-3 mb-12">
             {[
-              {n:'01',title:'Cherry-picked screenshots',desc:'They show you their wins. They hide 80% of their trades. You never see the full picture until you\'ve already paid.'},
-              {n:'02',title:'"Trust me bro" track records',desc:'No verified data. No timestamps. No stop losses. Just Lamborghinis and vague "10x this week" posts.'},
-              {n:'03',title:'Signals that bleed you dry',desc:'5 signals a day with no risk management. You\'re not trading — you\'re gambling someone else\'s hunches with your money.'},
+              {icon:'🎰', title:'They show you 5 winning screenshots. They hide the 40 losses.', desc:'Cherry-picked results are the oldest trick in trading. If a service won\'t show you EVERY trade — they\'re hiding something. We publish all '+totalTrades+' trades, including the 59% that lost.'},
+              {icon:'🤡', title:'"Trust me bro" is not a track record.', desc:'Lamborghini photos. Vague "10x this week" claims. No timestamps. No stop losses. No data. Just vibes and desperation disguised as confidence.'},
+              {icon:'🔥', title:'5 signals before lunch. Zero risk management.', desc:'High-frequency signal spam with no position sizing. You\'re not trading — you\'re feeding the house. One bad streak and your account is gone because nobody told you how much to risk.'},
             ].map((p,i)=>(
-              <div key={i} className="t p-6 lift">
-                <div className="text-[28px] font-bold mono text-white/[0.04] mb-3">{p.n}</div>
-                <h3 className="text-[16px] font-semibold mb-2.5 text-white/85">{p.title}</h3>
-                <p className="text-[14px] text-white/65 leading-relaxed">{p.desc}</p>
+              <div key={i} className="border border-[#ff4d4d]/[0.04] rounded-xl p-6 md:p-7 flex gap-5 items-start hover:border-[#ff4d4d]/[0.08] transition-colors">
+                <span className="text-[24px] shrink-0 mt-1">{p.icon}</span>
+                <div>
+                  <h3 className="text-[16px] font-bold text-white/85 mb-2 leading-snug">{p.title}</h3>
+                  <p className="text-[14px] text-white/45 leading-relaxed">{p.desc}</p>
+                </div>
               </div>
             ))}
           </div>
-          <p className="text-[14px] text-white/55 max-w-xl mx-auto leading-relaxed">
-            You've been burned before. We know — because so have we. That's why we publish <strong className="text-white/85">every single trade</strong> — wins AND losses — with timestamps, entries, exits, and exact P&L. 
-            <Link href="/performance" className="text-[#00e5a0]/60 hover:text-[#00e5a0] ml-1 underline underline-offset-2 transition-colors">All {totalTrades} of them.</Link>
-          </p>
+
+          <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 md:p-8 text-center">
+            <p className="text-[15px] text-white/60 leading-relaxed max-w-xl mx-auto">
+              We built PulseWave because we got burned too. So we made one rule: <strong className="text-white/90">publish everything</strong> — wins, losses, fees, drawdowns. Every entry. Every exit. Every dollar.
+            </p>
+            <Link href="/performance" className="inline-flex items-center gap-2 mt-4 text-[13px] text-[#00e5a0]/60 hover:text-[#00e5a0] mono tracking-wider transition-colors">
+              AUDIT ALL {totalTrades} TRADES <span className="text-[16px]">→</span>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -229,29 +237,39 @@ export default function LandingClientPage() {
 
       {/* ════════ 3. MECHANISM ════════ */}
       <section id="how" className="py-24 px-6 md:px-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="max-w-2xl mb-12">
-            <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">THE METHOD</p>
-            <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-              Market Structure — the method<br className="hidden md:block"/> institutions use to move markets.
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
+              The same method institutions use.<br className="hidden md:block"/> Automated. Delivered to your phone.
             </h2>
-            <p className="text-[14px] text-white/65 leading-relaxed">
-              While retail chases RSI crossovers and YouTube indicators, institutional traders follow <strong className="text-white/85">Break of Structure</strong> and <strong className="text-white/85">Order Blocks</strong> — the price levels where real money enters. Our engine automates this across 5 crypto pairs, 24 hours a day.
+            <p className="text-[14px] text-white/45 max-w-xl mx-auto leading-relaxed">
+              While retail chases RSI crossovers, institutional traders follow <strong className="text-white/70">Break of Structure</strong> and <strong className="text-white/70">Order Blocks</strong> — where real money enters the market. Our engine runs this 24/7 across 5 pairs.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              {n:'01',t:'Engine scans. You don\'t.',d:'Our system monitors BTC, ETH, SOL, AVAX, and XRP around the clock. It doesn\'t get tired, emotional, or FOMO into bad trades. It waits for the exact setup — then fires.'},
-              {n:'02',t:'Signal hits your phone.',d:'Entry price, stop loss, take profit, exact position size for YOUR account — all calculated in seconds. Delivered to Telegram the instant a setup confirms.'},
-              {n:'03',t:'You place the trade.',d:'Open your exchange, enter the levels, done. Same risk management every time — 10% fixed risk, mathematically sized positions. The system removes the one thing that kills traders: emotion.'},
-            ].map((s,i)=>(
-              <div key={i} className="t lift p-6">
-                <div className="text-[32px] font-bold text-white/[0.03] mono mb-4">{s.n}</div>
-                <h3 className="text-[14px] font-semibold mb-2 text-white/85">{s.t}</h3>
-                <p className="text-[14px] text-white/65 leading-relaxed">{s.d}</p>
-              </div>
-            ))}
+          <div className="relative">
+            {/* Connector line — desktop only */}
+            <div className="hidden md:block absolute top-[52px] left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-[#00e5a0]/10 via-[#00e5a0]/20 to-[#00e5a0]/10 z-0"></div>
+
+            <div className="grid md:grid-cols-3 gap-6 relative z-10">
+              {[
+                {n:'1',t:'Engine scans',sub:'You don\'t.',d:'BTC, ETH, SOL, AVAX, XRP — monitored around the clock. No fatigue. No FOMO. No emotion. It waits for the exact setup, then fires.', accent:'from-[#00e5a0]/20 to-[#00e5a0]/5'},
+                {n:'2',t:'Signal hits Telegram',sub:'In under 60 seconds.',d:'Entry, stop loss, take profit, position size for YOUR account — calculated instantly. One notification. Everything you need to place the trade.', accent:'from-[#00e5a0]/15 to-[#00e5a0]/5'},
+                {n:'3',t:'You place it',sub:'Done.',d:'Copy 5 numbers into your exchange. Same risk management every time. 10% fixed risk, mathematically sized. The system removes the thing that kills traders: you.', accent:'from-[#00e5a0]/10 to-[#00e5a0]/5'},
+              ].map((s,i)=>(
+                <div key={i} className="relative group">
+                  <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-7 hover:border-[#00e5a0]/[0.08] transition-all duration-300">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#00e5a0]/[0.08] to-transparent border border-[#00e5a0]/[0.12] flex items-center justify-center mb-5">
+                      <span className="text-[14px] mono font-bold text-[#00e5a0]/60">{s.n}</span>
+                    </div>
+                    <h3 className="text-[18px] font-bold text-white/90 mb-0.5">{s.t}</h3>
+                    <p className="text-[14px] text-[#00e5a0]/40 mono mb-3">{s.sub}</p>
+                    <p className="text-[14px] text-white/45 leading-relaxed">{s.d}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -556,47 +574,46 @@ export default function LandingClientPage() {
 
       {/* ════════ 7. PAIRS + SYSTEM ════════ */}
       <section className="py-24 px-6 md:px-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-[1fr_1fr] gap-8">
-            <div>
-              <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">TRADING UNIVERSE</p>
-              <h3 className="text-xl font-bold tracking-tight mb-5">5 pairs. 6 optimized configs.</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {pairList.map((x,i)=>(
-                  <div key={i} className="t lift p-4">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-[16px] font-bold text-white/55 mono">{x.p}</span>
-                      <span className="text-[14px] text-white/55 mono">{x.n} trades</span>
-                    </div>
-                    <div className="text-[16px] font-bold text-[#00e5a0] mono">+${(x.pnl/1000).toFixed(1)}K</div>
-                  </div>
-                ))}
-              </div>
-            </div>
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-14">
+            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
+              5 pairs. 24/7 monitoring.<br className="hidden md:block"/> Built like a hedge fund. Priced like a subscription.
+            </h2>
+          </div>
 
-            <div>
-              <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">SYSTEM</p>
-              <h3 className="text-xl font-bold tracking-tight mb-5">Built for reliability.</h3>
-              <div className="t">
-                <div className="divide-y divide-white/[0.02]">
-                  {[
-                    {l:'Market Monitoring',v:'24/7',d:'Never sleeps. Scans every candle close.'},
-                    {l:'Signal Delivery',v:'< 60s',d:'From detection to your Telegram.'},
-                    {l:'Risk Per Trade',v:'10%',d:'Same formula. Every single trade.'},
-                    {l:'Track Record',v:totalMonths>0?Math.floor(totalMonths/12)+' yr'+(totalMonths>=24?'s':''):'—',d:totalTrades+' trades. Fully timestamped.'},
-                    {l:'Hidden Fees',v:'$0',d:'What you see is what you pay.'},
-                  ].map((s,i)=>(
-                    <div key={i} className="px-5 py-4 flex items-center justify-between">
-                      <div>
-                        <div className="text-[14px] text-white/65 font-medium">{s.l}</div>
-                        <div className="text-[14px] text-white/55 mt-0.5">{s.d}</div>
-                      </div>
-                      <div className="text-[16px] font-bold mono text-white/85 shrink-0 ml-4">{s.v}</div>
-                    </div>
-                  ))}
+          {/* Pair cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+            {pairList.map((x,i)=>{
+              const maxPnl = Math.max(...pairList.map(p=>p.pnl))
+              const barW = maxPnl > 0 ? (x.pnl / maxPnl * 100) : 0
+              return (
+              <div key={i} className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-5 hover:border-[#00e5a0]/[0.08] transition-all duration-300 group">
+                <div className="text-[18px] font-bold mono text-white/80 mb-0.5 group-hover:text-[#00e5a0] transition-colors">{x.p}</div>
+                <div className="text-[11px] mono text-white/30 mb-3">{x.n} trades</div>
+                <div className="text-[18px] font-bold mono text-[#00e5a0] mb-2">+${(x.pnl/1000).toFixed(1)}K</div>
+                <div className="h-1 rounded-full bg-white/[0.03]">
+                  <div className="h-full rounded-full bg-[#00e5a0]/30 transition-all duration-500" style={{width: barW+'%'}}></div>
                 </div>
               </div>
-            </div>
+            )})}
+          </div>
+
+          {/* System specs — horizontal strip */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
+            {[
+              {v:'24/7', l:'Monitoring', s:'Every candle close'},
+              {v:'< 60s', l:'Signal Delivery', s:'Detection → Telegram'},
+              {v:'10%', l:'Risk Per Trade', s:'Fixed. Every time.'},
+              {v:totalMonths>0?Math.floor(totalMonths/12)+'yr'+(totalMonths>=24?'s':''):'—', l:'Track Record', s:totalTrades+' verified trades'},
+              {v:'$0', l:'Hidden Fees', s:'What you see is it'},
+            ].map((s,i)=>(
+              <div key={i} className="bg-[#0a0a0c] px-5 py-5 text-center">
+                <div className="text-[22px] font-bold mono text-white/85 mb-1">{s.v}</div>
+                <div className="text-[12px] text-white/50 font-medium mb-0.5">{s.l}</div>
+                <div className="text-[11px] text-white/25 mono">{s.s}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -734,32 +751,40 @@ export default function LandingClientPage() {
       {/* ════════ 8.5. ACCOUNT SIMULATOR ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-10">
-            <p className="text-[12px] text-[#00e5a0]/40 mono tracking-[.15em] mb-2">YOUR ACCOUNT</p>
-            <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
-              What these results look like at your size.
+          <div className="text-center mb-12">
+            <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.2em] mb-3">SCALE IT</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
+              Same signals. Your account size.
             </h2>
-            <p className="text-[14px] text-white/50 max-w-lg mx-auto">
-              Same signals. Same risk management. Scaled to your account.
+            <p className="text-[14px] text-white/40 max-w-md mx-auto">
+              10% fixed risk scales linearly. Here's what the verified track record looks like at different account sizes.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-              var multiplier = acct / 10000
-              var tp = totalProfit * multiplier
-              var ma = avgMonthly * multiplier
-              return (
-                <div key={acct} className="t p-5 text-center lift">
-                  <div className="text-[14px] mono text-white/40 mb-3">${(acct/1000).toFixed(0)}K</div>
-                  <div className="text-[24px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
-                  <div className="text-[16px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
-                </div>
-              )
-            })}
+          <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
+              {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+                var multiplier = acct / 10000
+                var tp = totalProfit * multiplier
+                var ma = avgMonthly * multiplier
+                var isBase = acct === 10000
+                return (
+                  <div key={acct} className={'p-5 text-center relative ' + (isBase ? 'bg-[#00e5a0]/[0.03]' : 'bg-[#0a0a0c]')}>
+                    {isBase && <div className="absolute top-0 left-0 right-0 h-px bg-[#00e5a0]/20"></div>}
+                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/50 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
+                    <div className={'text-[16px] mono font-bold mb-4 ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
+                    <div className="text-[22px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/25 mb-3">total profit</div>
+                    <div className="h-px bg-white/[0.04] mb-3"></div>
+                    <div className="text-[14px] mono text-white/50 font-medium">${Math.round(ma).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/20">per month avg</div>
+                  </div>
+                )
+              })}
+            </div>
           </div>
 
-          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results with 10% risk per trade, 20x leverage. Past performance does not guarantee future results.</p>
+          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results. 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
         </div>
       </section>
 
@@ -770,21 +795,23 @@ export default function LandingClientPage() {
       {/* ════════ 9. FAQ ════════ */}
       <section className="py-24 px-6 md:px-10">
         <div className="max-w-3xl mx-auto">
-          <p className="text-[14px] text-white/65 mono tracking-[.15em] mb-2 text-center">FAQ</p>
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-10 text-center leading-tight">Before you decide.</h2>
+          <div className="text-center mb-12">
+            <div className="text-[11px] text-white/25 mono tracking-[.2em] mb-3">QUESTIONS</div>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Before you decide.</h2>
+          </div>
 
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[
-              {q:'Why is your win rate only '+Math.round(winRate)+'%?',a:'Because we use wide take profits with tight risk management. You don\'t need to win most trades — you need your winners to be bigger than your losers. Our profit factor is '+profitFactor.toFixed(2)+': for every $1 lost, we make $'+profitFactor.toFixed(2)+'. Over '+totalTrades+' trades, that turns $10K into $'+Math.round(finalBalance).toLocaleString()+'.'},
-              {q:'How do I know the results are real?',a:'Every single trade is published with timestamps, entry/exit prices, P&L, and running balance. Go to our performance page and audit all '+totalTrades+' trades yourself. We show the losses too — '+redMonths+' losing month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. No other signal service does this.'},
-              {q:'What if I don\'t know how to trade?',a:'Each signal tells you exactly what to do: which pair, which direction, where to enter, stop loss, and take profit. Position size is calculated for your account. If you can copy 5 numbers into an exchange, you can follow our signals.'},
+              {q:'Why is the win rate only '+Math.round(winRate)+'%?',a:'Because our winners are much larger than our losers. Profit factor of '+profitFactor.toFixed(2)+' means for every $1 lost, we make $'+profitFactor.toFixed(2)+' back. Over '+totalTrades+' trades, that turns $10K into $'+Math.round(finalBalance).toLocaleString()+'. Win rate is a vanity metric — profit factor is what matters.'},
+              {q:'How do I know the results are real?',a:'Every trade is published with timestamps, entry/exit prices, P&L, and running balance. Audit all '+totalTrades+' trades on our performance page. We show the losses too — '+redMonths+' red month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. Name one other signal service that does this.'},
+              {q:'I\'ve never traded before. Can I still use this?',a:'Yes. Each signal includes: pair, direction, entry price, stop loss, take profit, and position size for your account. If you can copy 5 numbers into Bitget (or any exchange), you can follow the signals. We\'re not teaching you to trade — we\'re giving you the trade.'},
               {q:'What exchange do I need?',a:'We recommend Bitget for USDT-M futures, but signals work on any exchange that supports crypto futures — Bybit, OKX, Binance, etc. The levels are the same everywhere.'},
               {q:'How many signals per month?',a:'Roughly '+Math.round(avgPerMonth)+' signals per month on average across all pairs. Quality over quantity — we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
               {q:'Can I cancel anytime?',a:'Yes. Monthly subscribers cancel anytime, no questions asked. No lock-in, no cancellation fees. If the signals don\'t pay for themselves, you shouldn\'t be paying for them.'},
             ].map((faq,i)=>(
-              <div key={i} className="t p-5">
-                <h3 className="text-[14px] font-semibold text-white/85 mb-2">{faq.q}</h3>
-                <p className="text-[14px] text-white/50 leading-relaxed">{faq.a}</p>
+              <div key={i} className="border border-white/[0.04] rounded-xl p-6 hover:border-white/[0.06] transition-colors">
+                <h3 className="text-[15px] font-bold text-white/80 mb-2">{faq.q}</h3>
+                <p className="text-[14px] text-white/40 leading-relaxed">{faq.a}</p>
               </div>
             ))}
           </div>
@@ -796,29 +823,35 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 10. FINAL CTA ════════ */}
-      <section className="py-28 px-6 md:px-10 relative">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.025) 0%,transparent 65%)'}}/>
+      <section className="py-32 px-6 md:px-10 relative overflow-hidden">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.04) 0%,transparent 60%)'}}/>
         <div className="max-w-2xl mx-auto text-center relative z-10">
-          <div className="t inline-block px-8 py-3 mb-8">
-            <span className="text-[36px] md:text-[44px] font-bold mono text-[#00e5a0] glow">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
+          <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2 mb-8">
+            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
+            <span className="text-[12px] text-[#00e5a0]/60 mono tracking-wider">ENGINE SCANNING NOW</span>
           </div>
+
+          <div className="mb-8">
+            <span className="text-[48px] md:text-[64px] font-bold mono text-[#00e5a0] glow leading-none">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
+          </div>
+
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-            Two kinds of traders read this page.
+            You've scrolled this far for a reason.
           </h2>
-          <p className="text-[14px] text-white/55 mb-4 max-w-md mx-auto leading-relaxed">
-            Those who keep losing money trying to figure it out alone. And those who plug into a system that's already proven it works.
+          <p className="text-[15px] text-white/50 mb-3 max-w-md mx-auto leading-relaxed">
+            You're either going to keep trading on emotion, gut feelings, and hope — or you're going to plug into a system that's done {totalTrades} trades and turned $10K into ${Math.round(finalBalance).toLocaleString()}.
           </p>
-          <p className="text-[14px] text-white/65 mb-10 max-w-sm mx-auto leading-relaxed">
-            The public trade log is delayed 48 hours. Subscribers get signals the instant they fire. The next one could be tonight.
+          <p className="text-[14px] text-white/30 mb-10 max-w-sm mx-auto">
+            The next signal could fire tonight. Public log is delayed 48 hours. Subscribers get it instantly.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
-            <Link href="/auth/signup" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
-              Start receiving signals
-            </Link>
-            <Link href="/performance" className="flex-1 py-4 rounded-lg text-[16px] font-semibold text-white/65 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/65 transition-all text-center">
-              Audit every trade
+          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto mb-4">
+            <Link href="/auth/signup" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
+              Start receiving signals — $149/mo
             </Link>
           </div>
+          <Link href="/performance" className="text-[13px] text-white/35 mono tracking-wider hover:text-white/55 transition-colors">
+            OR AUDIT ALL {totalTrades} TRADES FIRST →
+          </Link>
         </div>
       </section>
 
@@ -833,12 +866,12 @@ export default function LandingClientPage() {
       {/* FOOTER */}
       <footer className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3"><img src="/logo.webp" alt="PulseWave" className="h-4 opacity-20"/><span className="text-[16px] text-white/55">© 2026 PulseWave Labs</span></div>
-          <div className="flex gap-6 text-[16px] text-white/55">
-            <Link href="/performance" className="hover:text-white/55 transition-colors">Trades</Link>
-            <Link href="/privacy" className="hover:text-white/55 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/55 transition-colors">Terms</Link>
-            <Link href="/disclaimer" className="hover:text-white/55 transition-colors">Disclaimer</Link>
+          <div className="flex items-center gap-3"><img src="/logo.webp" alt="PulseWave" className="h-4 opacity-20"/><span className="text-[11px] text-white/25">© 2026 PulseWave Labs</span></div>
+          <div className="flex gap-6 text-[11px] text-white/25">
+            <Link href="/performance" className="hover:text-white/40 transition-colors">Trades</Link>
+            <Link href="/privacy" className="hover:text-white/40 transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white/40 transition-colors">Terms</Link>
+            <Link href="/disclaimer" className="hover:text-white/40 transition-colors">Disclaimer</Link>
           </div>
         </div>
       </footer>
