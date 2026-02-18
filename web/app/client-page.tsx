@@ -206,12 +206,12 @@ export default function LandingClientPage() {
 
           <div className="space-y-3 mb-12">
             {[
-              {icon:'🎰', title:'They show you 5 winning screenshots. They hide the 40 losses.', desc:'Cherry-picked results are the oldest trick in trading. If a service won\'t show you EVERY trade — they\'re hiding something. We publish all '+totalTrades+' trades, including the 59% that lost.'},
-              {icon:'🤡', title:'"Trust me bro" is not a track record.', desc:'Lamborghini photos. Vague "10x this week" claims. No timestamps. No stop losses. No data. Just vibes and desperation disguised as confidence.'},
-              {icon:'🔥', title:'5 signals before lunch. Zero risk management.', desc:'High-frequency signal spam with no position sizing. You\'re not trading — you\'re feeding the house. One bad streak and your account is gone because nobody told you how much to risk.'},
+              { title:'They show you 5 winning screenshots. They hide the 40 losses.', desc:'Cherry-picked results are the oldest trick in trading. If a service won\'t show you EVERY trade — they\'re hiding something. We publish all '+totalTrades+' trades, including the 59% that lost.'},
+              { title:'"Trust me bro" is not a track record.', desc:'Lamborghini photos. Vague "10x this week" claims. No timestamps. No stop losses. No data. Just vibes and desperation disguised as confidence.'},
+              { title:'5 signals before lunch. Zero risk management.', desc:'High-frequency signal spam with no position sizing. You\'re not trading — you\'re feeding the house. One bad streak and your account is gone because nobody told you how much to risk.'},
             ].map((p,i)=>(
               <div key={i} className="border border-[#ff4d4d]/[0.04] rounded-xl p-6 md:p-7 flex gap-5 items-start hover:border-[#ff4d4d]/[0.08] transition-colors">
-                <span className="text-[24px] shrink-0 mt-1">{p.icon}</span>
+                
                 <div>
                   <h3 className="text-[16px] font-bold text-white/85 mb-2 leading-snug">{p.title}</h3>
                   <p className="text-[14px] text-white/45 leading-relaxed">{p.desc}</p>
@@ -640,10 +640,10 @@ export default function LandingClientPage() {
             <div className="text-[11px] text-white/30 mono tracking-[.2em] mb-5 text-center">WHAT TRADERS TYPICALLY SPEND</div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
-                {n:'Trading Courses',v:'$500 – $5,000',s:'One-time purchase. No ongoing signals. You still trade alone.', icon:'📖'},
-                {n:'Signal Groups',v:'$200 – $500/mo',s:'Unverified win rates. Cherry-picked screenshots. No transparency.', icon:'📢'},
-                {n:'Algo Trading Bots',v:'$100 – $300/mo',s:'You configure. You manage. You debug. Breaks when markets shift.', icon:'🤖'},
-                {n:'Trading Indicators',v:'$30 – $100/mo',s:'Still requires you to interpret charts, find entries, and manage risk.', icon:'📊'},
+                {n:'Trading Courses',v:'$500 – $5,000',s:'One-time purchase. No ongoing signals. You still trade alone.'},
+                {n:'Signal Groups',v:'$200 – $500/mo',s:'Unverified win rates. Cherry-picked screenshots. No transparency.'},
+                {n:'Algo Trading Bots',v:'$100 – $300/mo',s:'You configure. You manage. You debug. Breaks when markets shift.'},
+                {n:'Trading Indicators',v:'$30 – $100/mo',s:'Still requires you to interpret charts, find entries, and manage risk.'},
               ].map((c,i)=>(
                 <div key={i} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4 relative overflow-hidden group hover:border-white/[0.06] transition-colors">
                   <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff4d4d]/[0.02] rounded-bl-full"></div>
