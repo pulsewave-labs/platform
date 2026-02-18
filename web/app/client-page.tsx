@@ -76,9 +76,13 @@ export default function LandingClientPage() {
   const [mobileMenu, setMobileMenu] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [currentEquity, setCurrentEquity] = useState(218418)
+  const [recentTrades, setRecentTrades] = useState<any[]>([])
 
   useEffect(() => {
     fetch('/api/waitlist').then(r => r.json()).then(d => setWaitlistCount(d.count || 2847)).catch(() => {})
+    fetch('/api/performance').then(r => r.json()).then(d => {
+      if (d && d.trades) setRecentTrades(d.trades.slice(0, 8))
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {
@@ -379,17 +383,16 @@ export default function LandingClientPage() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold mb-6">The Pairs We Trade</h2>
-            <p className="text-xl text-zinc-400">6 carefully selected configurations that generated $208K+ in profits</p>
+            <p className="text-xl text-zinc-400">5 major crypto pairs, 6 optimized configurations — $208K+ in backtested profits</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
             {[
-              { pair: 'AVAX/USDT', timeframe: '6h', trades: 152, profit: 33648, winRate: 43 },
-              { pair: 'SOL/USDT', timeframe: '4h', trades: 98, profit: 24239, winRate: 41 },
-              { pair: 'XRP/USDT', timeframe: '12h', trades: 87, profit: 14378, winRate: 38 },
-              { pair: 'ETH/USDT', timeframe: '6h', trades: 134, profit: 13265, winRate: 42 },
-              { pair: 'ETH/USDT', timeframe: '12h', trades: 89, profit: 12413, winRate: 40 },
-              { pair: 'BTC/USDT', timeframe: '4h', trades: 64, profit: 6266, winRate: 39 },
+              { pair: 'AVAX/USDT', trades: 152, profit: 33648, winRate: 43 },
+              { pair: 'SOL/USDT', trades: 98, profit: 24239, winRate: 41 },
+              { pair: 'XRP/USDT', trades: 87, profit: 14378, winRate: 38 },
+              { pair: 'ETH/USDT', trades: 202, profit: 25678, winRate: 41, note: '2 configs' },
+              { pair: 'BTC/USDT', trades: 85, profit: 6266, winRate: 39 },
             ].map((config, i) => (
               <motion.div
                 key={i}
@@ -402,7 +405,7 @@ export default function LandingClientPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-xl font-bold">{config.pair}</h3>
-                    <p className="text-zinc-400">{config.timeframe} timeframe</p>
+                    {config.note && <p className="text-xs text-zinc-500">{config.note}</p>}
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-green-400">${config.profit.toLocaleString()}</div>
@@ -426,6 +429,116 @@ export default function LandingClientPage() {
         </div>
       </Section>
 
+      {/* ═══════════ HOW WE SIZE TRADES ═══════════ */}
+      <Section>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold mb-6">How We Size Every Trade</h2>
+            <p className="text-xl text-zinc-400">Simple, consistent, risk-managed. Every single trade uses the same formula.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8">
+              <h3 className="text-2xl font-bold mb-6">The Strategy</h3>
+              <div className="space-y-5">
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Target size={20} className="text-green-400" />
+                  </div>
+                  <div>
+                    <div className="font-bold mb-1">Market Structure Analysis</div>
+                    <div className="text-sm text-zinc-400">Break of Structure (BOS) + Order Block patterns detected by our AI across multiple timeframes</div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="font-bold mb-1">Fixed Risk Per Trade</div>
+                    <div className="text-sm text-zinc-400">Every trade risks exactly 10% of the starting capital. No compounding, no martingale, no increasing risk after losses.</div>
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <div className="w-10 h-10 bg-purple-500/10 border border-purple-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <BarChart3 size={20} className="text-purple-400" />
+                  </div>
+                  <div>
+                    <div className="font-bold mb-1">Mathematical Position Sizing</div>
+                    <div className="text-sm text-zinc-400">Position size = Risk Amount ÷ (Entry − Stop Loss). Larger stop = smaller position. The math keeps risk constant.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8">
+              <h3 className="text-2xl font-bold mb-6">Backtest Settings</h3>
+              <div className="space-y-4">
+                {[
+                  { label: 'Starting Capital', value: '$10,000' },
+                  { label: 'Risk Per Trade', value: '10% ($1,000 fixed)' },
+                  { label: 'Leverage', value: '20x' },
+                  { label: 'Position Sizing', value: 'Risk ÷ Stop Distance' },
+                  { label: 'Compounding', value: 'None (fixed $1,000 risk)' },
+                  { label: 'Fees', value: '0.1% maker/taker (included)' },
+                  { label: 'Exchange', value: 'Bitget USDT-M Futures' },
+                  { label: 'Test Period', value: 'Feb 2024 — Feb 2026' },
+                ].map((row, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-zinc-800 last:border-b-0">
+                    <span className="text-zinc-400 text-sm">{row.label}</span>
+                    <span className="font-mono font-bold text-sm">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-8">
+            <h3 className="text-xl font-bold mb-4">Position Sizing Example</h3>
+            <p className="text-zinc-400 text-sm mb-6">Here's exactly how the bot sizes a trade. Same formula, every time, no exceptions.</p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-zinc-400 border-b border-zinc-800">
+                    <th className="pb-3">Your Account</th>
+                    <th className="pb-3">Risk (10%)</th>
+                    <th className="pb-3">Example: BTC at $70K, SL at $67K</th>
+                    <th className="pb-3">Position Size</th>
+                    <th className="pb-3">Margin Used (20x)</th>
+                    <th className="pb-3 text-right">If TP hits (2.5:1 R:R)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { acct: 1000, risk: 100 },
+                    { acct: 5000, risk: 500 },
+                    { acct: 10000, risk: 1000 },
+                    { acct: 25000, risk: 2500 },
+                    { acct: 50000, risk: 5000 },
+                  ].map((row) => {
+                    const slDist = 3000 / 70000
+                    const notional = row.risk / slDist
+                    const margin = notional / 20
+                    const profit = row.risk * 2.5
+                    return (
+                      <tr key={row.acct} className="border-b border-zinc-800/50 last:border-b-0">
+                        <td className="py-3 font-mono font-bold">${row.acct.toLocaleString()}</td>
+                        <td className="py-3 font-mono text-yellow-400">${row.risk.toLocaleString()}</td>
+                        <td className="py-3 font-mono text-zinc-400">$1K risk ÷ 4.3% stop = ${Math.round(notional).toLocaleString()}</td>
+                        <td className="py-3 font-mono">${Math.round(notional).toLocaleString()}</td>
+                        <td className="py-3 font-mono text-zinc-400">${Math.round(margin).toLocaleString()}</td>
+                        <td className="py-3 font-mono text-green-400 text-right font-bold">+${Math.round(profit).toLocaleString()}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs text-zinc-600 mt-4">If stopped out, you lose the Risk amount. If TP hits, you make Risk × R:R. Fees are deducted from P&L. No hidden costs.</p>
+          </div>
+        </div>
+      </Section>
+
       {/* ═══════════ RECENT TRADES ═══════════ */}
       <Section>
         <div className="max-w-6xl mx-auto">
@@ -444,20 +557,13 @@ export default function LandingClientPage() {
                     <th className="px-6 py-4 font-semibold">Direction</th>
                     <th className="px-6 py-4 font-semibold">Entry</th>
                     <th className="px-6 py-4 font-semibold">Exit</th>
+                    <th className="px-6 py-4 font-semibold">Risk</th>
                     <th className="px-6 py-4 font-semibold text-right">P&L</th>
+                    <th className="px-6 py-4 font-semibold">Result</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  {[
-                    { date: '2026-02-15', pair: 'SOL/USDT', direction: 'LONG', entry: 198.50, exit: 216.80, pnl: 2847 },
-                    { date: '2026-02-14', pair: 'AVAX/USDT', direction: 'SHORT', entry: 42.30, exit: 38.90, pnl: 1652 },
-                    { date: '2026-02-13', pair: 'BTC/USDT', direction: 'LONG', entry: 68450, exit: 72100, pnl: 3241 },
-                    { date: '2026-02-12', pair: 'ETH/USDT', direction: 'LONG', entry: 2680, exit: 2580, pnl: -1489 },
-                    { date: '2026-02-11', pair: 'XRP/USDT', direction: 'SHORT', entry: 0.875, exit: 0.820, pnl: 1876 },
-                    { date: '2026-02-10', pair: 'SOL/USDT', direction: 'LONG', entry: 185.20, exit: 198.50, pnl: 2134 },
-                    { date: '2026-02-09', pair: 'AVAX/USDT', direction: 'LONG', entry: 38.90, exit: 42.30, pnl: 1789 },
-                    { date: '2026-02-08', pair: 'BTC/USDT', direction: 'SHORT', entry: 72100, exit: 68450, pnl: 2976 },
-                  ].map((trade, i) => (
+                  {recentTrades.map((trade, i) => (
                     <motion.tr
                       key={i}
                       initial={{ opacity: 0, x: -20 }}
@@ -466,19 +572,27 @@ export default function LandingClientPage() {
                       transition={{ delay: i * 0.05 }}
                       className="border-b border-zinc-800 last:border-b-0 hover:bg-zinc-800/30"
                     >
-                      <td className="px-6 py-4 font-mono text-zinc-400">{trade.date}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-400">{new Date(trade.entry_time).toLocaleDateString()}</td>
                       <td className="px-6 py-4 font-semibold">{trade.pair}</td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded text-xs font-bold ${
-                          trade.direction === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                          trade.action === 'LONG' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
                         }`}>
-                          {trade.direction}
+                          {trade.action}
                         </span>
                       </td>
-                      <td className="px-6 py-4 font-mono">${trade.entry.toLocaleString()}</td>
-                      <td className="px-6 py-4 font-mono">${trade.exit.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono">${Number(trade.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className="px-6 py-4 font-mono">${Number(trade.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className="px-6 py-4 font-mono text-yellow-400">${Number(trade.risk_amount).toLocaleString()}</td>
                       <td className={`px-6 py-4 font-mono font-bold text-right ${trade.pnl > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {trade.pnl > 0 ? '+' : ''}${trade.pnl.toLocaleString()}
+                        {trade.pnl > 0 ? '+' : ''}${Number(trade.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                          trade.exit_reason === 'TP' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {trade.exit_reason}
+                        </span>
                       </td>
                     </motion.tr>
                   ))}

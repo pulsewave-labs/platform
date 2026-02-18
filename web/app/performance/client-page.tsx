@@ -214,7 +214,7 @@ export default function PerformanceClientPage() {
                 ${data.stats.finalBalance.toLocaleString()}
               </span>
             </h2>
-            <p className="text-xl text-zinc-400">February 2024 - February 2026 • {data.stats.totalTrades} trades</p>
+            <p className="text-xl text-zinc-400">February 2024 - February 2026 • {data.stats.totalTrades} trades • $1,000 fixed risk per trade • 20x leverage</p>
           </motion.div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -283,6 +283,51 @@ export default function PerformanceClientPage() {
           </div>
         </motion.div>
 
+        {/* Trade Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-12"
+        >
+          <h3 className="text-2xl font-bold mb-6">How Every Trade Is Sized</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+              <h4 className="font-bold text-lg mb-4">Backtest Settings</h4>
+              <div className="space-y-3">
+                {[
+                  { label: 'Starting Capital', value: '$10,000' },
+                  { label: 'Risk Per Trade', value: '10% ($1,000 fixed)' },
+                  { label: 'Leverage', value: '20x' },
+                  { label: 'Position Sizing', value: 'Risk ÷ Stop Distance' },
+                  { label: 'Compounding', value: 'None (fixed $1,000 risk)' },
+                  { label: 'Fees', value: '0.1% maker/taker (included)' },
+                  { label: 'Exchange', value: 'Bitget USDT-M Futures' },
+                  { label: 'Strategy', value: 'Market Structure (BOS + OB)' },
+                ].map((row, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-zinc-800 last:border-b-0">
+                    <span className="text-zinc-400 text-sm">{row.label}</span>
+                    <span className="font-mono font-bold text-sm">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
+              <h4 className="font-bold text-lg mb-4">Position Sizing Formula</h4>
+              <div className="bg-zinc-800/50 rounded-lg p-4 mb-4 font-mono text-sm">
+                <div className="text-zinc-400 mb-2">// For every trade:</div>
+                <div className="text-green-400">Risk Amount = Account × 10% = $1,000</div>
+                <div className="text-blue-400 mt-1">Stop Distance = |Entry − Stop Loss| ÷ Entry</div>
+                <div className="text-purple-400 mt-1">Position Size = $1,000 ÷ Stop Distance</div>
+                <div className="text-yellow-400 mt-1">Margin Required = Position Size ÷ 20</div>
+              </div>
+              <p className="text-sm text-zinc-400 mb-4">The tighter the stop, the larger the position. The wider the stop, the smaller the position. Risk stays constant at $1,000 no matter what.</p>
+              <div className="bg-zinc-800/30 rounded-lg p-3 border border-zinc-700/50">
+                <p className="text-xs text-zinc-500"><strong>Example:</strong> BTC LONG at $70K with SL at $67K → Stop = 4.3% → Position = $23,333 notional → Margin = $1,167. If TP hits at 2.5:1 R:R, profit = $2,500. If stopped out, loss = $1,000.</p>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
         {/* Pair Performance */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -296,7 +341,6 @@ export default function PerformanceClientPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h4 className="font-bold text-lg">{pair.pair}</h4>
-                    <p className="text-sm text-zinc-400">{pair.timeframe}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-xl font-bold text-green-400">${pair.pnl.toLocaleString()}</div>
@@ -411,9 +455,12 @@ export default function PerformanceClientPage() {
                       { key: 'action', label: 'Direction' },
                       { key: 'entry_price', label: 'Entry' },
                       { key: 'exit_price', label: 'Exit' },
+                      { key: 'notional', label: 'Position' },
+                      { key: 'risk_amount', label: 'Risk' },
+                      { key: 'fees', label: 'Fees' },
                       { key: 'pnl', label: 'P&L ($)' },
-                      { key: 'pnl_pct', label: 'P&L (%)' },
                       { key: 'exit_reason', label: 'Result' },
+                      { key: 'balance_after', label: 'Balance' },
                     ].map((col) => (
                       <th 
                         key={col.key}
@@ -450,15 +497,13 @@ export default function PerformanceClientPage() {
                       </td>
                       <td className="px-6 py-4 font-mono">${trade.entry_price.toLocaleString()}</td>
                       <td className="px-6 py-4 font-mono">${trade.exit_price.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-400">${Math.round(trade.notional).toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono text-yellow-400">${trade.risk_amount.toLocaleString()}</td>
+                      <td className="px-6 py-4 font-mono text-zinc-500">${Math.round(trade.fees)}</td>
                       <td className={`px-6 py-4 font-mono font-bold ${
                         trade.pnl >= 0 ? 'text-green-400' : 'text-red-400'
                       }`}>
-                        {trade.pnl >= 0 ? '+' : ''}${trade.pnl.toLocaleString()}
-                      </td>
-                      <td className={`px-6 py-4 font-mono ${
-                        trade.pnl_pct >= 0 ? 'text-green-400' : 'text-red-400'
-                      }`}>
-                        {trade.pnl_pct >= 0 ? '+' : ''}{trade.pnl_pct.toFixed(1)}%
+                        {trade.pnl >= 0 ? '+' : ''}${Math.round(trade.pnl).toLocaleString()}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-2 py-1 rounded text-xs font-bold ${
@@ -469,6 +514,7 @@ export default function PerformanceClientPage() {
                           {trade.exit_reason}
                         </span>
                       </td>
+                      <td className="px-6 py-4 font-mono">${Math.round(trade.balance_after).toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
