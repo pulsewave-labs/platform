@@ -383,7 +383,7 @@ export default function PerformanceClientPage() {
       {/* Footer */}
       <footer className="border-t border-white/[0.04] py-6 px-6 md:px-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-          <span className="text-[11px] text-white/30">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
+          <span className="text-[10px] text-white/20">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
           <div className="flex gap-5 text-[11px] text-white/30">
             <Link href="/disclaimer" className="hover:text-white/50 transition-colors">Disclaimer</Link>
             <Link href="/privacy" className="hover:text-white/50 transition-colors">Privacy</Link>

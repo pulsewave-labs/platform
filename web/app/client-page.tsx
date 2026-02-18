@@ -722,7 +722,7 @@ export default function LandingClientPage() {
             })}
           </div>
 
-          <p className="text-[14px] text-white/20 text-center mt-4">Based on verified results with 10% risk per trade, 20x leverage. Past performance does not guarantee future results.</p>
+          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results with 10% risk per trade, 20x leverage. Past performance does not guarantee future results.</p>
         </div>
       </section>
 
@@ -789,7 +789,7 @@ export default function LandingClientPage() {
       {/* DISCLAIMER */}
       <section className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
         <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[14px] text-white/55 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/55 transition-colors">Full risk disclosure</Link>.</p>
+          <p className="text-[10px] text-white/25 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/35 transition-colors">Full risk disclosure</Link>.</p>
         </div>
       </section>
 
