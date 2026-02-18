@@ -197,9 +197,9 @@ export default function SettingsClientPage() {
               </h3>
               
               {[
-                { key: 'signalAlerts' as keyof NotificationSettings, label: 'New Trading Signals', desc: 'Get notified when new signals are detected' },
-                { key: 'tradeUpdates' as keyof NotificationSettings, label: 'Trade Updates', desc: 'Updates when signals hit TP/SL' },
-                { key: 'dailyReports' as keyof NotificationSettings, label: 'Daily Performance', desc: 'Daily P&L and performance summary' },
+                { key: 'signalAlerts', label: 'New Trading Signals', desc: 'Get notified when new signals are detected' },
+                { key: 'tradeUpdates', label: 'Trade Updates', desc: 'Updates when signals hit TP/SL' },
+                { key: 'dailyReports', label: 'Daily Performance', desc: 'Daily P&L and performance summary' },
               ].map((item) => (
                 <div key={item.key} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-b-0">
                   <div>
@@ -229,10 +229,10 @@ export default function SettingsClientPage() {
               </h3>
               
               {[
-                { key: 'emailNotifications' as keyof NotificationSettings, label: 'Email Notifications', desc: 'Receive notifications via email' },
-                { key: 'pushNotifications' as keyof NotificationSettings, label: 'Browser Push', desc: 'Push notifications in your browser' },
-                { key: 'weeklyReports' as keyof NotificationSettings, label: 'Weekly Reports', desc: 'Weekly performance summary' },
-                { key: 'systemAlerts' as keyof NotificationSettings, label: 'System Alerts', desc: 'Important system and maintenance updates' },
+                { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive notifications via email' },
+                { key: 'pushNotifications', label: 'Browser Push', desc: 'Push notifications in your browser' },
+                { key: 'weeklyReports', label: 'Weekly Reports', desc: 'Weekly performance summary' },
+                { key: 'systemAlerts', label: 'System Alerts', desc: 'Important system and maintenance updates' },
               ].map((item) => (
                 <div key={item.key} className="flex items-center justify-between py-3 border-b border-zinc-800 last:border-b-0">
                   <div>

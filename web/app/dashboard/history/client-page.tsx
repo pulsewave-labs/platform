@@ -59,14 +59,14 @@ interface PerformanceData {
 }
 
 export default function HistoryClientPage() {
-  const [data, setData] = useState<PerformanceData | null>(null)
+  const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterPair, setFilterPair] = useState('')
   const [filterDirection, setFilterDirection] = useState('')
   const [filterResult, setFilterResult] = useState('')
-  const [sortField, setSortField] = useState<keyof Trade>('entry_time')
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc')
+  const [sortField, setSortField] = useState<string>('entry_time')
+  const [sortDirection, setSortDirection] = useState<string>('desc')
   const [currentPage, setCurrentPage] = useState(1)
   const tradesPerPage = 25
 
@@ -129,7 +129,7 @@ export default function HistoryClientPage() {
 
   const totalPages = Math.ceil(filteredAndSortedTrades.length / tradesPerPage)
 
-  const handleSort = (field: keyof Trade) => {
+  const handleSort = (field: string) => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
     } else {
@@ -166,7 +166,8 @@ export default function HistoryClientPage() {
     )
   }
 
-  const uniquePairs = [...new Set(data.trades.map(t => t.pair))].sort()
+  const pairSet = new Set(data.trades.map((t: Trade) => t.pair))
+  const uniquePairs = Array.from(pairSet).sort()
 
   return (
     <div className="space-y-8">
@@ -316,15 +317,15 @@ export default function HistoryClientPage() {
             <thead className="bg-zinc-800/50">
               <tr className="text-left">
                 {[
-                  { key: 'entry_time' as keyof Trade, label: 'Date' },
-                  { key: 'pair' as keyof Trade, label: 'Pair' },
-                  { key: 'action' as keyof Trade, label: 'Direction' },
-                  { key: 'entry_price' as keyof Trade, label: 'Entry' },
-                  { key: 'exit_price' as keyof Trade, label: 'Exit' },
-                  { key: 'pnl' as keyof Trade, label: 'P&L ($)' },
-                  { key: 'pnl_pct' as keyof Trade, label: 'P&L (%)' },
-                  { key: 'exit_reason' as keyof Trade, label: 'Result' },
-                  { key: 'confidence' as keyof Trade, label: 'Confidence' },
+                  { key: 'entry_time', label: 'Date' },
+                  { key: 'pair', label: 'Pair' },
+                  { key: 'action', label: 'Direction' },
+                  { key: 'entry_price', label: 'Entry' },
+                  { key: 'exit_price', label: 'Exit' },
+                  { key: 'pnl', label: 'P&L ($)' },
+                  { key: 'pnl_pct', label: 'P&L (%)' },
+                  { key: 'exit_reason', label: 'Result' },
+                  { key: 'confidence', label: 'Confidence' },
                 ].map((col) => (
                   <th 
                     key={col.key}
