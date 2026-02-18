@@ -163,7 +163,6 @@ export default function CheckoutClientPage() {
                     </div>
                   )}
                   <div>
-                  <div>
                     <label className="block text-[11px] text-white/25 mono tracking-wider mb-1.5">EMAIL</label>
                     <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} placeholder="you@example.com" required />
                   </div>
