@@ -157,34 +157,54 @@ export default function LandingClientPage() {
           </div>
 
           {/* Monthly heatmap */}
-          {perf?.monthly&&(
+          {perf?.monthly&&(()=>{
+            const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+            const byYear:{[y:string]:any[]}={}
+            perf.monthly.forEach((m:any)=>{const y=m.month.slice(0,4);if(!byYear[y])byYear[y]=[];byYear[y].push(m)})
+            const years=Object.keys(byYear).sort()
+            return(
             <div className="t mb-8">
               <div className="th">
                 <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
                 <span className="text-[9px] text-white/55 mono ml-1">monthly_returns — {perf.monthly.length} months</span>
               </div>
-              <div className="p-4">
-                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-13 gap-1">
-                  {perf.monthly.map((m:any,i:number)=>{
-                    const pnl=m.pnl, int=Math.min(Math.abs(pnl)/12000,1)
-                    const bg=pnl>0?`rgba(0,229,160,${.06+int*.3})`:`rgba(255,77,77,${.06+int*.3})`
-                    return(
-                      <div key={i} className="aspect-square rounded flex flex-col items-center justify-center" style={{background:bg}}>
-                        <div className="text-[7px] text-white/60 mono">{m.month.slice(5)}</div>
-                        <div className={'text-[9px] font-semibold mono mt-px '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
+              <div className="p-4 space-y-3">
+                {years.map((year:string)=>{
+                  const yearTotal=byYear[year].reduce((s:number,x:any)=>s+x.pnl,0)
+                  return(
+                    <div key={year}>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <span className="text-[10px] text-white/50 mono font-semibold">{year}</span>
+                        <span className={'text-[10px] mono font-semibold '+(yearTotal>=0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{yearTotal>=0?'+':''}${(yearTotal/1000).toFixed(1)}K</span>
                       </div>
-                    )
-                  })}
-                </div>
-                <div className="flex gap-4 mt-3 text-[9px] text-white/55 mono">
+                      <div className="grid grid-cols-6 md:grid-cols-12 gap-1">
+                        {Array.from({length:12},(_,mi)=>{
+                          const monthKey=`${year}-${String(mi+1).padStart(2,'0')}`
+                          const md=byYear[year].find((x:any)=>x.month===monthKey)
+                          if(!md) return <div key={mi} className="rounded bg-white/[0.01] py-2 px-1 text-center"><div className="text-[8px] text-white/15 mono">{months[mi]}</div><div className="text-[9px] text-white/10 mono mt-0.5">—</div></div>
+                          const pnl=md.pnl, int=Math.min(Math.abs(pnl)/12000,1)
+                          const bg=pnl>0?`rgba(0,229,160,${.06+int*.3})`:`rgba(255,77,77,${.06+int*.3})`
+                          return(
+                            <div key={mi} className="rounded py-2 px-1 text-center" style={{background:bg}}>
+                              <div className="text-[8px] text-white/50 mono">{months[mi]}</div>
+                              <div className={'text-[10px] font-bold mono mt-0.5 '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+                <div className="flex gap-4 mt-2 text-[9px] text-white/40 mono">
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#00e5a0]/20"></span>Profit</span>
                   <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-sm bg-[#ff4d4d]/20"></span>Loss</span>
-                  <span className="text-white/8">|</span>
+                  <span className="text-white/15">|</span>
                   <span>22 green · 3 red</span>
                 </div>
               </div>
             </div>
-          )}
+            )
+          })()}
 
           {/* Summary stats */}
           {perf?.monthly&&(()=>{
