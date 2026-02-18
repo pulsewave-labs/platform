@@ -7,27 +7,11 @@ function useCountUp(end: number, decimals = 0, duration = 2200) {
   const [value, setValue] = useState(0)
   const ref = useRef<HTMLDivElement>(null)
   const animated = useRef(false)
-  const visible = useRef(false)
   useEffect(() => {
-    if (!ref.current) return
-    const obs = new IntersectionObserver(([e]) => {
-      visible.current = e.isIntersecting
-      if (e.isIntersecting && end > 0 && !animated.current) {
-        animated.current = true
-        let s: number
-        const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
-        requestAnimationFrame(step)
-      }
-    }, { threshold: 0 })
-    obs.observe(ref.current)
-    return () => obs.disconnect()
-  }, [end, duration])
-  // If data arrives after element is already visible, animate now
-  useEffect(() => {
-    if (end > 0 && visible.current && !animated.current) {
+    if (end > 0 && !animated.current) {
       animated.current = true
-      let s: number
-      const step = (t: number) => { if (!s) s = t; const p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step) }
+      var s = 0
+      var step = function(t: number) { if (!s) s = t; var p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step); }
       requestAnimationFrame(step)
     }
   }, [end, duration])
