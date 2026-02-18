@@ -454,14 +454,12 @@ export default function DashboardClientPage() {
 
       {/* Lifetime stats */}
       {stats && (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
           {[
             { label: 'TOTAL P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
             { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
             { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
             { label: 'PROFIT FACTOR', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
-            { label: 'TRADES', value: String(stats.totalTrades), color: '#e0e0e0' },
-            { label: 'MAX DD', value: '-' + stats.maxDrawdown + '%', color: '#ff4d4d' },
           ].map(function(s, i) {
             return (
               <div key={i} className="bg-[#0c0c0c] px-4 py-3">
