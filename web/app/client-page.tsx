@@ -125,7 +125,7 @@ export default function LandingClientPage() {
           {/* Terminal — proof strip */}
           <div className="fu4 t">
             <div className="th">
-              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              
               <span className="text-[9px] text-white/30 mono ml-1">live_performance</span>
               <span className="text-[9px] text-white/15 mono ml-auto hidden sm:inline">{time}</span>
             </div>
@@ -194,7 +194,7 @@ export default function LandingClientPage() {
             ].map((s,i)=>(
               <div key={i} className="t lift">
                 <div className="th">
-                  <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                  
                   <span className="text-[9px] text-white/30 mono ml-1">step_{s.n}</span>
                 </div>
                 <div className="p-5">
@@ -231,7 +231,7 @@ export default function LandingClientPage() {
             return(
             <div className="t mb-6">
               <div className="th">
-                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                
                 <span className="text-[9px] text-white/30 mono ml-1">monthly_pnl — {perf.monthly.length} months tracked</span>
               </div>
               <div className="p-4 space-y-3">
@@ -288,7 +288,7 @@ export default function LandingClientPage() {
           {/* Trade feed */}
           <div className="t">
             <div className="th">
-              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              
               <span className="text-[9px] text-white/30 mono ml-1">recent_trades · 7-day delay</span>
               <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/40 mono">LIVE</span></span>
             </div>
@@ -381,7 +381,7 @@ export default function LandingClientPage() {
             return (
           <div className="t">
             <div className="th">
-              <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+              
               <span className="text-[9px] text-white/30 mono ml-1">recent_winner</span>
               <span className="flex items-center gap-1.5 ml-auto">
                 <span className="text-[9px] text-[#00e5a0]/50 mono font-bold">+${Number(win.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
@@ -455,7 +455,7 @@ export default function LandingClientPage() {
               <h3 className="text-xl font-bold tracking-tight mb-4">Built for reliability.</h3>
               <div className="t">
                 <div className="th">
-                  <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                  
                   <span className="text-[9px] text-white/30 mono ml-1">system_health</span>
                 </div>
                 <div className="divide-y divide-white/[0.02]">
@@ -498,7 +498,7 @@ export default function LandingClientPage() {
           <div className="grid md:grid-cols-2 gap-3 max-w-2xl mx-auto">
             <div className="t">
               <div className="th">
-                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                
                 <span className="text-[9px] text-white/30 mono ml-1">monthly</span>
               </div>
               <div className="p-6">
@@ -518,7 +518,7 @@ export default function LandingClientPage() {
             <div className="t relative" style={{borderColor:'rgba(0,229,160,.15)'}}>
               <div className="absolute -top-2 right-4 px-2 py-px bg-[#00e5a0] text-black text-[8px] font-bold mono tracking-wider rounded">2 MONTHS FREE</div>
               <div className="th">
-                <div className="td bg-[#ff5f57]"></div><div className="td bg-[#febc2e]"></div><div className="td bg-[#28c840]"></div>
+                
                 <span className="text-[9px] text-white/30 mono ml-1">annual</span>
               </div>
               <div className="p-6">
