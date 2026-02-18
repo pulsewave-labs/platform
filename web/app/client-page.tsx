@@ -150,7 +150,7 @@ export default function LandingClientPage() {
             Most traders lose because they trade on emotion. Our Market Structure engine doesn't have emotions. It scans. It waits. It strikes.
           </p>
           <p className="fu2 text-[14px] text-white/65 max-w-md mb-10 leading-relaxed">
-            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Now it sends you the exact same signals. straight to Telegram.
+            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Now it sends you the exact same signals, straight to Telegram.
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
@@ -803,10 +803,10 @@ export default function LandingClientPage() {
           <div className="space-y-3">
             {[
               {q:'Why is the win rate only '+Math.round(winRate)+'%?',a:'Because our winners are much larger than our losers. Profit factor of '+profitFactor.toFixed(2)+' means for every $1 lost, we make $'+profitFactor.toFixed(2)+' back. Over '+totalTrades+' trades, that turns $10K into $'+Math.round(finalBalance).toLocaleString()+'. Win rate is a vanity metric. profit factor is what matters.'},
-              {q:'How do I know the results are real?',a:'Every trade is published with timestamps, entry/exit prices, P&L, and running balance. Audit all '+totalTrades+' trades on our performance page. We show the losses too. '+redMonths+' red month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. Name one other signal service that does this.'},
+              {q:'How do I know the results are real?',a:'Every trade is published with timestamps, entry/exit prices, P&L, and running balance. Audit all '+totalTrades+' trades on our performance page. We show the losses too: '+redMonths+' red month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. Name one other signal service that does this.'},
               {q:'I\'ve never traded before. Can I still use this?',a:'Yes. Each signal includes: pair, direction, entry price, stop loss, take profit, and position size for your account. If you can copy 5 numbers into Bitget (or any exchange), you can follow the signals. We\'re not teaching you to trade. we\'re giving you the trade.'},
-              {q:'What exchange do I need?',a:'We recommend Bitget for USDT-M futures, but signals work on any exchange that supports crypto futures. Bybit, OKX, Binance, etc. The levels are the same everywhere.'},
-              {q:'How many signals per month?',a:'Roughly '+Math.round(avgPerMonth)+' signals per month on average across all pairs. Quality over quantity. we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
+              {q:'What exchange do I need?',a:'We recommend Bitget for USDT-M futures, but signals work on any exchange that supports crypto futures: Bybit, OKX, Binance, etc. The levels are the same everywhere.'},
+              {q:'How many signals per month?',a:'Roughly '+Math.round(avgPerMonth)+' signals per month on average across all pairs. Quality over quantity, we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
               {q:'Can I cancel anytime?',a:'Yes. Monthly subscribers cancel anytime, no questions asked. No lock-in, no cancellation fees. If the signals don\'t pay for themselves, you shouldn\'t be paying for them.'},
             ].map((faq,i)=>(
               <div key={i} className="border border-white/[0.04] rounded-xl p-6 hover:border-white/[0.06] transition-colors">
