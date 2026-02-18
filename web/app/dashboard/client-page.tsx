@@ -318,19 +318,19 @@ export default function DashboardClientPage() {
 
       {/* Stats strip */}
       {stats && (
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-[#161616] rounded-lg overflow-hidden">
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-white/[0.02] rounded-lg overflow-hidden">
           {[
-            { label: 'P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
+            { label: 'TOTAL P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
             { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
             { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
-            { label: 'PF', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
+            { label: 'PROFIT FACTOR', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
             { label: 'TRADES', value: String(stats.totalTrades), color: '#e0e0e0' },
             { label: 'MAX DD', value: '-' + stats.maxDrawdown + '%', color: '#ff4d4d' },
           ].map(function(s, i) {
             return (
-              <div key={i} className="bg-[#0c0c0c] px-3 py-2.5">
-                <div className="text-[9px] text-[#777] mono tracking-widest leading-none mb-1.5">{s.label}</div>
-                <div className="text-base mono font-semibold leading-none" style={{ color: s.color }}>{s.value}</div>
+              <div key={i} className="bg-[#0c0c0c] px-4 py-3">
+                <div className="text-[8px] text-[#666] mono tracking-[.15em] leading-none mb-2">{s.label}</div>
+                <div className="text-[17px] mono font-bold leading-none" style={{ color: s.color }}>{s.value}</div>
               </div>
             )
           })}
@@ -342,18 +342,18 @@ export default function DashboardClientPage() {
 
       {/* Active Signals */}
       <section>
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-[10px] mono text-[#888] tracking-widest font-medium">ACTIVE SIGNALS</h2>
-          <span className="text-[10px] mono px-1.5 py-0.5 rounded bg-[#161616] text-[#777]">{activeSignals.length}</span>
+        <div className="flex items-center gap-2.5 mb-3">
+          <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">ACTIVE SIGNALS</h2>
+          <span className="text-[10px] mono px-2 py-0.5 rounded-md bg-white/[0.03] text-[#777]">{activeSignals.length}</span>
         </div>
 
         {activeSignals.length === 0 ? (
-          <div className="border border-[#161616] rounded-lg py-10 flex flex-col items-center">
-            <div className="w-32 h-px bg-[#161616] rounded-full overflow-hidden mb-4">
-              <div className="w-10 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
+          <div className="border border-white/[0.04] rounded-lg py-12 flex flex-col items-center bg-[#0c0c0c]">
+            <div className="w-40 h-px bg-white/[0.04] rounded-full overflow-hidden mb-5">
+              <div className="w-12 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
             </div>
-            <div className="text-[#777] mono text-xs mb-0.5">SCANNING FOR SETUPS</div>
-            <div className="text-[#282828] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
+            <div className="text-[#888] mono text-[12px] font-medium mb-1">Scanning for setups</div>
+            <div className="text-[#444] text-[11px] mono">Signals fire instantly via Telegram when detected</div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -446,49 +446,50 @@ export default function DashboardClientPage() {
 
       {/* Recent Trades */}
       <section>
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-3">
-            <h2 className="text-[10px] mono text-[#888] tracking-widest font-medium">RECENT TRADES</h2>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5">
+            <h2 className="text-[11px] mono text-[#888] tracking-[.15em] font-medium">RECENT TRADES</h2>
             {currentStreak > 1 && (
-              <span className={'text-[9px] mono px-1.5 py-0.5 rounded ' + (streakType === 'W' ? 'bg-[#00e5a0]/8 text-[#00e5a0]' : 'bg-[#ff4d4d]/8 text-[#ff4d4d]')}>
+              <span className={'text-[9px] mono px-2 py-0.5 rounded-md ' + (streakType === 'W' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>
                 {currentStreak}{streakType} STREAK
               </span>
             )}
           </div>
-          <a href="/dashboard/history" className="text-[10px] mono text-[#666] hover:text-[#888] transition-colors">ALL TRADES →</a>
+          <a href="/dashboard/history" className="text-[10px] mono text-[#555] hover:text-[#888] transition-colors tracking-wider">ALL TRADES →</a>
         </div>
 
-        <div className="border border-[#161616] rounded-lg overflow-hidden">
+        {/* Desktop table */}
+        <div className="hidden md:block border border-white/[0.04] rounded-lg overflow-hidden">
           <div className="overflow-x-auto scrollbar-none">
             <table className="w-full text-[11px] mono">
               <thead>
-                <tr className="bg-[#0c0c0c] text-[#666]">
-                  <th className="text-left px-3 py-2 font-medium tracking-wider">DATE</th>
-                  <th className="text-left px-3 py-2 font-medium tracking-wider">PAIR</th>
-                  <th className="text-left px-3 py-2 font-medium tracking-wider">SIDE</th>
-                  <th className="text-right px-3 py-2 font-medium tracking-wider">ENTRY</th>
-                  <th className="text-right px-3 py-2 font-medium tracking-wider">EXIT</th>
-                  <th className="text-right px-3 py-2 font-medium tracking-wider">P&L</th>
-                  <th className="text-center px-3 py-2 font-medium tracking-wider">EXIT</th>
+                <tr className="bg-[#0c0c0c] text-[#555]">
+                  <th className="text-left px-4 py-2.5 font-medium tracking-[.1em]">DATE</th>
+                  <th className="text-left px-4 py-2.5 font-medium tracking-[.1em]">PAIR</th>
+                  <th className="text-left px-4 py-2.5 font-medium tracking-[.1em]">SIDE</th>
+                  <th className="text-right px-4 py-2.5 font-medium tracking-[.1em]">ENTRY</th>
+                  <th className="text-right px-4 py-2.5 font-medium tracking-[.1em]">EXIT</th>
+                  <th className="text-right px-4 py-2.5 font-medium tracking-[.1em]">P&L</th>
+                  <th className="text-center px-4 py-2.5 font-medium tracking-[.1em]">RESULT</th>
                 </tr>
               </thead>
               <tbody>
                 {recentTrades.map(function(t: any, i: number) {
                   var isWin = t.pnl >= 0
                   return (
-                    <tr key={i} className={'border-t border-[#111] transition-colors hover:bg-[#0e0e0e] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
-                      <td className="px-3 py-2 text-[#777]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                      <td className="px-3 py-2 text-[#999] font-medium">{t.pair}</td>
-                      <td className="px-3 py-2">
-                        <span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span>
+                    <tr key={i} className={'border-t border-white/[0.02] transition-colors hover:bg-white/[0.01] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
+                      <td className="px-4 py-2.5 text-[#777]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                      <td className="px-4 py-2.5 text-[#aaa] font-medium">{t.pair}</td>
+                      <td className="px-4 py-2.5">
+                        <span className={'px-1.5 py-0.5 rounded text-[9px] font-bold ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
                       </td>
-                      <td className="px-3 py-2 text-right text-[#666]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                      <td className="px-3 py-2 text-right text-[#666]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                      <td className={'px-3 py-2 text-right font-medium ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                      <td className="px-4 py-2.5 text-right text-[#777]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className="px-4 py-2.5 text-right text-[#777]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className={'px-4 py-2.5 text-right font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
                         {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
                       </td>
-                      <td className="px-3 py-2 text-center">
-                        <span className={t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50'}>{t.exit_reason}</span>
+                      <td className="px-4 py-2.5 text-center">
+                        <span className={'text-[9px] font-medium tracking-wider ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
                       </td>
                     </tr>
                   )
@@ -497,9 +498,30 @@ export default function DashboardClientPage() {
             </table>
           </div>
         </div>
-      </section>
 
-      {/* removed — monthly P&L moved to history */}
+        {/* Mobile cards */}
+        <div className="md:hidden border border-white/[0.04] rounded-lg overflow-hidden divide-y divide-white/[0.02]">
+          {recentTrades.map(function(t: any, i: number) {
+            var isWin = t.pnl >= 0
+            return (
+              <div key={i} className={'px-4 py-3 ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
+                <div className="flex items-center justify-between mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className={'text-[9px] mono font-bold px-1.5 py-0.5 rounded ' + (t.action === 'LONG' ? 'bg-[#00e5a0]/[0.06] text-[#00e5a0]' : 'bg-[#ff4d4d]/[0.06] text-[#ff4d4d]')}>{t.action}</span>
+                    <span className="text-[13px] text-[#aaa] mono font-medium">{t.pair}</span>
+                  </div>
+                  <span className={'text-[14px] mono font-bold ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>{isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}</span>
+                </div>
+                <div className="flex items-center justify-between text-[10px] mono text-[#555]">
+                  <span>{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                  <span>${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})} → ${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                  <span className={'font-medium ' + (t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40')}>{t.exit_reason === 'TP' ? 'WIN' : 'LOSS'}</span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </section>
     </div>
   )
 }

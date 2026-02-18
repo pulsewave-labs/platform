@@ -159,7 +159,7 @@ export default function SettingsClientPage() {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm text-[#ccc] font-medium">Pro Plan</div>
-              <div className="text-[10px] text-[#777] mono">$97/month</div>
+              <div className="text-[10px] text-[#777] mono">$149/month</div>
             </div>
             <span className="text-[9px] mono text-[#00e5a0] px-2 py-0.5 bg-[#00e5a0]/8 border border-[#00e5a0]/15 rounded tracking-wider">ACTIVE</span>
           </div>
