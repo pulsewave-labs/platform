@@ -164,7 +164,7 @@ export default function LandingClientPage() {
 
           {/* Stats bar */}
           <div className="fu4 t">
-            <div className="grid grid-cols-2 md:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-px">
               {[
                 { label:'STARTING BALANCE', sub:'→ CURRENT', ref:equity.ref, val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
                 { label:'TOTAL TRADES', sub:'VERIFIED', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
@@ -180,7 +180,7 @@ export default function LandingClientPage() {
           </div>
 
           {/* Trust strip */}
-          <div className="fu4 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-6 text-[16px] text-white/55">
+          <div className="fu4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-[13px] md:text-[16px] text-white/55">
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>No hidden fees</span>
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>Cancel anytime</span>
             <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>All trades public</span>
@@ -195,7 +195,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 2. PROBLEM AGITATION ════════ */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <div className="text-[12px] text-[#ff4d4d]/75 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
@@ -236,7 +236,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 3. MECHANISM ════════ */}
-      <section id="how" className="py-24 px-6 md:px-10">
+      <section id="how" className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
@@ -279,7 +279,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 4. PROOF ════════ */}
-      <section id="proof" className="py-24 px-6 md:px-10">
+      <section id="proof" className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -312,7 +312,7 @@ export default function LandingClientPage() {
                         <span className="text-[14px] text-white/65 mono font-semibold">{year}</span>
                         <span className={'text-[14px] mono font-bold '+(yearTotal>=0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{yearTotal>=0?'+':''}${(yearTotal/1000).toFixed(1)}K</span>
                       </div>
-                      <div className="grid grid-cols-6 md:grid-cols-12 gap-1.5">
+                      <div className="grid grid-cols-4 md:grid-cols-12 gap-1">
                         {Array.from({length:12},(_,mi)=>{
                           const monthKey=`${year}-${String(mi+1).padStart(2,'0')}`
                           const md=byYear[year].find((x:any)=>x.month===monthKey)
@@ -336,7 +336,7 @@ export default function LandingClientPage() {
           })()}
 
           {/* Key stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
+          <div className="grid grid-cols-2 gap-2 mb-5">
             {perf?.monthly&&(()=>{
               const m=perf.monthly, total=m.reduce((s:number,x:any)=>s+x.pnl,0), avg=total/m.length
               const best=m.reduce((a:any,b:any)=>a.pnl>b.pnl?a:b,m[0]), worst=m.reduce((a:any,b:any)=>a.pnl<b.pnl?a:b,m[0])
@@ -391,8 +391,8 @@ export default function LandingClientPage() {
                     </div>
                     <span className={'text-[16px] mono font-bold '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[16px] mono text-white/55">
-                    <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                  <div className="flex items-center justify-between text-[12px] mono text-white/40">
+                    <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
                     <span>${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})} → ${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</span>
                     <span className={'tracking-wider font-medium '+(t.exit_reason==='TP'?'text-[#00e5a0]/60':'text-[#ff4d4d]/75')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
                   </div>
@@ -411,8 +411,8 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 5. SIGNAL PREVIEW ════════ */}
-      <section className="py-24 px-6 md:px-10">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_1.2fr] gap-12 items-center">
+      <section className="py-14 md:py-24 px-5 md:px-10">
+        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-12 items-center">
           <div>
             <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
@@ -507,7 +507,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 6. WHO THIS IS FOR ════════ */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
             <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">HONEST TAKE</div>
@@ -573,7 +573,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 7. PAIRS + SYSTEM ════════ */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
             <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
@@ -583,7 +583,7 @@ export default function LandingClientPage() {
           </div>
 
           {/* Pair cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-8">
             {pairList.map((x,i)=>{
               const maxPnl = Math.max(...pairList.map(p=>p.pnl))
               const barW = maxPnl > 0 ? (x.pnl / maxPnl * 100) : 0
@@ -600,7 +600,7 @@ export default function LandingClientPage() {
           </div>
 
           {/* System specs. horizontal strip */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
+          <div className="grid grid-cols-3 md:grid-cols-5 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
             {[
               {v:'24/7', l:'Monitoring', s:'Every candle close'},
               {v:'< 60s', l:'Signal Delivery', s:'Detection → Telegram'},
@@ -623,7 +623,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 8. PRICING ════════ */}
-      <section id="pricing" className="py-24 px-6 md:px-10">
+      <section id="pricing" className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">PRICING</p>
@@ -711,29 +711,26 @@ export default function LandingClientPage() {
                 <p className="text-[14px] text-white/40">What $149/mo looks like on a $10K account</p>
               </div>
 
-              <div className="flex items-center justify-center gap-3 md:gap-5 mb-8">
-                {/* Cost */}
-                <div className="text-center">
-                  <div className="text-[13px] text-white/30 mono mb-1">You pay</div>
-                  <div className="text-[28px] font-bold mono text-white/70">$149</div>
-                  <div className="text-[11px] text-white/25 mono">/month</div>
+              <div className="flex items-center justify-center gap-2 md:gap-5 mb-8 flex-wrap">
+                <div className="text-center px-3">
+                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">You pay</div>
+                  <div className="text-[22px] md:text-[28px] font-bold mono text-white/70">$149</div>
+                  <div className="text-[10px] md:text-[11px] text-white/25 mono">/month</div>
                 </div>
 
-                <div className="text-[20px] text-white/15 mono">→</div>
+                <div className="text-[18px] text-white/15 mono">→</div>
 
-                {/* Avg return */}
-                <div className="text-center">
-                  <div className="text-[13px] text-white/30 mono mb-1">Avg return</div>
-                  <div className="text-[28px] font-bold mono text-[#00e5a0]">+${Math.round(avgMonthly).toLocaleString()}</div>
-                  <div className="text-[11px] text-[#00e5a0]/50 mono">/month</div>
+                <div className="text-center px-3">
+                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">Avg return</div>
+                  <div className="text-[22px] md:text-[28px] font-bold mono text-[#00e5a0]">+${Math.round(avgMonthly).toLocaleString()}</div>
+                  <div className="text-[10px] md:text-[11px] text-[#00e5a0]/50 mono">/month</div>
                 </div>
 
-                <div className="text-[20px] text-white/15 mono">=</div>
+                <div className="text-[18px] text-white/15 mono">=</div>
 
-                {/* ROI */}
-                <div className="text-center">
-                  <div className="text-[13px] text-white/30 mono mb-1">ROI</div>
-                  <div className="text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
+                <div className="text-center px-3">
+                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">ROI</div>
+                  <div className="text-[30px] md:text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
                 </div>
               </div>
 
@@ -749,7 +746,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 8.5. ACCOUNT SIMULATOR ════════ */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">SCALE IT</div>
@@ -761,8 +758,8 @@ export default function LandingClientPage() {
             </p>
           </div>
 
-          <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
+          <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-x-auto">
+            <div className="grid grid-cols-5 gap-px bg-white/[0.02] min-w-[600px]">
               {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
                 var multiplier = acct / 10000
                 var tp = totalProfit * multiplier
@@ -793,7 +790,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 9. FAQ ════════ */}
-      <section className="py-24 px-6 md:px-10">
+      <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
             <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">QUESTIONS</div>
@@ -823,7 +820,7 @@ export default function LandingClientPage() {
 
 
       {/* ════════ 10. FINAL CTA ════════ */}
-      <section className="py-32 px-6 md:px-10 relative overflow-hidden">
+      <section className="py-20 md:py-32 px-5 md:px-10 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.04) 0%,transparent 60%)'}}/>
         <div className="max-w-2xl mx-auto text-center relative z-10">
           <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2 mb-8">
@@ -832,7 +829,7 @@ export default function LandingClientPage() {
           </div>
 
           <div className="mb-8">
-            <span className="text-[48px] md:text-[64px] font-bold mono text-[#00e5a0] glow leading-none">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
+            <span className="text-[36px] md:text-[64px] font-bold mono text-[#00e5a0] glow leading-none">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
           </div>
 
           <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
