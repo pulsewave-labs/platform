@@ -2,6 +2,30 @@
 
 import { useState, useEffect } from 'react'
 
+function timeAgo(dateStr: string) {
+  var ms = Date.now() - new Date(dateStr).getTime()
+  var mins = Math.floor(ms / 60000)
+  if (mins < 60) return mins + 'm ago'
+  var hrs = Math.floor(mins / 60)
+  if (hrs < 24) return hrs + 'h ago'
+  return Math.floor(hrs / 24) + 'd ago'
+}
+
+function MiniSparkline({ data, width, height }: { data: number[], width: number, height: number }) {
+  if (!data || data.length < 2) return null
+  var min = Math.min.apply(null, data)
+  var max = Math.max.apply(null, data)
+  var range = max - min || 1
+  var points = data.map(function(v, i) {
+    return (i / (data.length - 1)) * width + ',' + (height - ((v - min) / range) * height)
+  }).join(' ')
+  return (
+    <svg width={width} height={height} className="inline-block">
+      <polyline fill="none" stroke="#00e5a0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={points} />
+    </svg>
+  )
+}
+
 export default function DashboardClientPage() {
   const [signals, setSignals] = useState([])
   const [performance, setPerformance] = useState(null)
@@ -20,51 +44,83 @@ export default function DashboardClientPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-[#333] text-sm font-mono">Loading...</div>
+      <div className="flex flex-col items-center justify-center py-32">
+        <div className="w-48 h-px bg-[#1a1a1a] rounded-full overflow-hidden mb-3">
+          <div className="w-16 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/40 to-transparent scan-line"></div>
+        </div>
+        <div className="text-[#333] text-[10px] mono tracking-widest">LOADING TERMINAL</div>
       </div>
     )
   }
 
   var stats = performance ? (performance as any).stats : null
-  var recentTrades = performance ? (performance as any).trades.slice(0, 15) : []
+  var monthly = performance ? (performance as any).monthly || [] : []
+  var recentTrades = performance ? (performance as any).trades.slice(0, 20) : []
   var activeSignals = signals.filter(function(s: any) { return s.status === 'active' })
+  var equityCurve = monthly.map(function(m: any) { return m.balance })
+
+  // Streak calc
+  var currentStreak = 0
+  var streakType = ''
+  for (var i = 0; i < recentTrades.length; i++) {
+    if (i === 0) {
+      streakType = recentTrades[i].pnl >= 0 ? 'W' : 'L'
+      currentStreak = 1
+    } else if ((recentTrades[i].pnl >= 0 ? 'W' : 'L') === streakType) {
+      currentStreak++
+    } else break
+  }
 
   return (
-    <div className="space-y-6 pb-20 md:pb-0">
+    <div className="space-y-4">
 
-      {/* Stats strip */}
+      {/* Equity + Stats */}
       {stats && (
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-px bg-[#1a1a1a] rounded-lg overflow-hidden">
-          {[
-            { label: 'TOTAL P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: 'text-green-400' },
-            { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: 'text-green-400' },
-            { label: 'WIN RATE', value: stats.winRate + '%', color: 'text-white' },
-            { label: 'PROFIT FACTOR', value: stats.profitFactor.toFixed(2), color: 'text-white' },
-            { label: 'TRADES', value: stats.totalTrades.toString(), color: 'text-white' },
-            { label: 'MAX DD', value: stats.maxDrawdown + '%', color: 'text-red-400' },
-          ].map(function(s, i) {
-            return (
-              <div key={i} className="bg-[#0d0d0d] p-4">
-                <div className="text-[10px] text-[#555] font-mono tracking-wider mb-1">{s.label}</div>
-                <div className={'text-lg font-mono font-semibold ' + s.color}>{s.value}</div>
-              </div>
-            )
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+          {/* Main stats */}
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-[#161616] rounded-lg overflow-hidden">
+            {[
+              { label: 'P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
+              { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
+              { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
+              { label: 'PF', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
+              { label: 'TRADES', value: String(stats.totalTrades), color: '#e0e0e0' },
+              { label: 'MAX DD', value: '-' + stats.maxDrawdown + '%', color: '#ff4d4d' },
+            ].map(function(s, i) {
+              return (
+                <div key={i} className="bg-[#0c0c0c] px-3 py-2.5">
+                  <div className="text-[9px] text-[#444] mono tracking-widest leading-none mb-1.5">{s.label}</div>
+                  <div className="text-base mono font-semibold leading-none" style={{ color: s.color }}>{s.value}</div>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Mini equity curve */}
+          {equityCurve.length > 2 && (
+            <div className="bg-[#0c0c0c] border border-[#161616] rounded-lg px-4 py-2.5 flex flex-col items-center justify-center">
+              <div className="text-[9px] text-[#444] mono tracking-widest mb-1">EQUITY</div>
+              <MiniSparkline data={equityCurve} width={120} height={32} />
+              <div className="text-[9px] mono text-[#555] mt-1">${stats.startingCapital.toLocaleString()} → ${stats.finalBalance.toLocaleString()}</div>
+            </div>
+          )}
         </div>
       )}
 
-      {/* Active signals */}
-      <div>
-        <div className="flex items-center gap-3 mb-3">
-          <h2 className="text-xs font-mono text-[#555] tracking-wider">ACTIVE SIGNALS</h2>
-          <span className="text-[10px] font-mono text-[#333]">{activeSignals.length}</span>
+      {/* Active Signals */}
+      <section>
+        <div className="flex items-center gap-2 mb-2">
+          <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">ACTIVE SIGNALS</h2>
+          <span className="text-[10px] mono px-1.5 py-0.5 rounded bg-[#161616] text-[#444]">{activeSignals.length}</span>
         </div>
 
         {activeSignals.length === 0 ? (
-          <div className="border border-[#1a1a1a] rounded-lg p-8 text-center">
-            <div className="text-[#333] font-mono text-sm mb-1">NO ACTIVE SIGNALS</div>
-            <div className="text-[#222] text-xs">Bot is scanning for setups. Signals fire instantly via Telegram.</div>
+          <div className="border border-[#161616] rounded-lg py-10 flex flex-col items-center">
+            <div className="w-32 h-px bg-[#161616] rounded-full overflow-hidden mb-4">
+              <div className="w-10 h-full bg-gradient-to-r from-transparent via-[#00e5a0]/30 to-transparent scan-line"></div>
+            </div>
+            <div className="text-[#444] mono text-xs mb-0.5">SCANNING FOR SETUPS</div>
+            <div className="text-[#282828] text-[10px] mono">Signals fire instantly via Telegram when detected</div>
           </div>
         ) : (
           <div className="space-y-2">
@@ -78,61 +134,79 @@ export default function DashboardClientPage() {
               var rr = risk > 0 ? (reward / risk).toFixed(1) : '0'
               var slPct = ((risk / entry) * 100).toFixed(2)
               var tpPct = ((reward / entry) * 100).toFixed(2)
+              var rrNum = risk > 0 ? reward / risk : 0
+              var barWidth = Math.min(rrNum / 4 * 100, 100) // cap at 4:1
 
               return (
-                <div key={sig.id} className="border border-[#1a1a1a] rounded-lg overflow-hidden">
-                  {/* Signal header */}
-                  <div className="flex items-center justify-between px-4 py-3 bg-[#0d0d0d]">
+                <div key={sig.id} className="border border-[#161616] rounded-lg overflow-hidden">
+                  {/* Header */}
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-[#0c0c0c]">
                     <div className="flex items-center gap-3">
-                      <span className={'px-2 py-0.5 rounded text-[10px] font-mono font-bold ' + (isLong ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20')}>
+                      <span className={'px-2 py-0.5 rounded text-[10px] mono font-bold tracking-wider ' + (isLong ? 'bg-[#00e5a0]/8 text-[#00e5a0] border border-[#00e5a0]/15' : 'bg-[#ff4d4d]/8 text-[#ff4d4d] border border-[#ff4d4d]/15')}>
                         {sig.direction}
                       </span>
-                      <span className="font-mono font-semibold text-white">{sig.pair}</span>
+                      <span className="mono font-semibold text-white text-sm">{sig.pair}</span>
+                      <span className="text-[10px] mono text-[#333]">{timeAgo(sig.created_at)}</span>
                     </div>
-                    <div className="flex items-center gap-4 text-xs font-mono">
-                      <span className="text-[#555]">R:R</span>
-                      <span className="text-green-400 font-semibold">{rr}:1</span>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-[9px] mono text-[#444]">R:R</div>
+                        <div className="text-sm mono font-bold text-[#00e5a0]">{rr}:1</div>
+                      </div>
                     </div>
+                  </div>
+
+                  {/* Risk/Reward visual bar */}
+                  <div className="h-1 bg-[#161616] flex">
+                    <div className="h-full bg-[#ff4d4d]/30" style={{ width: '25%' }}></div>
+                    <div className="h-full bg-[#00e5a0]/40" style={{ width: barWidth * 0.75 + '%' }}></div>
                   </div>
 
                   {/* Levels */}
-                  <div className="grid grid-cols-3 gap-px bg-[#1a1a1a]">
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[10px] text-[#444] font-mono mb-1">ENTRY</div>
-                      <div className="font-mono text-sm text-white">${entry.toLocaleString()}</div>
+                  <div className="grid grid-cols-3 gap-px bg-[#131313]">
+                    <div className="bg-[#0a0a0a] px-4 py-2.5">
+                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">ENTRY</div>
+                      <div className="mono text-sm text-white font-medium">${entry.toLocaleString()}</div>
                     </div>
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[10px] text-[#444] font-mono mb-1">STOP LOSS</div>
-                      <div className="font-mono text-sm text-red-400">${sl.toLocaleString()}</div>
-                      <div className="text-[10px] font-mono text-red-400/50">-{slPct}%</div>
+                    <div className="bg-[#0a0a0a] px-4 py-2.5">
+                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">STOP LOSS</div>
+                      <div className="mono text-sm text-[#ff4d4d] font-medium">${sl.toLocaleString()}</div>
+                      <div className="text-[9px] mono text-[#ff4d4d]/40">-{slPct}%</div>
                     </div>
-                    <div className="bg-[#0a0a0a] px-4 py-3">
-                      <div className="text-[10px] text-[#444] font-mono mb-1">TAKE PROFIT</div>
-                      <div className="font-mono text-sm text-green-400">${tp.toLocaleString()}</div>
-                      <div className="text-[10px] font-mono text-green-400/50">+{tpPct}%</div>
+                    <div className="bg-[#0a0a0a] px-4 py-2.5">
+                      <div className="text-[9px] text-[#444] mono tracking-wider mb-1">TAKE PROFIT</div>
+                      <div className="mono text-sm text-[#00e5a0] font-medium">${tp.toLocaleString()}</div>
+                      <div className="text-[9px] mono text-[#00e5a0]/40">+{tpPct}%</div>
                     </div>
                   </div>
 
+                  {/* Reasoning */}
+                  {sig.reasoning && (
+                    <div className="px-4 py-2 bg-[#0a0a0a] border-t border-[#131313]">
+                      <div className="text-[10px] text-[#555] leading-relaxed">{sig.reasoning}</div>
+                    </div>
+                  )}
+
                   {/* Position sizing */}
-                  <div className="px-4 py-3 bg-[#0a0a0a] border-t border-[#1a1a1a]">
-                    <div className="text-[10px] text-[#444] font-mono mb-2">POSITION SIZING · 10% RISK · 20× LEVERAGE</div>
-                    <div className="grid grid-cols-5 gap-2 text-[10px] font-mono">
-                      <div className="text-[#444]">ACCOUNT</div>
-                      <div className="text-[#444]">RISK</div>
-                      <div className="text-[#444]">SIZE</div>
-                      <div className="text-[#444]">MARGIN</div>
-                      <div className="text-[#444] text-right">IF TP ↑</div>
+                  <div className="px-4 py-2.5 bg-[#0a0a0a] border-t border-[#131313]">
+                    <div className="text-[9px] text-[#333] mono tracking-wider mb-2">POSITION SIZING · 10% RISK · 20× LEV</div>
+                    <div className="grid grid-cols-5 gap-x-2 gap-y-0.5 text-[10px] mono">
+                      <div className="text-[#333] pb-0.5">ACCT</div>
+                      <div className="text-[#333] pb-0.5">RISK</div>
+                      <div className="text-[#333] pb-0.5">SIZE</div>
+                      <div className="text-[#333] pb-0.5">MARGIN</div>
+                      <div className="text-[#333] pb-0.5 text-right">TP PROFIT</div>
                       {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
                         var riskAmt = acct * 0.10
                         var posSize = risk > 0 ? riskAmt / (risk / entry) : 0
                         var margin = posSize / 20
                         var profit = (posSize / entry) * reward
                         return [
-                          <div key={acct + 'a'} className="text-[#888]">${acct.toLocaleString()}</div>,
-                          <div key={acct + 'r'} className="text-yellow-400/80">${riskAmt.toLocaleString()}</div>,
-                          <div key={acct + 's'} className="text-[#888]">${Math.round(posSize).toLocaleString()}</div>,
-                          <div key={acct + 'm'} className="text-[#555]">${Math.round(margin).toLocaleString()}</div>,
-                          <div key={acct + 'p'} className="text-green-400 text-right">+${Math.round(profit).toLocaleString()}</div>,
+                          <div key={acct + 'a'} className="text-[#666]">${acct >= 1000 ? (acct / 1000) + 'K' : acct}</div>,
+                          <div key={acct + 'r'} className="text-[#c9a227]">${riskAmt >= 1000 ? (riskAmt / 1000).toFixed(1) + 'K' : riskAmt}</div>,
+                          <div key={acct + 's'} className="text-[#666]">${Math.round(posSize) >= 1000 ? (Math.round(posSize) / 1000).toFixed(0) + 'K' : Math.round(posSize)}</div>,
+                          <div key={acct + 'm'} className="text-[#444]">${Math.round(margin) >= 1000 ? (Math.round(margin) / 1000).toFixed(1) + 'K' : Math.round(margin)}</div>,
+                          <div key={acct + 'p'} className="text-[#00e5a0] text-right">+${Math.round(profit) >= 1000 ? (Math.round(profit) / 1000).toFixed(1) + 'K' : Math.round(profit)}</div>,
                         ]
                       })}
                     </div>
@@ -142,53 +216,91 @@ export default function DashboardClientPage() {
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Recent trades */}
-      <div>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-xs font-mono text-[#555] tracking-wider">RECENT TRADES</h2>
-          <a href="/dashboard/history" className="text-[10px] font-mono text-[#444] hover:text-[#666] transition-colors">VIEW ALL →</a>
+      {/* Recent Trades */}
+      <section>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">RECENT TRADES</h2>
+            {currentStreak > 1 && (
+              <span className={'text-[9px] mono px-1.5 py-0.5 rounded ' + (streakType === 'W' ? 'bg-[#00e5a0]/8 text-[#00e5a0]' : 'bg-[#ff4d4d]/8 text-[#ff4d4d]')}>
+                {currentStreak}{streakType} STREAK
+              </span>
+            )}
+          </div>
+          <a href="/dashboard/history" className="text-[10px] mono text-[#333] hover:text-[#555] transition-colors">ALL TRADES →</a>
         </div>
 
-        <div className="border border-[#1a1a1a] rounded-lg overflow-hidden">
-          <table className="w-full text-xs font-mono">
-            <thead>
-              <tr className="bg-[#0d0d0d] text-[#444]">
-                <th className="text-left px-3 py-2.5 font-medium">DATE</th>
-                <th className="text-left px-3 py-2.5 font-medium">PAIR</th>
-                <th className="text-left px-3 py-2.5 font-medium">SIDE</th>
-                <th className="text-right px-3 py-2.5 font-medium">ENTRY</th>
-                <th className="text-right px-3 py-2.5 font-medium">EXIT</th>
-                <th className="text-right px-3 py-2.5 font-medium">P&L</th>
-                <th className="text-center px-3 py-2.5 font-medium">EXIT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentTrades.map(function(t: any, i: number) {
-                var isWin = t.pnl >= 0
-                return (
-                  <tr key={i} className="border-t border-[#141414] hover:bg-[#0d0d0d] transition-colors">
-                    <td className="px-3 py-2.5 text-[#555]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-                    <td className="px-3 py-2.5 text-[#ccc] font-medium">{t.pair}</td>
-                    <td className="px-3 py-2.5">
-                      <span className={t.action === 'LONG' ? 'text-green-400' : 'text-red-400'}>{t.action}</span>
-                    </td>
-                    <td className="px-3 py-2.5 text-right text-[#888]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="px-3 py-2.5 text-right text-[#888]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className={'px-3 py-2.5 text-right font-medium ' + (isWin ? 'text-green-400' : 'text-red-400')}>
-                      {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
-                    </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <span className={t.exit_reason === 'TP' ? 'text-green-400/60' : 'text-red-400/60'}>{t.exit_reason}</span>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+        <div className="border border-[#161616] rounded-lg overflow-hidden">
+          <div className="overflow-x-auto scrollbar-none">
+            <table className="w-full text-[11px] mono">
+              <thead>
+                <tr className="bg-[#0c0c0c] text-[#333]">
+                  <th className="text-left px-3 py-2 font-medium tracking-wider">DATE</th>
+                  <th className="text-left px-3 py-2 font-medium tracking-wider">PAIR</th>
+                  <th className="text-left px-3 py-2 font-medium tracking-wider">SIDE</th>
+                  <th className="text-right px-3 py-2 font-medium tracking-wider">ENTRY</th>
+                  <th className="text-right px-3 py-2 font-medium tracking-wider">EXIT</th>
+                  <th className="text-right px-3 py-2 font-medium tracking-wider">P&L</th>
+                  <th className="text-center px-3 py-2 font-medium tracking-wider">EXIT</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentTrades.map(function(t: any, i: number) {
+                  var isWin = t.pnl >= 0
+                  return (
+                    <tr key={i} className={'border-t border-[#111] transition-colors hover:bg-[#0e0e0e] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
+                      <td className="px-3 py-2 text-[#444]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                      <td className="px-3 py-2 text-[#999] font-medium">{t.pair}</td>
+                      <td className="px-3 py-2">
+                        <span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span>
+                      </td>
+                      <td className="px-3 py-2 text-right text-[#666]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className="px-3 py-2 text-right text-[#666]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                      <td className={'px-3 py-2 text-right font-medium ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                        {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                      </td>
+                      <td className="px-3 py-2 text-center">
+                        <span className={t.exit_reason === 'TP' ? 'text-[#00e5a0]/50' : 'text-[#ff4d4d]/50'}>{t.exit_reason}</span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      </section>
+
+      {/* Monthly Performance Mini Grid */}
+      {monthly.length > 0 && (
+        <section>
+          <div className="flex items-center gap-2 mb-2">
+            <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">MONTHLY P&L</h2>
+          </div>
+          <div className="grid grid-cols-5 md:grid-cols-12 lg:grid-cols-25 gap-1">
+            {monthly.map(function(m: any, i: number) {
+              var isPositive = m.pnl >= 0
+              var maxPnl = Math.max.apply(null, monthly.map(function(x: any) { return Math.abs(x.pnl) }))
+              var intensity = Math.abs(m.pnl) / maxPnl
+              var bg = isPositive
+                ? 'rgba(0, 229, 160, ' + (0.05 + intensity * 0.35) + ')'
+                : 'rgba(255, 77, 77, ' + (0.05 + intensity * 0.35) + ')'
+              return (
+                <div key={i} className="rounded aspect-square flex flex-col items-center justify-center group relative cursor-default" style={{ backgroundColor: bg }}>
+                  <div className="text-[8px] mono text-[#555] leading-none">{m.month.split('-')[1]}</div>
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1a1a1a] border border-[#222] rounded px-2 py-1 text-[9px] mono whitespace-nowrap z-10">
+                    <span className={isPositive ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>
+                      {m.month}: {isPositive ? '+' : ''}${m.pnl.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
     </div>
   )
 }
