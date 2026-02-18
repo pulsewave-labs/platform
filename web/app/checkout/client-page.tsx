@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
@@ -14,8 +14,8 @@ const PLANS = {
 export default function CheckoutClientPage() {
   const searchParams = useSearchParams()
   const initialPlan = searchParams.get('plan') === 'annual' ? 'annual' : 'monthly'
-  const [selected, setSelected] = useState<'monthly' | 'annual'>(initialPlan)
-  const [perf, setPerf] = useState<any>(null)
+  const [selected, setSelected] = useState(initialPlan)
+  const [perf, setPerf] = useState(null)
 
   // Account fields
   const [email, setEmail] = useState('')
@@ -50,7 +50,7 @@ export default function CheckoutClientPage() {
 
   const formValid = email.trim() && password.length >= 8 && password === confirmPassword
 
-  async function handleCreateAccount(e: React.FormEvent) {
+  async function handleCreateAccount(e: any) {
     e.preventDefault()
     setAccountError('')
 
