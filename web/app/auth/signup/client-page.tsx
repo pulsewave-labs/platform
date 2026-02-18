@@ -70,7 +70,7 @@ export default function SignupPage() {
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             className={inputClass}
-            placeholder="Mason"
+            placeholder="First name"
             required
           />
         </div>
