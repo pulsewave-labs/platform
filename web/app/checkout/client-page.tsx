@@ -7,8 +7,8 @@ import { WhopCheckoutEmbed } from '@whop/checkout/react'
 
 // TODO: Replace with real Whop plan IDs from Mason
 const PLANS = {
-  monthly: { id: 'plan_MONTHLY_PLACEHOLDER', price: '$149', period: '/mo', label: 'Monthly', save: '' },
-  annual: { id: 'plan_ANNUAL_PLACEHOLDER', price: '$1,490', period: '/yr', label: 'Annual', save: 'Save $298' },
+  monthly: { id: 'plan_kaL9L5TvxU8Bg', price: '$149', period: '/mo', label: 'Monthly', save: '' },
+  annual: { id: 'plan_KXHGlrE70uC9q', price: '$1,490', period: '/yr', label: 'Annual', save: 'Save $298' },
 }
 
 export default function CheckoutClientPage() {
