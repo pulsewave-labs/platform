@@ -42,7 +42,7 @@ export default function SignupPage() {
       {/* Logo */}
       <div className="text-center mb-8">
         <img src="/logo.webp" alt="PulseWave" className="h-8 w-auto mx-auto mb-6" />
-        <h1 className="text-xl font-semibold text-white">Start your free trial</h1>
+        <h1 className="text-xl font-semibold text-white">Create your account</h1>
         <p className="text-sm text-secondary mt-1">14 days free. No credit card required.</p>
       </div>
 

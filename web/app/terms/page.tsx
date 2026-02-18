@@ -95,7 +95,7 @@ export default function TermsPage() {
               <li>Use the Service for any illegal purpose or in violation of any applicable law</li>
               <li>Impersonate any person or entity, or misrepresent your affiliation</li>
               <li>Interfere with or disrupt the Service or servers</li>
-              <li>Create multiple accounts to abuse free trials or referral programs</li>
+              <li>Create multiple accounts to abuse referral programs or promotional offers</li>
             </ul>
           </section>
 
