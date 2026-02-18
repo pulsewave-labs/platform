@@ -292,20 +292,42 @@ export default function LandingClientPage() {
               <span className="text-[9px] text-white/30 mono ml-1">recent_trades · 7-day delay</span>
               <span className="flex items-center gap-1 ml-auto"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/40 mono">LIVE</span></span>
             </div>
+            {/* Desktop table header */}
             <div className="hidden md:grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[8px] text-white/20 mono tracking-[.1em] px-4 py-2 border-b border-white/[0.02]">
               <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
             </div>
+            {/* Desktop rows */}
             {trades.map((t,i)=>(
-              <div key={i} className={'grid grid-cols-[1fr_50px_70px] md:grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-4 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
+              <div key={'d'+i} className={'hidden md:grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-4 py-2.5 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
                 <div className="text-[10px] text-white/25 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
                 <div className="text-[11px] text-white/60 mono font-medium">{t.pair.replace('/USDT','')}</div>
-                <div className="hidden md:block"><span className={'text-[9px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
-                <div className="text-[10px] text-white/20 mono hidden md:block">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                <div className="text-[10px] text-white/20 mono hidden md:block">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div><span className={'text-[9px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
+                <div className="text-[10px] text-white/20 mono">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+                <div className="text-[10px] text-white/20 mono">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
                 <div className={'text-[11px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
                 <div className="text-right"><span className={'text-[8px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/50':'text-[#ff4d4d]/50')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
               </div>
             ))}
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-white/[0.02]">
+              {trades.map((t,i)=>(
+                <div key={'m'+i} className={'px-4 py-3 '+(i%2===0?'bg-white/[0.003]':'')}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className={'text-[9px] mono font-bold px-1.5 py-px rounded '+(t.action==='LONG'?'bg-[#00e5a0]/10 text-[#00e5a0]':'bg-[#ff4d4d]/10 text-[#ff4d4d]')}>{t.action}</span>
+                      <span className="text-[12px] text-white/60 mono font-medium">{t.pair.replace('/USDT','')}</span>
+                    </div>
+                    <span className={'text-[13px] mono font-bold '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-[9px] mono text-white/20">
+                    <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
+                    <span className="text-white/8">|</span>
+                    <span>${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})} → ${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</span>
+                    <span className={'ml-auto tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/40':'text-[#ff4d4d]/40')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
             <div className="px-4 py-2.5 text-center">
               <Link href="/performance" className="text-[10px] text-white/25 mono tracking-wider hover:text-white/50 transition-colors">VERIFY ALL 624 TRADES →</Link>
             </div>
