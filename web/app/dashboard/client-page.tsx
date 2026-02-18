@@ -272,6 +272,7 @@ export default function DashboardClientPage() {
   const [signals, setSignals] = useState([])
   const [performance, setPerformance] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [scanCountdown, setScanCountdown] = useState('')
 
   useEffect(function init() {
     Promise.all([
@@ -282,6 +283,16 @@ export default function DashboardClientPage() {
       setPerformance(results[1])
       setLoading(false)
     })
+  }, [])
+
+  useEffect(function() {
+    function calcNext() {
+      var secs = 60 - new Date().getSeconds()
+      setScanCountdown(secs + 's')
+    }
+    calcNext()
+    var iv = setInterval(calcNext, 1000)
+    return function() { clearInterval(iv) }
   }, [])
 
   if (loading) {
@@ -341,18 +352,6 @@ export default function DashboardClientPage() {
     if (t.pnl > 0) pairPerf[p].wins++
   })
   var pairList = Object.entries(pairPerf).map(function(e) { return { pair: e[0], ...e[1] } }).sort(function(a, b) { return b.pnl - a.pnl })
-
-  // Next scan countdown — scans every 60s
-  var [scanCountdown, setScanCountdown] = useState('')
-  useEffect(function() {
-    function calcNext() {
-      var secs = 60 - new Date().getSeconds()
-      setScanCountdown(secs + 's')
-    }
-    calcNext()
-    var iv = setInterval(calcNext, 1000)
-    return function() { clearInterval(iv) }
-  }, [])
 
   return (
     <div className="space-y-4">
