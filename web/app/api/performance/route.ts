@@ -129,9 +129,9 @@ export async function GET(request: Request) {
       })
       .sort((a, b) => b.pnl - a.pnl)
 
-    // Authenticated users get all trades; public gets 7-day delay
+    // Authenticated users get all trades; public gets 2-day delay
     const allTradesSorted = trades.slice().sort((a, b) => new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime())
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const sevenDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
     const publicTrades = isAuthenticated
       ? allTradesSorted
       : allTradesSorted.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
@@ -166,7 +166,7 @@ export async function GET(request: Request) {
       pairs,
       trades: publicTrades,
       delayed: !isAuthenticated,
-      delayDays: isAuthenticated ? 0 : 7
+      delayDays: isAuthenticated ? 0 : 2
     }
 
     return NextResponse.json(response, {

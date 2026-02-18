@@ -236,7 +236,7 @@ export default function PerformanceClientPage() {
           <div className="flex items-end justify-between mb-4">
             <div>
               <h2 className="text-[13px] mono text-[#888] tracking-[.15em] font-medium mb-2">COMPLETE TRADE LOG</h2>
-              <p className="text-[12px] text-[#555] mono">{filtered.length} trades · Public trades delayed 7 days</p>
+              <p className="text-[12px] text-[#555] mono">{filtered.length} trades · Public trades delayed 48 hours</p>
             </div>
           </div>
 
@@ -367,7 +367,7 @@ export default function PerformanceClientPage() {
         {/* CTA */}
         <div className="bg-[#0c0c0c] border border-white/[0.04] rounded-lg p-10 text-center mb-10">
           <h3 className="text-xl font-bold mb-2">Get real-time signals.</h3>
-          <p className="text-[14px] text-white/50 mb-6 max-w-md mx-auto">Public trades are delayed 7 days. Subscribers get signals the moment they fire — straight to Telegram.</p>
+          <p className="text-[14px] text-white/50 mb-6 max-w-md mx-auto">Public trades are delayed 48 hours. Subscribers get signals the moment they fire — straight to Telegram.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
             <Link href="/auth/signup" className="flex-1 py-3 bg-[#00e5a0] text-black text-[13px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors text-center">
               Get Signals — $149/mo

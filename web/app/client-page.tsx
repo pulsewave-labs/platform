@@ -341,7 +341,7 @@ export default function LandingClientPage() {
             <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
               <span className="text-[10px] text-white/55 mono">RECENT TRADES</span>
               <div className="flex items-center gap-3">
-                <span className="text-[9px] text-white/55 mono">7-day delay</span>
+                <span className="text-[9px] text-white/55 mono">2-day delay</span>
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[8px] text-[#00e5a0]/40 mono">LIVE</span></span>
               </div>
             </div>
@@ -763,7 +763,7 @@ export default function LandingClientPage() {
             Those who keep losing money trying to figure it out alone. And those who plug into a system that's already proven it works.
           </p>
           <p className="text-[12px] text-white/65 mb-10 max-w-sm mx-auto leading-relaxed">
-            The public trade log is delayed 7 days. Subscribers get signals the instant they fire. The next one could be tonight.
+            The public trade log is delayed 48 hours. Subscribers get signals the instant they fire. The next one could be tonight.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-sm mx-auto">
             <Link href="/auth/signup" className="flex-1 py-3.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[13px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
