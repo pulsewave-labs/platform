@@ -499,34 +499,7 @@ export default function DashboardClientPage() {
         </div>
       </section>
 
-      {/* Monthly P&L Heatmap */}
-      {monthly.length > 0 && (
-        <section>
-          <div className="flex items-center gap-2 mb-2">
-            <h2 className="text-[10px] mono text-[#555] tracking-widest font-medium">MONTHLY P&L</h2>
-          </div>
-          <div className="grid grid-cols-5 md:grid-cols-12 lg:grid-cols-25 gap-1">
-            {monthly.map(function(m: any, i: number) {
-              var isPositive = m.pnl >= 0
-              var maxPnl = Math.max.apply(null, monthly.map(function(x: any) { return Math.abs(x.pnl) }))
-              var intensity = Math.abs(m.pnl) / maxPnl
-              var bg = isPositive
-                ? 'rgba(0, 229, 160, ' + (0.05 + intensity * 0.35) + ')'
-                : 'rgba(255, 77, 77, ' + (0.05 + intensity * 0.35) + ')'
-              return (
-                <div key={i} className="rounded aspect-square flex flex-col items-center justify-center group relative cursor-default" style={{ backgroundColor: bg }}>
-                  <div className="text-[8px] mono text-[#555] leading-none">{m.month.split('-')[1]}</div>
-                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden group-hover:block bg-[#1a1a1a] border border-[#222] rounded px-2 py-1 text-[9px] mono whitespace-nowrap z-10">
-                    <span className={isPositive ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>
-                      {m.month}: {isPositive ? '+' : ''}${m.pnl.toLocaleString()}
-                    </span>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      {/* removed — monthly P&L moved to history */}
     </div>
   )
 }

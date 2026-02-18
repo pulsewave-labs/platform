@@ -33,6 +33,7 @@ export default function HistoryClientPage() {
 
   var stats = (data as any).stats
   var allTrades = (data as any).trades || []
+  var monthly = (data as any).monthly || []
   var pairs = Array.from(new Set(allTrades.map(function(t: any) { return t.pair }))).sort() as string[]
 
   var filtered = allTrades.filter(function(t: any) {
@@ -73,6 +74,63 @@ export default function HistoryClientPage() {
           )
         })}
       </div>
+
+      {/* Monthly P&L */}
+      {monthly.length > 0 && (
+        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
+            <div className="text-[10px] mono text-[#555] tracking-widest font-medium">MONTHLY P&L</div>
+            <div className="flex items-center gap-4 text-[9px] mono">
+              <span className="text-[#444]">{monthly.filter(function(m: any) { return m.pnl > 0 }).length}/{monthly.length} PROFITABLE</span>
+              <span className="text-[#00e5a0]">AVG ${stats.avgMonthlyPnl.toLocaleString()}/MO</span>
+            </div>
+          </div>
+          <div className="px-4 py-3">
+            {(() => {
+              var maxPnl = Math.max.apply(null, monthly.map(function(m: any) { return Math.abs(m.pnl) }))
+              var barMax = maxPnl * 1.1
+              return (
+                <div className="space-y-0.5">
+                  {monthly.map(function(m: any, i: number) {
+                    var isPos = m.pnl >= 0
+                    var width = Math.abs(m.pnl) / barMax * 50 // 50% max width for each side
+                    var monthLabel = new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+                    return (
+                      <div key={i} className="flex items-center h-6 group">
+                        {/* Month label */}
+                        <div className="w-16 text-[9px] mono text-[#444] text-right pr-3 flex-shrink-0">{monthLabel}</div>
+
+                        {/* Bar area — centered, negative goes left, positive goes right */}
+                        <div className="flex-1 flex items-center h-full relative">
+                          {/* Center line */}
+                          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[#1a1a1a]"></div>
+
+                          {/* Bar */}
+                          {isPos ? (
+                            <div className="absolute left-1/2 h-3.5 rounded-r-sm transition-all group-hover:h-4" style={{ width: width + '%', backgroundColor: 'rgba(0, 229, 160, 0.5)' }}></div>
+                          ) : (
+                            <div className="absolute right-1/2 h-3.5 rounded-l-sm transition-all group-hover:h-4" style={{ width: width + '%', backgroundColor: 'rgba(255, 77, 77, 0.5)' }}></div>
+                          )}
+                        </div>
+
+                        {/* Value */}
+                        <div className={'w-20 text-[9px] mono text-right flex-shrink-0 pl-3 transition-colors ' + (isPos ? 'text-[#00e5a0] group-hover:text-[#00e5a0]' : 'text-[#ff4d4d] group-hover:text-[#ff4d4d]')}>
+                          {isPos ? '+' : ''}${m.pnl.toLocaleString()}
+                        </div>
+
+                        {/* Trades + WR */}
+                        <div className="w-24 text-[9px] mono text-[#333] text-right flex-shrink-0 hidden md:block">
+                          {m.trades}t · {m.wins}W/{m.losses}L
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            })()}
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-2">
