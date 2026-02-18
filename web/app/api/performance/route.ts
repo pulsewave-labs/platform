@@ -25,8 +25,12 @@ interface Trade {
   status: string
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    // Check if authenticated user (dashboard) — skip delay
+    const cookie = request.headers.get('cookie') || ''
+    const isAuthenticated = cookie.includes('sb-') && cookie.includes('auth-token')
+
     // Load trade data
     const dataPath = path.join(process.cwd(), 'public', 'data', 'trades.json')
     const rawData = fs.readFileSync(dataPath, 'utf8')
@@ -125,10 +129,12 @@ export async function GET() {
       })
       .sort((a, b) => b.pnl - a.pnl)
 
-    // Public trades are delayed by 7 days
+    // Authenticated users get all trades; public gets 7-day delay
+    const allTradesSorted = trades.slice().sort((a, b) => new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime())
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-    const publicTrades = trades.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
-      .sort((a, b) => new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime())
+    const publicTrades = isAuthenticated
+      ? allTradesSorted
+      : allTradesSorted.filter(t => new Date(t.exit_time) <= sevenDaysAgo)
 
     const response = {
       stats: {
