@@ -26,8 +26,8 @@ import {
 
 const ease = [0.25, 0.1, 0.25, 1] as const
 
-function useCountUp(end: number, duration = 2000, startDelay = 0) {
-  const [count, setCount] = useState(0)
+function useCountUp(end: number, decimals = 0, duration = 2000, startDelay = 0) {
+  const [value, setValue] = useState(0)
   const ref = useRef(null)
   const inView = useInView(ref, { once: true })
   
@@ -40,7 +40,7 @@ function useCountUp(end: number, duration = 2000, startDelay = 0) {
         if (!start) start = t
         const p = Math.min((t - start) / duration, 1)
         const eased = 1 - Math.pow(1 - p, 3)
-        setCount(Math.floor(eased * end))
+        setValue(eased * end)
         if (p < 1) requestAnimationFrame(step)
       }
       requestAnimationFrame(step)
@@ -49,7 +49,7 @@ function useCountUp(end: number, duration = 2000, startDelay = 0) {
     return () => clearTimeout(timeout)
   }, [inView, end, duration, startDelay])
   
-  return { count, ref }
+  return { value, ref }
 }
 
 function Section({ children, className = '', id }: { children: React.ReactNode; className?: string; id?: string }) {
@@ -77,11 +77,13 @@ export default function LandingClientPage() {
   const [scrolled, setScrolled] = useState(false)
   const [currentEquity, setCurrentEquity] = useState(218418)
   const [recentTrades, setRecentTrades] = useState<any[]>([])
+  const [perfData, setPerfData] = useState<any>(null)
 
   useEffect(() => {
     fetch('/api/waitlist').then(r => r.json()).then(d => setWaitlistCount(d.count || 2847)).catch(() => {})
     fetch('/api/performance').then(r => r.json()).then(d => {
       if (d && d.trades) setRecentTrades(d.trades.slice(0, 8))
+      if (d) setPerfData(d)
     }).catch(() => {})
   }, [])
 
@@ -250,17 +252,17 @@ export default function LandingClientPage() {
           
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center mb-16">
             {[
-              { label: 'Total Return', value: 2084.2, suffix: '%', color: 'text-green-400', delay: 0 },
-              { label: 'Win Rate', value: 40.7, suffix: '%', color: 'text-blue-400', delay: 200 },
-              { label: 'Profit Factor', value: 1.52, suffix: '', color: 'text-teal-400', delay: 400 },
-              { label: 'Profitable Months', value: 22, suffix: '/25', color: 'text-purple-400', delay: 600 },
+              { label: 'Total Return', end: 2084.2, decimals: 1, suffix: '%', color: 'text-green-400', delay: 0 },
+              { label: 'Win Rate', end: 40.7, decimals: 1, suffix: '%', color: 'text-blue-400', delay: 200 },
+              { label: 'Profit Factor', end: 1.52, decimals: 2, suffix: '', color: 'text-teal-400', delay: 400 },
+              { label: 'Profitable Months', end: 22, decimals: 0, suffix: '/25', color: 'text-purple-400', delay: 600 },
             ].map((stat, i) => {
-              const { count, ref } = useCountUp(stat.value, 2000, stat.delay)
-              const displayValue = stat.value < 10 ? (count / 100).toFixed(2) : count.toLocaleString()
+              const { value, ref } = useCountUp(stat.end, stat.decimals, 2000, stat.delay)
+              const display = stat.decimals > 0 ? value.toFixed(stat.decimals) : Math.floor(value).toLocaleString()
               return (
                 <div key={i} ref={ref} className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6">
                   <div className={`text-3xl md:text-4xl font-bold mb-2 ${stat.color}`}>
-                    {stat.value < 10 && stat.suffix !== '/25' ? displayValue : count.toLocaleString()}{stat.suffix}
+                    {display}{stat.suffix}
                   </div>
                   <div className="text-sm text-zinc-400">{stat.label}</div>
                 </div>
@@ -272,19 +274,31 @@ export default function LandingClientPage() {
             <div>
               <h3 className="text-2xl font-bold mb-6">Monthly P&L Performance</h3>
               <div className="space-y-3">
-                {[
-                  { month: '2024 Average', pnl: 8337, isAvg: true },
-                  { month: '2025 Average', pnl: 8337, isAvg: true },
-                  { month: 'Best Month', pnl: 24500, isAvg: false },
-                  { month: 'Worst Month', pnl: -12800, isAvg: false },
-                ].map((row, i) => (
-                  <div key={i} className="flex justify-between items-center py-3 border-b border-zinc-800 last:border-b-0">
-                    <span className="text-zinc-300">{row.month}</span>
-                    <span className={`font-mono font-bold ${row.pnl > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {row.pnl > 0 ? '+' : ''}${row.pnl.toLocaleString()}
-                    </span>
-                  </div>
-                ))}
+                {(() => {
+                  if (!perfData || !perfData.monthly) return null
+                  const m = perfData.monthly
+                  const m2024 = m.filter((x: any) => x.month.startsWith('2024'))
+                  const m2025 = m.filter((x: any) => x.month.startsWith('2025'))
+                  const avg2024 = m2024.length > 0 ? Math.round(m2024.reduce((s: number, x: any) => s + x.pnl, 0) / m2024.length) : 0
+                  const avg2025 = m2025.length > 0 ? Math.round(m2025.reduce((s: number, x: any) => s + x.pnl, 0) / m2025.length) : 0
+                  const best = m.reduce((a: any, b: any) => a.pnl > b.pnl ? a : b, m[0])
+                  const worst = m.reduce((a: any, b: any) => a.pnl < b.pnl ? a : b, m[0])
+                  const rows = [
+                    { label: '2024 Monthly Avg', pnl: avg2024 },
+                    { label: '2025 Monthly Avg', pnl: avg2025 },
+                    { label: 'Best Month (' + best.month + ')', pnl: best.pnl },
+                    { label: 'Worst Month (' + worst.month + ')', pnl: worst.pnl },
+                    { label: 'Avg Monthly P&L', pnl: Math.round(m.reduce((s: number, x: any) => s + x.pnl, 0) / m.length) },
+                  ]
+                  return rows.map((row, i) => (
+                    <div key={i} className="flex justify-between items-center py-3 border-b border-zinc-800 last:border-b-0">
+                      <span className="text-zinc-300">{row.label}</span>
+                      <span className={`font-mono font-bold ${row.pnl > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {row.pnl > 0 ? '+' : ''}${row.pnl.toLocaleString()}
+                      </span>
+                    </div>
+                  ))
+                })()}
               </div>
             </div>
             
