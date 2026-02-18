@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 function timeAgo(dateStr: string) {
   var ms = Date.now() - new Date(dateStr).getTime()
@@ -11,18 +11,210 @@ function timeAgo(dateStr: string) {
   return Math.floor(hrs / 24) + 'd ago'
 }
 
-function MiniSparkline({ data, width, height }: { data: number[], width: number, height: number }) {
-  if (!data || data.length < 2) return null
-  var min = Math.min.apply(null, data)
-  var max = Math.max.apply(null, data)
-  var range = max - min || 1
-  var points = data.map(function(v, i) {
-    return (i / (data.length - 1)) * width + ',' + (height - ((v - min) / range) * height)
+function EquityChart({ trades }: { trades: any[] }) {
+  var containerRef = useRef(null as HTMLDivElement | null)
+  var [hover, setHover] = useState(null as null | { x: number, y: number, trade: any, idx: number })
+  var [dims, setDims] = useState({ w: 800, h: 300 })
+
+  useEffect(function() {
+    function measure() {
+      if (containerRef.current) {
+        var rect = containerRef.current.getBoundingClientRect()
+        setDims({ w: rect.width, h: Math.min(340, Math.max(200, rect.width * 0.3)) })
+      }
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return function() { window.removeEventListener('resize', measure) }
+  }, [])
+
+  if (!trades || trades.length < 2) return null
+
+  // Build equity curve from trades (sorted oldest first)
+  var sorted = trades.slice().sort(function(a: any, b: any) {
+    return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
+  })
+
+  var points = [{ balance: 10000, date: sorted[0].entry_time, pnl: 0, pair: '', action: '', idx: 0 }]
+  for (var i = 0; i < sorted.length; i++) {
+    points.push({
+      balance: sorted[i].balance_after,
+      date: sorted[i].exit_time || sorted[i].entry_time,
+      pnl: sorted[i].pnl,
+      pair: sorted[i].pair,
+      action: sorted[i].action,
+      idx: i + 1
+    })
+  }
+
+  var pad = { top: 20, right: 16, bottom: 28, left: 56 }
+  var cw = dims.w - pad.left - pad.right
+  var ch = dims.h - pad.top - pad.bottom
+
+  var balances = points.map(function(p) { return p.balance })
+  var minBal = Math.min.apply(null, balances)
+  var maxBal = Math.max.apply(null, balances)
+  var range = maxBal - minBal || 1
+
+  // Add some padding to range
+  minBal = minBal - range * 0.05
+  maxBal = maxBal + range * 0.05
+  range = maxBal - minBal
+
+  function xPos(idx: number) { return pad.left + (idx / (points.length - 1)) * cw }
+  function yPos(bal: number) { return pad.top + (1 - (bal - minBal) / range) * ch }
+
+  // Build SVG path
+  var pathD = points.map(function(p, i) {
+    var x = xPos(i)
+    var y = yPos(p.balance)
+    return (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1)
   }).join(' ')
+
+  // Fill area
+  var areaD = pathD + ' L' + xPos(points.length - 1).toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' L' + pad.left.toFixed(1) + ',' + (pad.top + ch).toFixed(1) + ' Z'
+
+  // Y-axis labels
+  var yTicks = 5
+  var yLabels = []
+  for (var t = 0; t <= yTicks; t++) {
+    var val = minBal + (t / yTicks) * range
+    yLabels.push({ val: val, y: yPos(val) })
+  }
+
+  // X-axis labels (month markers)
+  var xLabels: { label: string, x: number }[] = []
+  var lastMonth = ''
+  for (var j = 0; j < points.length; j++) {
+    var d = new Date(points[j].date)
+    var monthKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    if (monthKey !== lastMonth) {
+      lastMonth = monthKey
+      xLabels.push({ label: d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }), x: xPos(j) })
+    }
+  }
+  // Only show every Nth label to avoid overlap
+  var step = Math.ceil(xLabels.length / 10)
+  xLabels = xLabels.filter(function(_, i) { return i % step === 0 })
+
+  // Drawdown shading
+  var drawdownRegions: string[] = []
+  var peak = points[0].balance
+  var ddStart = -1
+  for (var k = 0; k < points.length; k++) {
+    if (points[k].balance > peak) peak = points[k].balance
+    var dd = (peak - points[k].balance) / peak
+    if (dd > 0.05 && ddStart === -1) ddStart = k
+    if ((dd <= 0.05 || k === points.length - 1) && ddStart !== -1) {
+      // Build a region path
+      var regionPath = ''
+      for (var r = ddStart; r <= k; r++) {
+        regionPath += (r === ddStart ? 'M' : 'L') + xPos(r).toFixed(1) + ',' + yPos(points[r].balance).toFixed(1)
+      }
+      // Close to the peak line
+      for (var r2 = k; r2 >= ddStart; r2--) {
+        var peakAtR = points[0].balance
+        for (var p2 = 0; p2 <= r2; p2++) { if (points[p2].balance > peakAtR) peakAtR = points[p2].balance }
+        regionPath += ' L' + xPos(r2).toFixed(1) + ',' + yPos(peakAtR).toFixed(1)
+      }
+      regionPath += ' Z'
+      drawdownRegions.push(regionPath)
+      ddStart = -1
+    }
+  }
+
+  var handleMouseMove = useCallback(function(e: React.MouseEvent) {
+    if (!containerRef.current) return
+    var rect = containerRef.current.getBoundingClientRect()
+    var mx = e.clientX - rect.left
+    var idx = Math.round(((mx - pad.left) / cw) * (points.length - 1))
+    idx = Math.max(0, Math.min(points.length - 1, idx))
+    var pt = points[idx]
+    setHover({ x: xPos(idx), y: yPos(pt.balance), trade: pt, idx: idx })
+  }, [points, cw])
+
   return (
-    <svg width={width} height={height} className="inline-block">
-      <polyline fill="none" stroke="#00e5a0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" points={points} />
-    </svg>
+    <div ref={containerRef} className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
+        <div className="text-[10px] mono text-[#555] tracking-widest font-medium">EQUITY CURVE</div>
+        <div className="flex items-center gap-4 text-[9px] mono">
+          <span className="text-[#444]">{sorted.length} TRADES</span>
+          <span className="text-[#00e5a0]">$10K → ${Math.round(sorted[sorted.length - 1].balance_after / 1000)}K</span>
+        </div>
+      </div>
+      <svg
+        width={dims.w}
+        height={dims.h}
+        className="cursor-crosshair"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={function() { setHover(null) }}
+      >
+        {/* Grid lines */}
+        {yLabels.map(function(yl, i) {
+          return <line key={i} x1={pad.left} x2={dims.w - pad.right} y1={yl.y} y2={yl.y} stroke="#141414" strokeWidth="1" />
+        })}
+
+        {/* Drawdown shading */}
+        {drawdownRegions.map(function(d, i) {
+          return <path key={i} d={d} fill="#ff4d4d" opacity="0.04" />
+        })}
+
+        {/* Area fill */}
+        <defs>
+          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#00e5a0" stopOpacity="0.12" />
+            <stop offset="100%" stopColor="#00e5a0" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <path d={areaD} fill="url(#eqGrad)" />
+
+        {/* Main line */}
+        <path d={pathD} fill="none" stroke="#00e5a0" strokeWidth="1.5" strokeLinejoin="round" />
+
+        {/* Starting point */}
+        <circle cx={xPos(0)} cy={yPos(10000)} r="2.5" fill="#0c0c0c" stroke="#00e5a0" strokeWidth="1" />
+
+        {/* End point */}
+        <circle cx={xPos(points.length - 1)} cy={yPos(points[points.length - 1].balance)} r="2.5" fill="#00e5a0" />
+
+        {/* Y-axis labels */}
+        {yLabels.map(function(yl, i) {
+          var label = yl.val >= 1000 ? '$' + Math.round(yl.val / 1000) + 'K' : '$' + Math.round(yl.val)
+          return <text key={i} x={pad.left - 6} y={yl.y + 3} textAnchor="end" fill="#333" fontSize="9" fontFamily="JetBrains Mono, monospace">{label}</text>
+        })}
+
+        {/* X-axis labels */}
+        {xLabels.map(function(xl, i) {
+          return <text key={i} x={xl.x} y={dims.h - 6} textAnchor="middle" fill="#333" fontSize="9" fontFamily="JetBrains Mono, monospace">{xl.label}</text>
+        })}
+
+        {/* Hover crosshair */}
+        {hover && (
+          <>
+            <line x1={hover.x} x2={hover.x} y1={pad.top} y2={pad.top + ch} stroke="#333" strokeWidth="1" strokeDasharray="2,2" />
+            <line x1={pad.left} x2={dims.w - pad.right} y1={hover.y} y2={hover.y} stroke="#333" strokeWidth="1" strokeDasharray="2,2" />
+            <circle cx={hover.x} cy={hover.y} r="3" fill="#00e5a0" />
+            <circle cx={hover.x} cy={hover.y} r="6" fill="#00e5a0" opacity="0.15" />
+          </>
+        )}
+      </svg>
+
+      {/* Hover tooltip */}
+      {hover && hover.trade && (
+        <div className="flex items-center justify-between px-4 py-1.5 border-t border-[#141414] text-[10px] mono">
+          <div className="flex items-center gap-4">
+            <span className="text-[#555]">{new Date(hover.trade.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</span>
+            {hover.trade.pair && <span className="text-[#888]">{hover.trade.pair}</span>}
+            {hover.trade.action && <span className={hover.trade.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.action}</span>}
+            {hover.trade.pnl !== 0 && <span className={hover.trade.pnl > 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{hover.trade.pnl > 0 ? '+' : ''}${Math.round(hover.trade.pnl).toLocaleString()}</span>}
+          </div>
+          <div className="text-[#888]">
+            Balance: <span className="text-white font-medium">${Math.round(hover.trade.balance).toLocaleString()}</span>
+            <span className="text-[#444] ml-2">Trade #{hover.idx}/{sorted.length}</span>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -55,9 +247,9 @@ export default function DashboardClientPage() {
 
   var stats = performance ? (performance as any).stats : null
   var monthly = performance ? (performance as any).monthly || [] : []
-  var recentTrades = performance ? (performance as any).trades.slice(0, 20) : []
+  var allTrades = performance ? (performance as any).trades || [] : []
+  var recentTrades = allTrades.slice(0, 20)
   var activeSignals = signals.filter(function(s: any) { return s.status === 'active' })
-  var equityCurve = monthly.map(function(m: any) { return m.balance })
 
   // Streak calc
   var currentStreak = 0
@@ -74,38 +266,29 @@ export default function DashboardClientPage() {
   return (
     <div className="space-y-4">
 
-      {/* Equity + Stats */}
+      {/* Stats strip */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
-          {/* Main stats */}
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-[#161616] rounded-lg overflow-hidden">
-            {[
-              { label: 'P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
-              { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
-              { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
-              { label: 'PF', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
-              { label: 'TRADES', value: String(stats.totalTrades), color: '#e0e0e0' },
-              { label: 'MAX DD', value: '-' + stats.maxDrawdown + '%', color: '#ff4d4d' },
-            ].map(function(s, i) {
-              return (
-                <div key={i} className="bg-[#0c0c0c] px-3 py-2.5">
-                  <div className="text-[9px] text-[#444] mono tracking-widest leading-none mb-1.5">{s.label}</div>
-                  <div className="text-base mono font-semibold leading-none" style={{ color: s.color }}>{s.value}</div>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Mini equity curve */}
-          {equityCurve.length > 2 && (
-            <div className="bg-[#0c0c0c] border border-[#161616] rounded-lg px-4 py-2.5 flex flex-col items-center justify-center">
-              <div className="text-[9px] text-[#444] mono tracking-widest mb-1">EQUITY</div>
-              <MiniSparkline data={equityCurve} width={120} height={32} />
-              <div className="text-[9px] mono text-[#555] mt-1">${stats.startingCapital.toLocaleString()} → ${stats.finalBalance.toLocaleString()}</div>
-            </div>
-          )}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-[#161616] rounded-lg overflow-hidden">
+          {[
+            { label: 'P&L', value: '+$' + (stats.finalBalance - stats.startingCapital).toLocaleString(), color: '#00e5a0' },
+            { label: 'RETURN', value: '+' + stats.totalReturn.toFixed(1) + '%', color: '#00e5a0' },
+            { label: 'WIN RATE', value: stats.winRate + '%', color: '#e0e0e0' },
+            { label: 'PF', value: stats.profitFactor.toFixed(2), color: '#e0e0e0' },
+            { label: 'TRADES', value: String(stats.totalTrades), color: '#e0e0e0' },
+            { label: 'MAX DD', value: '-' + stats.maxDrawdown + '%', color: '#ff4d4d' },
+          ].map(function(s, i) {
+            return (
+              <div key={i} className="bg-[#0c0c0c] px-3 py-2.5">
+                <div className="text-[9px] text-[#444] mono tracking-widest leading-none mb-1.5">{s.label}</div>
+                <div className="text-base mono font-semibold leading-none" style={{ color: s.color }}>{s.value}</div>
+              </div>
+            )
+          })}
         </div>
       )}
+
+      {/* Equity Chart */}
+      {allTrades.length > 0 && <EquityChart trades={allTrades} />}
 
       {/* Active Signals */}
       <section>
@@ -135,11 +318,10 @@ export default function DashboardClientPage() {
               var slPct = ((risk / entry) * 100).toFixed(2)
               var tpPct = ((reward / entry) * 100).toFixed(2)
               var rrNum = risk > 0 ? reward / risk : 0
-              var barWidth = Math.min(rrNum / 4 * 100, 100) // cap at 4:1
+              var barWidth = Math.min(rrNum / 4 * 100, 100)
 
               return (
                 <div key={sig.id} className="border border-[#161616] rounded-lg overflow-hidden">
-                  {/* Header */}
                   <div className="flex items-center justify-between px-4 py-2.5 bg-[#0c0c0c]">
                     <div className="flex items-center gap-3">
                       <span className={'px-2 py-0.5 rounded text-[10px] mono font-bold tracking-wider ' + (isLong ? 'bg-[#00e5a0]/8 text-[#00e5a0] border border-[#00e5a0]/15' : 'bg-[#ff4d4d]/8 text-[#ff4d4d] border border-[#ff4d4d]/15')}>
@@ -148,21 +330,17 @@ export default function DashboardClientPage() {
                       <span className="mono font-semibold text-white text-sm">{sig.pair}</span>
                       <span className="text-[10px] mono text-[#333]">{timeAgo(sig.created_at)}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <div className="text-[9px] mono text-[#444]">R:R</div>
-                        <div className="text-sm mono font-bold text-[#00e5a0]">{rr}:1</div>
-                      </div>
+                    <div className="text-right">
+                      <div className="text-[9px] mono text-[#444]">R:R</div>
+                      <div className="text-sm mono font-bold text-[#00e5a0]">{rr}:1</div>
                     </div>
                   </div>
 
-                  {/* Risk/Reward visual bar */}
                   <div className="h-1 bg-[#161616] flex">
                     <div className="h-full bg-[#ff4d4d]/30" style={{ width: '25%' }}></div>
                     <div className="h-full bg-[#00e5a0]/40" style={{ width: barWidth * 0.75 + '%' }}></div>
                   </div>
 
-                  {/* Levels */}
                   <div className="grid grid-cols-3 gap-px bg-[#131313]">
                     <div className="bg-[#0a0a0a] px-4 py-2.5">
                       <div className="text-[9px] text-[#444] mono tracking-wider mb-1">ENTRY</div>
@@ -180,14 +358,12 @@ export default function DashboardClientPage() {
                     </div>
                   </div>
 
-                  {/* Reasoning */}
                   {sig.reasoning && (
                     <div className="px-4 py-2 bg-[#0a0a0a] border-t border-[#131313]">
                       <div className="text-[10px] text-[#555] leading-relaxed">{sig.reasoning}</div>
                     </div>
                   )}
 
-                  {/* Position sizing */}
                   <div className="px-4 py-2.5 bg-[#0a0a0a] border-t border-[#131313]">
                     <div className="text-[9px] text-[#333] mono tracking-wider mb-2">POSITION SIZING · 10% RISK · 20× LEV</div>
                     <div className="grid grid-cols-5 gap-x-2 gap-y-0.5 text-[10px] mono">
@@ -273,7 +449,7 @@ export default function DashboardClientPage() {
         </div>
       </section>
 
-      {/* Monthly Performance Mini Grid */}
+      {/* Monthly P&L Heatmap */}
       {monthly.length > 0 && (
         <section>
           <div className="flex items-center gap-2 mb-2">
