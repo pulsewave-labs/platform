@@ -23,9 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <header className="h-12 border-b border-[#1a1a1a] flex items-center justify-between px-4 bg-[#0d0d0d] sticky top-0 z-50">
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-5 h-5 rounded bg-green-500 flex items-center justify-center">
-                <span className="text-[10px] font-bold text-black">PW</span>
-              </div>
+              <img src="/logo.webp" alt="PulseWave" className="h-5" />
               <span className="text-sm font-semibold tracking-tight hidden sm:inline">PulseWave</span>
             </Link>
 

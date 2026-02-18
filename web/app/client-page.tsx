@@ -21,7 +21,6 @@ import {
   Bell,
   Activity,
   Users,
-  Bot
 } from 'lucide-react'
 
 const ease = [0.25, 0.1, 0.25, 1] as const
@@ -152,10 +151,7 @@ export default function LandingClientPage() {
         <div className="max-w-7xl mx-auto px-6 md:px-8 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
-                <Bot size={18} className="text-white" />
-              </div>
-              <span className="font-bold text-xl">PulseWave Signals</span>
+              <img src="/logo.webp" alt="PulseWave" className="h-8" />
             </div>
             <div className="hidden md:flex items-center gap-8">
               {['Performance', 'How It Works', 'Pricing'].map(s => (
@@ -755,10 +751,7 @@ export default function LandingClientPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
             <div className="col-span-2 md:col-span-1">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
-                  <Bot size={18} className="text-white" />
-                </div>
-                <span className="font-bold text-xl">PulseWave Signals</span>
+                <img src="/logo.webp" alt="PulseWave" className="h-8" />
               </div>
               <p className="text-sm text-zinc-400 leading-relaxed">AI-powered crypto signals that turned $10K into $218K.</p>
             </div>
