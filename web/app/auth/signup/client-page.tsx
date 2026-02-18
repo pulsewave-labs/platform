@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
 
 export default function SignupPage() {
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
   const [email, setEmail] = useState('')
+  const [phone, setPhone] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
@@ -21,12 +23,18 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.')
+      return
+    }
+
     setLoading(true)
 
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } }
+      options: { data: { first_name: firstName, phone } }
     })
 
     if (error) {
@@ -36,6 +44,8 @@ export default function SignupPage() {
       router.push('/dashboard')
     }
   }
+
+  const inputClass = "w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
 
   return (
     <div>
@@ -54,13 +64,13 @@ export default function SignupPage() {
         )}
 
         <div>
-          <label className="block text-xs font-medium text-secondary mb-1.5">Full name</label>
+          <label className="block text-xs font-medium text-secondary mb-1.5">First name</label>
           <input
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
-            placeholder="John Doe"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            className={inputClass}
+            placeholder="Mason"
             required
           />
         </div>
@@ -71,9 +81,20 @@ export default function SignupPage() {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
+            className={inputClass}
             placeholder="you@example.com"
             required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-secondary mb-1.5">Phone</label>
+          <input
+            type="tel"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className={inputClass}
+            placeholder="+1 (555) 000-0000"
           />
         </div>
 
@@ -83,8 +104,21 @@ export default function SignupPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-3.5 py-3 bg-surface border border-border rounded-xl text-white text-base md:text-sm placeholder-muted focus:border-accent focus:ring-1 focus:ring-accent outline-none transition-colors min-h-[48px]"
+            className={inputClass}
             placeholder="Min. 8 characters"
+            minLength={8}
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-secondary mb-1.5">Confirm password</label>
+          <input
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            className={inputClass}
+            placeholder="Re-enter password"
             minLength={8}
             required
           />
