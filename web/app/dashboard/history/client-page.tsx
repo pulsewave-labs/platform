@@ -5,11 +5,9 @@ import { useState, useEffect } from 'react'
 export default function HistoryClientPage() {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [page, setPage] = useState(1)
+  const [expandedMonth, setExpandedMonth] = useState(null as string | null)
   const [filterPair, setFilterPair] = useState('')
   const [filterDir, setFilterDir] = useState('')
-  const [filterResult, setFilterResult] = useState('')
-  const perPage = 30
 
   useEffect(function load() {
     fetch('/api/performance')
@@ -34,27 +32,21 @@ export default function HistoryClientPage() {
   var stats = (data as any).stats
   var allTrades = (data as any).trades || []
   var monthly = (data as any).monthly || []
-  var pairs = Array.from(new Set(allTrades.map(function(t: any) { return t.pair }))).sort() as string[]
 
-  var filtered = allTrades.filter(function(t: any) {
-    if (filterPair && t.pair !== filterPair) return false
-    if (filterDir && t.action !== filterDir) return false
-    if (filterResult === 'WIN' && t.pnl <= 0) return false
-    if (filterResult === 'LOSS' && t.pnl > 0) return false
-    if (filterResult === 'TP' && t.exit_reason !== 'TP') return false
-    if (filterResult === 'SL' && t.exit_reason !== 'SL') return false
-    return true
+  // Group trades by month
+  var tradesByMonth: Record<string, any[]> = {}
+  allTrades.forEach(function(t: any) {
+    var d = new Date(t.entry_time)
+    var key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')
+    if (!tradesByMonth[key]) tradesByMonth[key] = []
+    tradesByMonth[key].push(t)
   })
 
-  var totalPages = Math.ceil(filtered.length / perPage)
-  var paginated = filtered.slice((page - 1) * perPage, page * perPage)
-
-  var filteredPnl = filtered.reduce(function(s: number, t: any) { return s + t.pnl }, 0)
-  var filteredWins = filtered.filter(function(t: any) { return t.pnl > 0 }).length
-  var filteredFees = filtered.reduce(function(s: number, t: any) { return s + t.fees }, 0)
+  // Get unique pairs for filter
+  var pairs = Array.from(new Set(allTrades.map(function(t: any) { return t.pair }))).sort() as string[]
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4 pb-20 md:pb-0">
 
       {/* Summary */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-[#161616] rounded-lg overflow-hidden">
@@ -75,163 +67,156 @@ export default function HistoryClientPage() {
         })}
       </div>
 
-      {/* Monthly P&L */}
-      {monthly.length > 0 && (
-        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-2 border-b border-[#141414]">
-            <div className="text-[10px] mono text-[#555] tracking-widest font-medium">MONTHLY P&L</div>
-            <div className="flex items-center gap-4 text-[9px] mono">
-              <span className="text-[#444]">{monthly.filter(function(m: any) { return m.pnl > 0 }).length}/{monthly.length} PROFITABLE</span>
-              <span className="text-[#00e5a0]">AVG ${stats.avgMonthlyPnl.toLocaleString()}/MO</span>
-            </div>
-          </div>
-          <div className="px-4 py-3">
-            {(() => {
-              var maxPnl = Math.max.apply(null, monthly.map(function(m: any) { return Math.abs(m.pnl) }))
-              var barMax = maxPnl * 1.1
-              return (
-                <div className="space-y-0.5">
-                  {monthly.map(function(m: any, i: number) {
-                    var isPos = m.pnl >= 0
-                    var width = Math.abs(m.pnl) / barMax * 50 // 50% max width for each side
-                    var monthLabel = new Date(m.month + '-01').toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-                    return (
-                      <div key={i} className="flex items-center h-6 group">
-                        {/* Month label */}
-                        <div className="w-16 text-[9px] mono text-[#444] text-right pr-3 flex-shrink-0">{monthLabel}</div>
+      {/* Monthly Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        {monthly.slice().reverse().map(function(m: any) {
+          var isPos = m.pnl >= 0
+          var isExpanded = expandedMonth === m.month
+          var monthDate = new Date(m.month + '-01')
+          var monthName = monthDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+          var monthShort = monthDate.toLocaleDateString('en-US', { month: 'short' })
+          var year = monthDate.getFullYear()
+          var wr = m.trades > 0 ? (m.wins / m.trades * 100).toFixed(0) : '0'
+          var maxPnl = Math.max.apply(null, monthly.map(function(x: any) { return Math.abs(x.pnl) }))
+          var intensity = Math.min(Math.abs(m.pnl) / maxPnl, 1)
 
-                        {/* Bar area — centered, negative goes left, positive goes right */}
-                        <div className="flex-1 flex items-center h-full relative">
-                          {/* Center line */}
-                          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-[#1a1a1a]"></div>
+          var borderColor = isPos
+            ? 'rgba(0, 229, 160, ' + (0.06 + intensity * 0.2) + ')'
+            : 'rgba(255, 77, 77, ' + (0.06 + intensity * 0.2) + ')'
 
-                          {/* Bar */}
-                          {isPos ? (
-                            <div className="absolute left-1/2 h-3.5 rounded-r-sm transition-all group-hover:h-4" style={{ width: width + '%', backgroundColor: 'rgba(0, 229, 160, 0.5)' }}></div>
-                          ) : (
-                            <div className="absolute right-1/2 h-3.5 rounded-l-sm transition-all group-hover:h-4" style={{ width: width + '%', backgroundColor: 'rgba(255, 77, 77, 0.5)' }}></div>
-                          )}
-                        </div>
-
-                        {/* Value */}
-                        <div className={'w-20 text-[9px] mono text-right flex-shrink-0 pl-3 transition-colors ' + (isPos ? 'text-[#00e5a0] group-hover:text-[#00e5a0]' : 'text-[#ff4d4d] group-hover:text-[#ff4d4d]')}>
-                          {isPos ? '+' : ''}${m.pnl.toLocaleString()}
-                        </div>
-
-                        {/* Trades + WR */}
-                        <div className="w-24 text-[9px] mono text-[#333] text-right flex-shrink-0 hidden md:block">
-                          {m.trades}t · {m.wins}W/{m.losses}L
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })()}
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-2">
-        {[
-          { value: filterPair, setter: setFilterPair, options: ['ALL PAIRS'].concat(pairs), key: 'pair' },
-          { value: filterDir, setter: setFilterDir, options: ['ALL SIDES', 'LONG', 'SHORT'], key: 'dir' },
-          { value: filterResult, setter: setFilterResult, options: ['ALL RESULTS', 'WIN', 'LOSS', 'TP', 'SL'], key: 'result' },
-        ].map(function(f) {
           return (
-            <select key={f.key}
-              value={f.value}
-              onChange={function(e) { var v = e.target.value; if (v.startsWith('ALL')) v = ''; f.setter(v); setPage(1) }}
-              className="px-2 py-1 bg-[#0c0c0c] border border-[#1a1a1a] rounded text-[10px] mono text-[#666] focus:outline-none focus:border-[#333] appearance-none cursor-pointer hover:border-[#222] transition-colors"
-            >
-              {f.options.map(function(opt) { return <option key={opt} value={opt.startsWith('ALL') ? '' : opt}>{opt}</option> })}
-            </select>
+            <div key={m.month}>
+              <button
+                onClick={function() { setExpandedMonth(isExpanded ? null : m.month); setFilterPair(''); setFilterDir('') }}
+                className="w-full text-left border rounded-lg overflow-hidden transition-all hover:border-[#333]"
+                style={{ borderColor: isExpanded ? (isPos ? '#00e5a0' : '#ff4d4d') : borderColor, backgroundColor: '#0c0c0c' }}
+              >
+                {/* Top bar — thin color accent */}
+                <div className="h-0.5" style={{ backgroundColor: isPos ? 'rgba(0, 229, 160, ' + (0.2 + intensity * 0.6) + ')' : 'rgba(255, 77, 77, ' + (0.2 + intensity * 0.6) + ')' }}></div>
+
+                <div className="px-3 py-2.5">
+                  {/* Month + Year */}
+                  <div className="flex items-baseline justify-between mb-2">
+                    <div>
+                      <span className="text-sm font-semibold text-[#ccc]">{monthShort}</span>
+                      <span className="text-[10px] text-[#444] ml-1.5 mono">{year}</span>
+                    </div>
+                    <div className={'text-sm mono font-bold ' + (isPos ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                      {isPos ? '+' : ''}${m.pnl.toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Stats row */}
+                  <div className="flex items-center justify-between text-[9px] mono">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[#555]">{m.trades} trades</span>
+                      <span className="text-[#333]">·</span>
+                      <span className="text-[#555]">{wr}% WR</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[#00e5a0]/60">{m.wins}W</span>
+                      <span className="text-[#ff4d4d]/60">{m.losses}L</span>
+                    </div>
+                  </div>
+
+                  {/* Mini win/loss dots */}
+                  <div className="flex gap-px mt-2">
+                    {(tradesByMonth[m.month] || []).slice().sort(function(a: any, b: any) {
+                      return new Date(a.entry_time).getTime() - new Date(b.entry_time).getTime()
+                    }).map(function(t: any, ti: number) {
+                      return (
+                        <div key={ti}
+                          className="h-1 rounded-full flex-1"
+                          style={{
+                            backgroundColor: t.pnl >= 0 ? 'rgba(0, 229, 160, 0.5)' : 'rgba(255, 77, 77, 0.4)',
+                            maxWidth: '8px'
+                          }}
+                        ></div>
+                      )
+                    })}
+                  </div>
+                </div>
+              </button>
+
+              {/* Expanded trade list */}
+              {isExpanded && (
+                <div className="mt-1 border border-[#1a1a1a] rounded-lg bg-[#0a0a0a] overflow-hidden">
+                  {/* Month header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-[#141414] bg-[#0c0c0c]">
+                    <div className="text-[10px] mono text-[#555] tracking-widest">{monthName.toUpperCase()}</div>
+                    <div className="flex items-center gap-2">
+                      <select value={filterPair} onChange={function(e) { setFilterPair(e.target.value) }}
+                        className="px-1.5 py-0.5 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-[9px] mono text-[#666] focus:outline-none">
+                        <option value="">ALL</option>
+                        {pairs.map(function(p) { return <option key={p} value={p}>{p}</option> })}
+                      </select>
+                      <select value={filterDir} onChange={function(e) { setFilterDir(e.target.value) }}
+                        className="px-1.5 py-0.5 bg-[#0a0a0a] border border-[#1a1a1a] rounded text-[9px] mono text-[#666] focus:outline-none">
+                        <option value="">ALL</option>
+                        <option value="LONG">LONG</option>
+                        <option value="SHORT">SHORT</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Trades table */}
+                  <div className="overflow-x-auto scrollbar-none">
+                    <table className="w-full text-[10px] mono">
+                      <thead>
+                        <tr className="text-[#333] bg-[#0c0c0c]">
+                          <th className="text-left px-3 py-1.5 font-medium">DATE</th>
+                          <th className="text-left px-3 py-1.5 font-medium">PAIR</th>
+                          <th className="text-left px-3 py-1.5 font-medium">SIDE</th>
+                          <th className="text-right px-3 py-1.5 font-medium">ENTRY</th>
+                          <th className="text-right px-3 py-1.5 font-medium">EXIT</th>
+                          <th className="text-right px-3 py-1.5 font-medium">SIZE</th>
+                          <th className="text-right px-3 py-1.5 font-medium">RISK</th>
+                          <th className="text-right px-3 py-1.5 font-medium">FEES</th>
+                          <th className="text-right px-3 py-1.5 font-medium">P&L</th>
+                          <th className="text-center px-3 py-1.5 font-medium">EXIT</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(tradesByMonth[m.month] || []).slice().sort(function(a: any, b: any) {
+                          return new Date(b.entry_time).getTime() - new Date(a.entry_time).getTime()
+                        }).filter(function(t: any) {
+                          if (filterPair && t.pair !== filterPair) return false
+                          if (filterDir && t.action !== filterDir) return false
+                          return true
+                        }).map(function(t: any, ti: number) {
+                          var isWin = t.pnl >= 0
+                          return (
+                            <tr key={ti} className={'border-t border-[#111] hover:bg-[#0e0e0e] ' + (ti % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
+                              <td className="px-3 py-1.5 text-[#444]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+                              <td className="px-3 py-1.5 text-[#999] font-medium">{t.pair}</td>
+                              <td className="px-3 py-1.5"><span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span></td>
+                              <td className="px-3 py-1.5 text-right text-[#666]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                              <td className="px-3 py-1.5 text-right text-[#666]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                              <td className="px-3 py-1.5 text-right text-[#444]">${Math.round(Number(t.notional)).toLocaleString()}</td>
+                              <td className="px-3 py-1.5 text-right text-[#c9a227]/70">${Number(t.risk_amount).toLocaleString()}</td>
+                              <td className="px-3 py-1.5 text-right text-[#333]">${Number(t.fees).toFixed(0)}</td>
+                              <td className={'px-3 py-1.5 text-right font-medium ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
+                                {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
+                              </td>
+                              <td className="px-3 py-1.5 text-center"><span className={t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40'}>{t.exit_reason}</span></td>
+                            </tr>
+                          )
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Month summary footer */}
+                  <div className="flex items-center justify-between px-3 py-1.5 border-t border-[#141414] bg-[#0c0c0c] text-[9px] mono text-[#444]">
+                    <span>Balance after: <span className="text-[#888]">${m.balance.toLocaleString()}</span></span>
+                    <span>Fees: <span className="text-[#555]">${Math.round((tradesByMonth[m.month] || []).reduce(function(s: number, t: any) { return s + t.fees }, 0)).toLocaleString()}</span></span>
+                  </div>
+                </div>
+              )}
+            </div>
           )
         })}
-        {(filterPair || filterDir || filterResult) && (
-          <button onClick={function() { setFilterPair(''); setFilterDir(''); setFilterResult(''); setPage(1) }}
-            className="text-[10px] mono text-[#444] hover:text-[#666] transition-colors px-1">
-            ✕ CLEAR
-          </button>
-        )}
-        <div className="flex-1"></div>
-        <div className="flex items-center gap-3 text-[9px] mono text-[#444]">
-          <span>{filtered.length} trades</span>
-          <span className={filteredPnl >= 0 ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>
-            {filteredPnl >= 0 ? '+' : ''}${Math.round(filteredPnl).toLocaleString()}
-          </span>
-          <span>{filtered.length > 0 ? (filteredWins / filtered.length * 100).toFixed(1) : 0}% WR</span>
-          <span className="text-[#333]">${Math.round(filteredFees).toLocaleString()} fees</span>
-        </div>
       </div>
-
-      {/* Table */}
-      <div className="border border-[#161616] rounded-lg overflow-hidden">
-        <div className="overflow-x-auto scrollbar-none">
-          <table className="w-full text-[10px] mono">
-            <thead>
-              <tr className="bg-[#0c0c0c] text-[#333]">
-                <th className="text-left px-3 py-2 font-medium tracking-wider">DATE</th>
-                <th className="text-left px-3 py-2 font-medium tracking-wider">PAIR</th>
-                <th className="text-left px-3 py-2 font-medium tracking-wider">SIDE</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">ENTRY</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">SL</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">TP</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">EXIT</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">SIZE</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">RISK</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">FEES</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">P&L</th>
-                <th className="text-center px-3 py-2 font-medium tracking-wider">EXIT</th>
-                <th className="text-right px-3 py-2 font-medium tracking-wider">BAL</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginated.map(function(t: any, i: number) {
-                var isWin = t.pnl >= 0
-                return (
-                  <tr key={i} className={'border-t border-[#111] transition-colors hover:bg-[#0e0e0e] ' + (i % 2 === 0 ? 'bg-[#0a0a0a]' : 'bg-[#0b0b0b]')}>
-                    <td className="px-3 py-1.5 text-[#444]">{new Date(t.entry_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' })}</td>
-                    <td className="px-3 py-1.5 text-[#999] font-medium">{t.pair}</td>
-                    <td className="px-3 py-1.5"><span className={t.action === 'LONG' ? 'text-[#00e5a0]' : 'text-[#ff4d4d]'}>{t.action}</span></td>
-                    <td className="px-3 py-1.5 text-right text-[#666]">${Number(t.entry_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="px-3 py-1.5 text-right text-[#ff4d4d]/30">${Number(t.stop_loss).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="px-3 py-1.5 text-right text-[#00e5a0]/30">${Number(t.take_profit).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="px-3 py-1.5 text-right text-[#666]">${Number(t.exit_price).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
-                    <td className="px-3 py-1.5 text-right text-[#444]">${Math.round(Number(t.notional)).toLocaleString()}</td>
-                    <td className="px-3 py-1.5 text-right text-[#c9a227]/70">${Number(t.risk_amount).toLocaleString()}</td>
-                    <td className="px-3 py-1.5 text-right text-[#333]">${Number(t.fees).toFixed(0)}</td>
-                    <td className={'px-3 py-1.5 text-right font-medium ' + (isWin ? 'text-[#00e5a0]' : 'text-[#ff4d4d]')}>
-                      {isWin ? '+' : ''}${Number(t.pnl).toLocaleString(undefined, {maximumFractionDigits: 0})}
-                    </td>
-                    <td className="px-3 py-1.5 text-center"><span className={t.exit_reason === 'TP' ? 'text-[#00e5a0]/40' : 'text-[#ff4d4d]/40'}>{t.exit_reason}</span></td>
-                    <td className="px-3 py-1.5 text-right text-[#555]">${Math.round(Number(t.balance_after)).toLocaleString()}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between text-[10px] mono text-[#333]">
-          <span>{(page - 1) * perPage + 1}–{Math.min(page * perPage, filtered.length)} of {filtered.length}</span>
-          <div className="flex items-center gap-1">
-            <button onClick={function() { setPage(Math.max(1, page - 1)) }} disabled={page === 1}
-              className="px-2 py-1 border border-[#161616] rounded hover:border-[#222] disabled:opacity-20 transition-colors">
-              ←
-            </button>
-            <span className="px-2 text-[#444]">{page}/{totalPages}</span>
-            <button onClick={function() { setPage(Math.min(totalPages, page + 1)) }} disabled={page === totalPages}
-              className="px-2 py-1 border border-[#161616] rounded hover:border-[#222] disabled:opacity-20 transition-colors">
-              →
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Footer */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#131313] rounded-lg overflow-hidden text-[9px] mono">
