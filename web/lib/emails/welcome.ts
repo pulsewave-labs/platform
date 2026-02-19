@@ -10,7 +10,7 @@ export function welcomeEmailHtml({ email, name }: { email: string; name?: string
 
 <!-- Logo -->
 <tr><td style="padding:0 0 32px 0;">
-<span style="font-family:'Courier New',monospace;font-size:20px;font-weight:bold;color:#00e5a0;letter-spacing:4px;">PULSEWAVE</span>
+<img src="https://www.pulsewavelabs.io/logo.png" alt="PulseWave" width="180" style="display:block;height:auto;border:0;" />
 </td></tr>
 
 <!-- Headline -->
