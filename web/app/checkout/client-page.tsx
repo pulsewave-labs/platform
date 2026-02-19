@@ -72,10 +72,10 @@ export default function CheckoutClientPage() {
     })
   }
 
-  var inputClass = "w-full px-3.5 py-3 bg-[#0c0c0e] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
+  var inputClass = "w-full px-3.5 py-3 bg-[#09090b] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-white antialiased">
+    <div className="min-h-screen bg-[#09090b] text-white antialiased">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
       <style dangerouslySetInnerHTML={{ __html: [
         "body{font-family:'Inter',-apple-system,sans-serif}",
@@ -140,7 +140,7 @@ export default function CheckoutClientPage() {
           <div className="fu order-1" style={{animationDelay:'.2s'}}>
 
             {/* Step 1: Account */}
-            <div className={'bg-[#0a0a0c] border rounded-xl overflow-hidden mb-4 transition-all ' + (accountReady ? 'border-[#00e5a0]/15' : 'border-white/[0.06]')}>
+            <div className={'bg-[#09090b] border rounded-xl overflow-hidden mb-4 transition-all ' + (accountReady ? 'border-[#00e5a0]/15' : 'border-white/[0.06]')}>
               <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-[#00e5a0]/10 text-[#00e5a0]' : 'bg-white/[0.04] text-white/30')}>
@@ -188,7 +188,7 @@ export default function CheckoutClientPage() {
             </div>
 
             {/* Step 2: Payment */}
-            <div className={'bg-[#0a0a0c] border rounded-xl transition-all ' + (accountReady ? 'border-white/[0.06] opacity-100' : 'border-white/[0.03] opacity-30 pointer-events-none')}>
+            <div className={'bg-[#09090b] border rounded-xl transition-all ' + (accountReady ? 'border-white/[0.06] opacity-100' : 'border-white/[0.03] opacity-30 pointer-events-none')}>
               <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-white/[0.04] text-white/30' : 'bg-white/[0.04] text-white/15')}>2</div>
@@ -247,7 +247,7 @@ export default function CheckoutClientPage() {
           {/* RIGHT: Order summary — hidden on mobile, shown on desktop */}
           <div className="hidden md:block fu order-2" style={{animationDelay:'.3s'}}>
 
-            <div className="bg-[#0a0a0c] border border-white/[0.06] rounded-xl p-6 mb-4">
+            <div className="bg-[#09090b] border border-white/[0.06] rounded-xl p-6 mb-4">
               <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
               <div className="space-y-3">
                 {[
@@ -281,7 +281,7 @@ export default function CheckoutClientPage() {
                   { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
                 ].map(function(s, i) {
                   return (
-                    <div key={i} className="bg-[#0a0a0c] px-4 py-3 text-center">
+                    <div key={i} className="bg-[#09090b] px-4 py-3 text-center">
                       <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-1">{s.l}</div>
                       <div className="text-[16px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
                     </div>
@@ -321,7 +321,7 @@ export default function CheckoutClientPage() {
                 { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
               ].map(function(s, i) {
                 return (
-                  <div key={i} className="bg-[#0a0a0c] px-3 py-2.5 text-center">
+                  <div key={i} className="bg-[#09090b] px-3 py-2.5 text-center">
                     <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-0.5">{s.l}</div>
                     <div className="text-[15px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
                   </div>
