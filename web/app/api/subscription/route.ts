@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
 
     var email = (user.email || '').toLowerCase()
 
-    // Admin bypass
-    if (ADMIN_EMAILS.includes(email)) {
-      return NextResponse.json({ active: true, status: 'active', plan: 'admin', email: email, created_at: user.created_at || null })
-    }
+    var isAdmin = ADMIN_EMAILS.includes(email)
 
     var { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -32,16 +29,16 @@ export async function GET(request: NextRequest) {
       .single()
 
     if (profileError || !profile) {
-      return NextResponse.json({ active: false, status: 'none', plan: null, email: email, created_at: null })
+      return NextResponse.json({ active: isAdmin, status: isAdmin ? 'active' : 'none', plan: isAdmin ? 'admin' : null, email: email, created_at: user.created_at || null })
     }
 
-    var status = profile.subscription_status || 'none'
+    var status = isAdmin ? 'active' : (profile.subscription_status || 'none')
     var active = status === 'active'
 
     return NextResponse.json({
       active: active,
       status: status,
-      plan: profile.subscription_plan || null,
+      plan: isAdmin ? 'admin' : (profile.subscription_plan || null),
       expires_at: profile.subscription_expires_at || null,
       email: profile.email || email,
       created_at: profile.created_at || null,
