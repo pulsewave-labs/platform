@@ -1,4 +1,4 @@
-export function welcomeEmailHtml({ email, name }: { email: string; name?: string }): string {
+export function welcomeEmailHtml({ email, name, setPasswordUrl }: { email: string; name?: string; setPasswordUrl?: string }): string {
   const greeting = name ? `Hi ${name},` : 'Hi there,'
   return `<!DOCTYPE html>
 <html lang="en">
@@ -23,6 +23,22 @@ export function welcomeEmailHtml({ email, name }: { email: string; name?: string
 ${greeting}<br><br>
 You now have access to the same signal engine that turned $10K into $218K over 624 verified trades.
 </td></tr>
+
+<!-- Step 0: Set Password -->
+${setPasswordUrl ? `
+<tr><td style="padding:0 0 16px 0;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#111111;border:1px solid #00e5a0;border-radius:8px;">
+<tr><td style="padding:24px;">
+<table role="presentation" cellpadding="0" cellspacing="0"><tr>
+<td style="width:32px;vertical-align:top;"><span style="display:inline-block;width:28px;height:28px;line-height:28px;text-align:center;border-radius:50%;background-color:#00e5a0;color:#0a0a0a;font-weight:bold;font-size:14px;">✦</span></td>
+<td style="padding-left:12px;">
+<div style="font-size:18px;font-weight:600;color:#ffffff;margin-bottom:8px;">Set Your Password</div>
+<div style="font-size:14px;color:#a0a0a0;line-height:1.5;margin-bottom:16px;">We created your account automatically. Click below to choose a password so you can log into your dashboard anytime.</div>
+<a href="${setPasswordUrl}" style="display:inline-block;padding:12px 24px;background-color:#00e5a0;color:#0a0a0a;font-size:14px;font-weight:700;text-decoration:none;border-radius:6px;">Set Password →</a>
+</td></tr></table>
+</td></tr></table>
+</td></tr>
+` : ''}
 
 <!-- Step 1 -->
 <tr><td style="padding:0 0 16px 0;">

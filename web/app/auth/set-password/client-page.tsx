@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../../lib/supabase/client'
 
-export default function ResetPasswordPage() {
+export default function SetPasswordPage() {
   var [password, setPassword] = useState('')
   var [confirm, setConfirm] = useState('')
   var [loading, setLoading] = useState(false)
@@ -17,7 +17,9 @@ export default function ResetPasswordPage() {
   var params = useSearchParams()
   var supabase = createClient()
 
+  // Pick up the auth tokens from the URL (Supabase redirects with hash fragments)
   useEffect(() => {
+    // Supabase puts tokens in the hash: #access_token=...&refresh_token=...
     if (typeof window === 'undefined') return
 
     var hash = window.location.hash
@@ -33,6 +35,7 @@ export default function ResetPasswordPage() {
       }
     }
 
+    // Also check query params
     var access = params.get('access_token')
     var refresh = params.get('refresh_token')
     if (access && refresh) {
@@ -42,6 +45,7 @@ export default function ResetPasswordPage() {
       return
     }
 
+    // Check if already logged in
     supabase.auth.getUser().then(r => {
       if (r.data.user) setSessionReady(true)
     })
@@ -61,7 +65,7 @@ export default function ResetPasswordPage() {
       setLoading(false)
     } else {
       setDone(true)
-      setTimeout(() => router.push('/dashboard'), 2000)
+      setTimeout(() => router.push('/welcome'), 2000)
     }
   }
 
@@ -86,10 +90,10 @@ export default function ResetPasswordPage() {
               <div className="w-14 h-14 rounded-full bg-[#00e5a0]/[0.06] border border-[#00e5a0]/[0.12] flex items-center justify-center mx-auto mb-5">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
               </div>
-              <h1 className="text-[22px] font-bold mb-2">Password updated.</h1>
-              <p className="text-[14px] text-white/35 mb-6">Redirecting to your dashboard...</p>
-              <Link href="/dashboard" className="text-[13px] text-[#00e5a0]/50 mono hover:text-[#00e5a0] transition-colors">
-                Go to dashboard →
+              <h1 className="text-[22px] font-bold mb-2">Password set.</h1>
+              <p className="text-[14px] text-white/35 mb-6">Redirecting you to get started...</p>
+              <Link href="/welcome" className="text-[13px] text-[#00e5a0]/50 mono hover:text-[#00e5a0] transition-colors">
+                Go to onboarding →
               </Link>
             </div>
           ) : (
@@ -100,8 +104,8 @@ export default function ResetPasswordPage() {
                     <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                   </svg>
                 </div>
-                <h1 className="text-[22px] font-bold mb-1">Reset your password</h1>
-                <p className="text-[14px] text-white/35">Enter a new password for your account.</p>
+                <h1 className="text-[22px] font-bold mb-1">Set your password</h1>
+                <p className="text-[14px] text-white/35">Choose a password for your PulseWave account.</p>
               </div>
 
               {!sessionReady && (
@@ -164,7 +168,7 @@ export default function ResetPasswordPage() {
                     disabled={loading || !valid}
                     className="w-full py-3.5 bg-[#00e5a0] text-black rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-2"
                   >
-                    {loading ? 'Updating...' : 'Update Password'}
+                    {loading ? 'Setting password...' : 'Set Password'}
                   </button>
                 </form>
               )}

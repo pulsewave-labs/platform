@@ -48,9 +48,9 @@ export async function sendSignalEmail(email: string, signal: SignalEmailData): P
   }
 }
 
-export async function sendWelcomeEmail(email: string, name?: string): Promise<boolean> {
+export async function sendWelcomeEmail(email: string, name?: string, setPasswordUrl?: string): Promise<boolean> {
   try {
-    const html = welcomeEmailHtml({ email, name })
+    const html = welcomeEmailHtml({ email, name, setPasswordUrl })
     const res = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
