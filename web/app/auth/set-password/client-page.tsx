@@ -174,7 +174,7 @@ export default function SetPasswordPage() {
               )}
 
               <p className="text-[10px] text-white/10 text-center mt-6">
-                Having trouble? <a href="mailto:mason@pulsewavelabs.io" className="underline hover:text-white/20">Contact support</a>
+                Having trouble? <a href="mailto:support@pulsewavelabs.io" className="underline hover:text-white/20">Contact support</a>
               </p>
             </>
           )}

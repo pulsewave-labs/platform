@@ -315,7 +315,7 @@ export default function WelcomeClient() {
           {/* Footer */}
           <div className="fu4 mt-8 text-center">
             <p className="text-[11px] text-white/10">
-              Questions? <a href="mailto:mason@pulsewavelabs.io" className="underline hover:text-white/25 transition-colors">mason@pulsewavelabs.io</a>
+              Questions? <a href="mailto:support@pulsewavelabs.io" className="underline hover:text-white/25 transition-colors">support@pulsewavelabs.io</a>
             </p>
           </div>
 
