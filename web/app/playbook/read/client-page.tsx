@@ -69,11 +69,15 @@ export default function PlaybookRead() {
             </div>
 
             <h1 className="text-[32px] md:text-[56px] font-black leading-[1.05] tracking-[-0.03em] mb-6 max-w-3xl">
-              The 5-Pair Playbook
+              We lose 6 out of every 10 trades.
             </h1>
 
-            <p className="text-[16px] md:text-[19px] text-zinc-500 leading-relaxed max-w-2xl mb-12">
-              The framework behind $10K → $218K across 624 trades. The exact pairs, how we score every setup, how we read levels, and how we size positions — step by step, so you can use it yourself.
+            <p className="text-[18px] md:text-[22px] text-zinc-400 leading-[1.6] max-w-2xl mb-5 font-medium">
+              Our account is up 2,084%.
+            </p>
+
+            <p className="text-[15px] md:text-[17px] text-zinc-600 leading-relaxed max-w-xl mb-12">
+              This playbook explains exactly how that's possible — and gives you the system to do it yourself.
             </p>
 
             <div className="flex flex-wrap items-center gap-8 md:gap-12">
@@ -81,7 +85,7 @@ export default function PlaybookRead() {
                 {v:'624',l:'VERIFIED TRADES'},
                 {v:'40.7%',l:'WIN RATE'},
                 {v:'1.52',l:'PROFIT FACTOR'},
-                {v:'2,084%',l:'TOTAL RETURN'},
+                {v:'$10K → $218K',l:'TOTAL RETURN'},
               ].map((s,i) => (
                 <div key={i}>
                   <div className="mono text-[24px] md:text-[30px] font-bold text-white/80">{s.v}</div>
@@ -94,18 +98,40 @@ export default function PlaybookRead() {
       </section>
 
 
-      {/* ══════════ QUICK CONTEXT ══════════ */}
+      {/* ══════════ THE CONTRADICTION ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
           <div className="max-w-2xl">
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              Before we get into the system: our win rate is <strong className="text-white/70">40.7%</strong>. We lose more trades than we win. If that scares you, good — it means you're paying attention.
+              That probably sounds like a contradiction. Losing most of your trades and making money? Every trading guru on Twitter will tell you that's impossible. You need a 70%+ win rate, right?
             </p>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              The reason a $10K account grew to $218K isn't win rate. It's that our average winner is <strong className="text-white/70">+3.2%</strong> and our average loser is <strong className="text-white/70">-1.4%</strong>. The wins are more than 2x the losses. Over hundreds of trades, that compounds aggressively.
+              Wrong. And that one misconception is why most retail traders blow their accounts.
             </p>
+            <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
+              Here's the number that actually matters: our average winner is <strong className="text-white/70">+3.2%</strong>. Our average loser is <strong className="text-white/70">-1.4%</strong>. The wins are <strong className="text-white/70">2.3x larger</strong> than the losses. So even though we lose more often, the winners more than pay for the losers. Over 624 trades, that turns $10K into $218K.
+            </p>
+            <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
+              This playbook shows you exactly how:
+            </p>
+            <div className="space-y-2 mb-6">
+              {[
+                {ch:'01',t:'Which 5 pairs to trade and why — and how to pick your own'},
+                {ch:'02',t:'The 0-100 scoring system that filters out bad trades before you enter'},
+                {ch:'03',t:'How to find S/R zones that actually hold (step-by-step on TradingView)'},
+                {ch:'04',t:'A real winning trade broken down factor by factor'},
+                {ch:'05',t:'A real losing trade — and the math that makes losses profitable'},
+                {ch:'06',t:'The position sizing formula that keeps you alive during losing streaks'},
+                {ch:'07',t:'The complete 624-trade track record — every number, nothing hidden'},
+              ].map((item,i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <span className="mono text-[11px] text-[#00e5a0]/30 font-semibold mt-1 w-5 shrink-0">{item.ch}</span>
+                  <span className="text-[15px] text-zinc-500 leading-relaxed">{item.t}</span>
+                </div>
+              ))}
+            </div>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8]">
-              This playbook breaks down the full system. Every chapter is something you can actually apply to your own trading today.
+              Every chapter has something you can apply to your trading today. Even if you never use our signals, you'll trade better after reading this.
             </p>
           </div>
         </R>
