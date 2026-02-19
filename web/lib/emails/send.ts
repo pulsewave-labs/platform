@@ -13,6 +13,7 @@ export async function sendWelcomeEmail(email: string, name?: string): Promise<bo
       },
       body: JSON.stringify({
         from: 'PulseWave Signals <hello@system.pulsewavelabs.io>',
+        reply_to: 'hello@pulsewaveindicator.com',
         to: email,
         subject: 'Welcome to PulseWave Signals',
         html,
