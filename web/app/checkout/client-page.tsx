@@ -72,7 +72,7 @@ export default function CheckoutClientPage() {
     })
   }
 
-  var inputClass = "w-full px-3.5 py-3 bg-[#09090b] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
+  var inputClass = "w-full px-3.5 py-3 bg-white/[0.03] border border-white/[0.06] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
 
   return (
     <div className="min-h-screen bg-[#09090b] text-white antialiased">
@@ -140,8 +140,8 @@ export default function CheckoutClientPage() {
           <div className="fu order-1" style={{animationDelay:'.2s'}}>
 
             {/* Step 1: Account */}
-            <div className={'bg-[#09090b] border rounded-xl overflow-hidden mb-4 transition-all ' + (accountReady ? 'border-[#00e5a0]/15' : 'border-white/[0.06]')}>
-              <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
+            <div className={'mb-6 transition-all'}>
+              <div className="px-1 py-3 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-[#00e5a0]/10 text-[#00e5a0]' : 'bg-white/[0.04] text-white/30')}>
                     {accountReady ? '✓' : '1'}
@@ -152,7 +152,7 @@ export default function CheckoutClientPage() {
               </div>
 
               {!accountReady ? (
-                <form onSubmit={handleCreateAccount} className="p-4 md:p-5 space-y-3">
+                <form onSubmit={handleCreateAccount} className="py-4 space-y-3">
                   {accountError && (
                     <div className="text-[12px] text-[#ff4d4d] bg-[#ff4d4d]/[0.05] border border-[#ff4d4d]/10 rounded-lg px-3 py-2">
                       {accountError}
@@ -181,15 +181,15 @@ export default function CheckoutClientPage() {
                   </p>
                 </form>
               ) : (
-                <div className="px-4 md:px-5 py-3 flex items-center gap-2 text-[13px] text-white/40">
+                <div className="px-1 py-3 flex items-center gap-2 text-[13px] text-white/40">
                   <span className="text-[#00e5a0]/40">✓</span> Signed in as {email}
                 </div>
               )}
             </div>
 
             {/* Step 2: Payment */}
-            <div className={'bg-[#09090b] border rounded-xl transition-all ' + (accountReady ? 'border-white/[0.06] opacity-100' : 'border-white/[0.03] opacity-30 pointer-events-none')}>
-              <div className="px-4 md:px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
+            <div className={'transition-all ' + (accountReady ? 'opacity-100' : 'opacity-30 pointer-events-none')}>
+              <div className="px-1 py-3 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className={'w-5 h-5 rounded-full flex items-center justify-center text-[10px] mono font-bold ' + (accountReady ? 'bg-white/[0.04] text-white/30' : 'bg-white/[0.04] text-white/15')}>2</div>
                   <span className="text-[11px] text-white/30 mono tracking-wider">PAYMENT</span>
@@ -247,7 +247,7 @@ export default function CheckoutClientPage() {
           {/* RIGHT: Order summary — hidden on mobile, shown on desktop */}
           <div className="hidden md:block fu order-2" style={{animationDelay:'.3s'}}>
 
-            <div className="bg-[#09090b] border border-white/[0.06] rounded-xl p-6 mb-4">
+            <div className="mb-6">
               <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
               <div className="space-y-3">
                 {[
@@ -274,14 +274,14 @@ export default function CheckoutClientPage() {
             </div>
 
             {stats && (
-              <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-xl overflow-hidden mb-4">
+              <div className="grid grid-cols-3 gap-6 mb-6 pt-6 border-t border-white/[0.04]">
                 {[
                   { l: 'RETURN', v: '+' + stats.totalReturn + '%', c: '#00e5a0' },
                   { l: 'PROFIT FACTOR', v: stats.profitFactor.toFixed(2), c: '#e0e0e0' },
                   { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
                 ].map(function(s, i) {
                   return (
-                    <div key={i} className="bg-[#09090b] px-4 py-3 text-center">
+                    <div key={i} className="text-center">
                       <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-1">{s.l}</div>
                       <div className="text-[16px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
                     </div>
@@ -290,7 +290,7 @@ export default function CheckoutClientPage() {
               </div>
             )}
 
-            <div className="bg-white/[0.015] border border-white/[0.03] rounded-xl p-5">
+            <div className="pt-6 border-t border-white/[0.04]">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-8 h-8 rounded-full bg-[#00e5a0]/[0.06] flex items-center justify-center">
                   <span className="text-[12px] mono text-[#00e5a0]/50 font-bold">P</span>
@@ -314,14 +314,14 @@ export default function CheckoutClientPage() {
         {/* Mobile-only: compact proof strip below checkout */}
         <div className="md:hidden mt-6 fu" style={{animationDelay:'.3s'}}>
           {stats && (
-            <div className="grid grid-cols-3 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/[0.04]">
               {[
                 { l: 'RETURN', v: '+' + stats.totalReturn + '%', c: '#00e5a0' },
                 { l: 'PROFIT FACTOR', v: stats.profitFactor.toFixed(2), c: '#e0e0e0' },
                 { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
               ].map(function(s, i) {
                 return (
-                  <div key={i} className="bg-[#09090b] px-3 py-2.5 text-center">
+                  <div key={i} className="text-center">
                     <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-0.5">{s.l}</div>
                     <div className="text-[15px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
                   </div>
