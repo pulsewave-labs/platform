@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sendWelcomeEmail } from '../../../../lib/emails/send'
 
 var supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 var serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
@@ -46,6 +47,9 @@ export async function POST(request: NextRequest) {
         .eq('id', profile.id)
 
       console.log('[whop-webhook] membership.went_valid for', email)
+
+      // Send welcome email
+      sendWelcomeEmail(email).catch((err) => console.error('[whop-webhook] welcome email error:', err))
     } else if (eventType === 'membership.went_invalid') {
       await supabase
         .from('profiles')
