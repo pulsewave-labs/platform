@@ -15,8 +15,9 @@ export default function SettingsClientPage() {
   var [subPlan, setSubPlan] = useState('')
   var [subExpires, setSubExpires] = useState('')
   var [whopUrl] = useState('https://whop.com/pulsewave-indicator')
+  var [pwSent, setPwSent] = useState(false)
+  var [pwLoading, setPwLoading] = useState(false)
 
-  // Fetch user profile + subscription on mount
   useEffect(function() {
     async function loadProfile() {
       try {
@@ -34,7 +35,6 @@ export default function SettingsClientPage() {
     loadProfile()
   }, [])
 
-  // Check Telegram link status on mount
   useEffect(function() {
     async function checkStatus() {
       try {
@@ -73,54 +73,104 @@ export default function SettingsClientPage() {
     } catch (e) {}
   }
 
+  async function handleResetPassword() {
+    if (!userEmail) return
+    setPwLoading(true)
+    try {
+      var res = await fetch('/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) })
+      setPwSent(true)
+    } catch (e) {}
+    setPwLoading(false)
+  }
+
   function formatDate(d) {
-    if (!d) return '—'
+    if (!d) return '\u2014'
     return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
   }
 
   var statusColor = subStatus === 'active' ? '#00e5a0' : subStatus === 'cancelled' ? '#c9a227' : '#ff4d4d'
   var statusLabel = subStatus === 'active' ? 'ACTIVE' : subStatus === 'cancelled' ? 'CANCELLED' : subStatus === 'expired' ? 'EXPIRED' : 'INACTIVE'
-  var planLabel = subPlan === 'annual' ? 'Annual — $1,490/year' : subPlan === 'monthly' ? 'Monthly — $149/month' : 'No active plan'
+  var planLabel = subPlan === 'annual' ? 'Annual \u2014 $1,490/year' : subPlan === 'monthly' ? 'Monthly \u2014 $149/month' : subPlan === 'admin' ? 'Admin' : 'No active plan'
 
   return (
     <div className="max-w-lg space-y-4">
 
-      {/* Account */}
       <section>
         <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">ACCOUNT</div>
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
             <span className="text-[14px] text-[#666]">Email</span>
-            <span className="text-[14px] text-[#ccc] mono">{userEmail || '—'}</span>
+            <span className="text-[14px] text-[#ccc] mono">{userEmail || '\u2014'}</span>
           </div>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414] bg-[#0c0c0c]">
+            <span className="text-[14px] text-[#666]">Member since</span>
+            <span className="text-[14px] text-[#ccc] mono">{formatDate(memberSince)}</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414] bg-[#0c0c0c]">
+            <span className="text-[14px] text-[#666]">Password</span>
+            {pwSent ? (
+              <span className="text-[13px] mono text-[#00e5a0]">Reset email sent</span>
+            ) : (
+              <button onClick={handleResetPassword} disabled={pwLoading} className="text-[13px] mono text-[#00e5a0] hover:text-[#00cc8e] transition-colors disabled:opacity-50">
+                {pwLoading ? 'Sending...' : 'RESET PASSWORD'}
+              </button>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">SUBSCRIPTION</div>
+        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-[15px] text-[#ccc] font-medium">{planLabel}</div>
+                {subExpires && subStatus === 'active' && (
+                  <div className="text-[12px] text-[#666] mono mt-0.5">Renews {formatDate(subExpires)}</div>
+                )}
+                {subExpires && subStatus === 'cancelled' && (
+                  <div className="text-[12px] text-[#c9a227] mono mt-0.5">Access until {formatDate(subExpires)}</div>
+                )}
+              </div>
+              <span className="text-[11px] mono px-2 py-0.5 border rounded tracking-wider" style={{color: statusColor, backgroundColor: statusColor + '14', borderColor: statusColor + '26'}}>{statusLabel}</span>
+            </div>
+          </div>
+          <div className="border-t border-[#141414] px-4 py-3 flex items-center justify-between">
+            <span className="text-[13px] text-[#666]">Manage billing, change plan, or cancel</span>
+            <a href={whopUrl} target="_blank" rel="noopener noreferrer" className="text-[13px] mono text-[#00e5a0] hover:text-[#00cc8e] transition-colors">MANAGE</a>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">TELEGRAM</div>
+        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] px-4 py-3">
+          {checkingLink ? (
+            <div className="text-[14px] text-[#777] mono">Checking...</div>
+          ) : telegramLinked ? (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#00e5a0]"></span>
+                  <span className="text-sm text-[#ccc] font-medium">Connected</span>
+                </div>
+                <button onClick={handleDisconnectTelegram} className="text-[13px] mono text-[#ff4d4d] hover:text-[#ff6b6b] transition-colors">DISCONNECT</button>
               </div>
               {telegramLinkedAt && (
-                <div className="text-[13px] text-[#777] mono">
-                  Linked {formatDate(telegramLinkedAt)}
-                </div>
+                <div className="text-[13px] text-[#777] mono">Linked {formatDate(telegramLinkedAt)}</div>
               )}
             </div>
           ) : deepLink ? (
             <div>
               <div className="text-sm text-[#ccc] font-medium mb-2">Almost there!</div>
               <div className="text-[14px] text-[#666] mb-3">Click the button below to open the PulseWave bot and link your account:</div>
-              <a
-                href={deepLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full text-center py-3 bg-[#0088cc] hover:bg-[#0099dd] text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                Open in Telegram
-              </a>
-              <div className="text-[13px] text-[#666] mono mt-2 text-center">
-                Then come back here, it updates automatically
-              </div>
+              <a href={deepLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 bg-[#0088cc] hover:bg-[#0099dd] text-white text-sm font-medium rounded-lg transition-colors">Open in Telegram</a>
+              <div className="text-[13px] text-[#666] mono mt-2 text-center">Then come back here, it updates automatically</div>
               <button
                 onClick={function() { setCheckingLink(true); fetch('/api/telegram/link').then(function(r) { return r.json() }).then(function(d) { setTelegramLinked(d.linked); if(d.linked_at) setTelegramLinkedAt(d.linked_at); if(d.linked) setDeepLink(''); setCheckingLink(false); }).catch(function() { setCheckingLink(false) }); }}
                 className="block w-full text-center mt-2 text-[13px] mono text-[#888] hover:text-[#ccc] transition-colors"
-              >
-                CHECK STATUS
-              </button>
+              >CHECK STATUS</button>
             </div>
           ) : (
             <div>
@@ -130,11 +180,7 @@ export default function SettingsClientPage() {
                   <div className="text-[13px] text-[#777] mono">Get instant signal notifications</div>
                 </div>
               </div>
-              <button
-                onClick={handleConnectTelegram}
-                disabled={linkLoading}
-                className="mt-2 w-full py-2 bg-[#00e5a0] hover:bg-[#00cc8e] text-black text-sm font-semibold rounded-lg transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleConnectTelegram} disabled={linkLoading} className="mt-2 w-full py-2 bg-[#00e5a0] hover:bg-[#00cc8e] text-black text-sm font-semibold rounded-lg transition-colors disabled:opacity-50">
                 {linkLoading ? 'Generating link...' : 'Connect Telegram'}
               </button>
             </div>
@@ -142,7 +188,6 @@ export default function SettingsClientPage() {
         </div>
       </section>
 
-      {/* Notifications */}
       <section>
         <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">NOTIFICATIONS</div>
         <div className="border border-[#161616] rounded-lg overflow-hidden">
@@ -158,12 +203,9 @@ export default function SettingsClientPage() {
               <span className={'absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ' + (telegramEnabled ? 'left-[18px] bg-white' : 'left-0.5 bg-[#555]')}></span>
             </button>
           </div>
-          </div>
         </div>
       </section>
 
-      {/* spacer */}
-      <div></div>
     </div>
   )
 }
