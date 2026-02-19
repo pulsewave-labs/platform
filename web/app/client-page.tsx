@@ -101,7 +101,7 @@ export default function LandingClientPage() {
             <button onClick={()=>scrollTo('how')} className="text-[14px] text-white/55 hover:text-white/85 transition-colors">How It Works</button>
             <button onClick={()=>scrollTo('pricing')} className="text-[14px] text-white/55 hover:text-white/85 transition-colors">Pricing</button>
             <Link href="/auth/login" className="text-[14px] text-white/55 hover:text-white/85 transition-colors">Log In</Link>
-            <Link href="/checkout" className="text-[14px] px-5 py-2 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
+            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="text-[14px] px-5 py-2 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
           </div>
           <button className="md:hidden text-white/65" onClick={()=>setMenu(!menu)}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={menu?"M18 6L6 18M6 6l12 12":"M4 8h16M4 16h16"}/></svg>
@@ -112,7 +112,7 @@ export default function LandingClientPage() {
           <button onClick={()=>scrollTo('how')} className="block text-white/55 text-[14px]">How It Works</button>
           <button onClick={()=>scrollTo('pricing')} className="block text-white/55 text-[14px]">Pricing</button>
           <Link href="/auth/login" className="block text-white/55 text-[14px]">Log In</Link>
-          <Link href="/checkout" className="inline-block px-5 py-2 bg-[#00e5a0] text-black rounded font-bold text-[14px]">GET ACCESS</Link>
+          <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-5 py-2 bg-[#00e5a0] text-black rounded font-bold text-[14px]">GET ACCESS</Link>
         </div>}
       </nav>
 
@@ -138,7 +138,7 @@ export default function LandingClientPage() {
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
-            <Link href="/checkout" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
+            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
               Start receiving signals
             </Link>
             <Link href="/performance" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
@@ -693,7 +693,7 @@ export default function LandingClientPage() {
                     <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
                   ))}
                 </div>
-                <Link href="/checkout" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/65 text-[16px] font-bold text-center hover:border-white/[0.15] hover:text-white/85 transition-all mono tracking-wide">GET STARTED</Link>
+                <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/65 text-[16px] font-bold text-center hover:border-white/[0.15] hover:text-white/85 transition-all mono tracking-wide">GET STARTED</Link>
               </div>
             </div>
 
@@ -711,7 +711,7 @@ export default function LandingClientPage() {
                     <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
                   ))}
                 </div>
-                <Link href="/checkout?plan=annual" className="block w-full py-3 rounded-lg bg-[#00e5a0] text-black text-[16px] font-bold text-center hover:bg-[#00cc8e] transition-colors mono tracking-wide">GET STARTED</Link>
+                <Link href="https://whop.com/checkout/plan_KXHGlrE70uC9q" className="block w-full py-3 rounded-lg bg-[#00e5a0] text-black text-[16px] font-bold text-center hover:bg-[#00cc8e] transition-colors mono tracking-wide">GET STARTED</Link>
               </div>
             </div>
           </div>
@@ -920,7 +920,7 @@ export default function LandingClientPage() {
             The next signal could fire tonight. Public log is delayed 48 hours. Subscribers get it instantly.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto mb-4">
-            <Link href="/checkout" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
+            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
               Start receiving signals. $149/mo
             </Link>
           </div>

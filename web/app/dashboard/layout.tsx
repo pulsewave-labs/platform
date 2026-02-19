@@ -23,7 +23,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       .then(function(data) {
         if (!data.active) {
           setSubBanner(true)
-          setTimeout(function() { router.push('/checkout?expired=true') }, 3000)
+          setTimeout(function() { router.push('https://whop.com/checkout/plan_kaL9L5TvxU8Bg') }, 3000)
         }
       })
       .catch(function() {})
@@ -45,7 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
             <h1 className="text-xl font-bold mb-2">Subscription Required</h1>
             <p className="text-sm text-white/40 mb-4">Your subscription is inactive. Redirecting to checkout...</p>
-            <a href="/checkout?expired=true" className="inline-block px-6 py-2.5 bg-[#00e5a0] text-black text-sm font-bold rounded-lg">Subscribe Now</a>
+            <a href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-6 py-2.5 bg-[#00e5a0] text-black text-sm font-bold rounded-lg">Subscribe Now</a>
           </div>
         </body>
       </html>
