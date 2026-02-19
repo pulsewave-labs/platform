@@ -73,11 +73,11 @@ export default function PlaybookRead() {
             </h1>
 
             <p className="text-[18px] md:text-[22px] text-zinc-400 leading-[1.6] max-w-2xl mb-5 font-medium">
-              Our account is up 2,084%.
+              We turned $10K into $218K in under 2 years.
             </p>
 
             <p className="text-[15px] md:text-[17px] text-zinc-600 leading-relaxed max-w-xl mb-12">
-              This playbook explains exactly how that's possible — and gives you the system to do it yourself.
+              This is the full breakdown — every pair, every rule, every number — so you can understand exactly how a 40% win rate generated 2,084% returns. And use the framework yourself.
             </p>
 
             <div className="flex flex-wrap items-center gap-8 md:gap-12">
@@ -103,13 +103,13 @@ export default function PlaybookRead() {
         <R>
           <div className="max-w-2xl">
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              That probably sounds like a contradiction. Losing most of your trades and making money? Every trading guru on Twitter will tell you that's impossible. You need a 70%+ win rate, right?
+              That probably sounds impossible. A system that loses most of its trades turned $10,000 into $218,000 in under two years? Every trading guru on Twitter will tell you that you need a 70%+ win rate to be profitable.
             </p>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              Wrong. And that one misconception is why most retail traders blow their accounts.
+              They're wrong. And that misconception is why most retail traders blow their accounts.
             </p>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              Here's the number that actually matters: our average winner is <strong className="text-white/70">+3.2%</strong>. Our average loser is <strong className="text-white/70">-1.4%</strong>. The wins are <strong className="text-white/70">2.3x larger</strong> than the losses. So even though we lose more often, the winners more than pay for the losers. Over 624 trades, that turns $10K into $218K.
+              Here's how it works: our average winner is <strong className="text-white/70">+3.2%</strong>. Our average loser is <strong className="text-white/70">-1.4%</strong>. The wins are <strong className="text-white/70">2.3x larger</strong> than the losses. So even though we lose more often, the winners more than pay for the losers. Across 624 trades over 20 months, that compounds $10K into $218K.
             </p>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
               This playbook shows you exactly how:
