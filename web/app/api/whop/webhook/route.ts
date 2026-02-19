@@ -5,6 +5,7 @@ import crypto from 'crypto'
 
 var supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 var serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+var whopSecret = process.env.WHOP_WEBHOOK_SECRET || ''
 
 function getAdmin() {
   return createClient(supabaseUrl, serviceKey)
@@ -102,7 +103,21 @@ async function ensureUser(supabase: ReturnType<typeof getAdmin>, email: string, 
 
 export async function POST(request: NextRequest) {
   try {
-    var body = await request.json()
+    var rawBody = await request.text()
+
+    // Verify Whop webhook signature if secret is configured
+    if (whopSecret) {
+      var sig = request.headers.get('whop-signature') || request.headers.get('x-whop-signature') || ''
+      if (sig) {
+        var expected = crypto.createHmac('sha256', whopSecret).update(rawBody).digest('hex')
+        if (sig !== expected) {
+          console.error('[whop-webhook] Invalid signature')
+          return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+        }
+      }
+    }
+
+    var body = JSON.parse(rawBody)
     var eventType = (body.type || body.event || body.action || '').replace(/\./g, '_')
     var data = body.data || body
 
