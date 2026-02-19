@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://signals.pulsewave.app',
+    url: 'https://www.pulsewavelabs.io',
     siteName: 'PulseWave Signals',
     title: 'PulseWave Signals — AI Bot That Turned $10K Into $218K',
     description: 'AI-powered crypto signal bot with 2,084% verified returns. 624 trades, 88% profitable months.',
@@ -60,6 +60,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${mono.variable} dark`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','1381341602998432');fbq('track','PageView');`,
+          }}
+        />
+        <noscript>
+          <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1381341602998432&ev=PageView&noscript=1" />
+        </noscript>
+      </head>
       <body className="font-sans antialiased bg-zinc-950 text-white min-h-screen">
         {children}
       </body>
