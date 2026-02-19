@@ -120,7 +120,7 @@ export default function WelcomeClient() {
               </h1>
 
               <p className="fade-up fade-up-2" style={{ fontSize: 15, color: '#777', lineHeight: 1.7, margin: '0 0 32px' }}>
-                You now have access to the same engine that turned $10K into $218K across 624 backtested trades. Let's get you set up in 60 seconds.
+                You now have access to the same engine that turned $10K into $218K across 624 trades. Let's get you set up in 60 seconds.
               </p>
 
               {/* What you get */}
