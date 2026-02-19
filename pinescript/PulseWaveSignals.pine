@@ -440,7 +440,7 @@ if showZones and barstate.islast and clCount > 0
         color zCol = isRes ? color.new(#ff4d4d, zoneTransp) : color.new(#00e5a0, zoneTransp)
         color bCol = isRes ? color.new(#ff4d4d, zoneTransp + 4) : color.new(#00e5a0, zoneTransp + 4)
 
-        box.new(bar_index - 60, cHi, bar_index + 10, cLo, border_color=bCol, bgcolor=zCol, border_width=0)
+        box.new(bar_index - 500, cHi, bar_index + 10, cLo, border_color=bCol, bgcolor=zCol, border_width=0)
 
         // Strength label
         label.new(bar_index + 12, mid, str.tostring(str), style=label.style_none, textcolor=isRes ? color.new(#ff4d4d, 40) : color.new(#00e5a0, 40), size=size.tiny)
