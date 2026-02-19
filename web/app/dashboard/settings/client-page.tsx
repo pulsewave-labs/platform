@@ -77,7 +77,7 @@ export default function SettingsClientPage() {
     if (!userEmail) return
     setPwLoading(true)
     try {
-      var res = await fetch('/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) })
+      var res = await fetch('/api/auth/reset-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: userEmail }) })
       setPwSent(true)
     } catch (e) {}
     setPwLoading(false)
