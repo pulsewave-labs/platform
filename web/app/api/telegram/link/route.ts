@@ -42,13 +42,14 @@ export async function GET(request: NextRequest) {
 
     const { data: profile } = await supabaseAdmin
       .from('profiles')
-      .select('telegram_chat_id, telegram_linked_at')
+      .select('telegram_chat_id, telegram_linked_at, email_signals')
       .eq('id', user.id)
       .single()
 
     return NextResponse.json({
       linked: !!profile?.telegram_chat_id,
       linked_at: profile?.telegram_linked_at || null,
+      email_signals: profile?.email_signals !== false,
     })
   } catch (err) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

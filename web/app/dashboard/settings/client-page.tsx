@@ -17,6 +17,8 @@ export default function SettingsClientPage() {
   var [whopUrl] = useState('https://whop.com/pulsewave-indicator')
   var [pwSent, setPwSent] = useState(false)
   var [pwLoading, setPwLoading] = useState(false)
+  var [emailSignals, setEmailSignals] = useState(true)
+  var [emailToggleLoading, setEmailToggleLoading] = useState(false)
 
   useEffect(function() {
     async function loadProfile() {
@@ -43,12 +45,29 @@ export default function SettingsClientPage() {
           var data = await res.json()
           setTelegramLinked(data.linked)
           if (data.linked_at) setTelegramLinkedAt(data.linked_at)
+          if (data.email_signals !== undefined) setEmailSignals(data.email_signals)
         }
       } catch (e) {}
       setCheckingLink(false)
     }
     checkStatus()
   }, [])
+
+  async function handleToggleEmailSignals() {
+    var newVal = !emailSignals
+    setEmailToggleLoading(true)
+    setEmailSignals(newVal)
+    try {
+      await fetch('/api/profile/email-signals', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_signals: newVal })
+      })
+    } catch (e) {
+      setEmailSignals(!newVal)
+    }
+    setEmailToggleLoading(false)
+  }
 
   async function handleConnectTelegram() {
     setLinkLoading(true)
@@ -185,6 +204,28 @@ export default function SettingsClientPage() {
               </button>
             </div>
           )}
+        </div>
+      </section>
+
+      <section>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">EMAIL SIGNALS</div>
+        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <div className="text-sm text-[#ccc] font-medium">Email Delivery</div>
+              <div className="text-[13px] text-[#777] mono">Receive signals at {userEmail || 'your email'}</div>
+            </div>
+            <button
+              onClick={handleToggleEmailSignals}
+              disabled={emailToggleLoading}
+              className={'w-9 h-5 rounded-full transition-all duration-200 relative ' + (emailSignals ? 'bg-[#00e5a0]' : 'bg-[#222]')}
+            >
+              <span className={'absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ' + (emailSignals ? 'left-[18px] bg-white' : 'left-0.5 bg-[#555]')}></span>
+            </button>
+          </div>
+          <div className="border-t border-[#141414] px-4 py-2">
+            <div className="text-[12px] text-[#555] mono">Signals include entry, stop loss, take profit, and position sizing. {!telegramLinked && 'Connect Telegram above for faster delivery.'}</div>
+          </div>
         </div>
       </section>
 
