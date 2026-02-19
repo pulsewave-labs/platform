@@ -84,7 +84,7 @@ export default function CheckoutClientPage() {
         "@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}",
         ".fu{animation:fadeUp .5s ease-out forwards}",
         // Make Whop iframe never clip — full height, no internal scroll
-        "iframe[title='Whop Embedded Checkout']{min-height:400px;overflow:visible!important}",
+        "iframe[title='Whop Embedded Checkout']{min-height:600px;overflow:visible!important}",
       ].join('\n') }} />
 
       {/* Nav */}
@@ -104,12 +104,9 @@ export default function CheckoutClientPage() {
 
         {/* Header */}
         <div className="text-center mb-6 md:mb-10 fu">
-          <h1 className="text-xl md:text-[32px] font-bold tracking-tight mb-1.5 md:mb-2 leading-tight">
+          <h1 className="text-xl md:text-[32px] font-bold tracking-tight leading-tight">
             Start receiving signals.
           </h1>
-          <p className="text-[13px] md:text-[14px] text-white/35 max-w-md mx-auto">
-            Create your account, choose your plan, and get instant access.
-          </p>
         </div>
 
         {/* Plan selector */}
