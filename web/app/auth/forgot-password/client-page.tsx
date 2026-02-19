@@ -29,16 +29,16 @@ export default function ForgotPasswordPage() {
     setLoading(false)
   }
 
-  var inputClass = 'w-full px-4 py-3.5 bg-[#111] border border-white/[0.08] rounded-xl text-[15px] text-white placeholder:text-white/20 focus:outline-none focus:border-[#00e5a0]/30 transition-all'
+  var inputClass = 'w-full px-4 py-3.5 bg-[#0a0a0c] border border-white/[0.08] rounded-xl text-[15px] text-white placeholder:text-white/20 focus:outline-none focus:border-[#00e5a0]/30 transition-all'
 
   return (
-    <div className="min-h-screen bg-[#000] text-white flex flex-col antialiased">
+    <div className="min-h-screen bg-[#08080a] text-white flex flex-col antialiased">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: "body{font-family:'Inter',-apple-system,sans-serif;background:#000}.mono{font-family:'JetBrains Mono',monospace}" }} />
+      <style dangerouslySetInnerHTML={{ __html: "body{font-family:'Inter',-apple-system,sans-serif;background:#08080a}.mono{font-family:'JetBrains Mono',monospace}" }} />
 
       <nav className="border-b border-white/[0.04]">
-        <div className="max-w-6xl mx-auto px-5 md:px-10 h-14 flex items-center">
-          <Link href="/"><img src="/logo.webp" alt="PulseWave" className="h-5 opacity-50" /></Link>
+        <div className="max-w-7xl mx-auto px-6 md:px-10 h-14 flex items-center">
+          <Link href="/"><img src="/logo.webp" alt="PulseWave" className="h-7" /></Link>
         </div>
       </nav>
 
