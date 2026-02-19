@@ -232,21 +232,8 @@ export default function SettingsClientPage() {
         </div>
       </section>
 
-      {/* Danger Zone */}
-      <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">DANGER ZONE</div>
-        <div className="border border-[#ff4d4d]/10 rounded-lg bg-[#0c0c0c] px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="text-sm text-[#ccc] font-medium">Delete Account</div>
-              <div className="text-[13px] text-[#666] mono">Permanently remove your account and data</div>
-            </div>
-            <button className="text-[13px] mono text-[#ff4d4d]/60 hover:text-[#ff4d4d] transition-colors">
-              DELETE
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* spacer */}
+      <div></div>
     </div>
   )
 }
