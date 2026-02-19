@@ -17,38 +17,17 @@ export default function SetPasswordPage() {
   var params = useSearchParams()
   var supabase = createClient()
 
-  // Pick up the auth tokens from the URL (Supabase redirects with hash fragments)
   useEffect(() => {
-    // Supabase puts tokens in the hash: #access_token=...&refresh_token=...
     if (typeof window === 'undefined') return
-
     var hash = window.location.hash
     if (hash) {
-      var hashParams = new URLSearchParams(hash.substring(1))
-      var access = hashParams.get('access_token')
-      var refresh = hashParams.get('refresh_token')
-      if (access && refresh) {
-        supabase.auth.setSession({ access_token: access, refresh_token: refresh }).then(() => {
-          setSessionReady(true)
-        })
-        return
-      }
+      var hp = new URLSearchParams(hash.substring(1))
+      var a = hp.get('access_token'), r = hp.get('refresh_token')
+      if (a && r) { supabase.auth.setSession({ access_token: a, refresh_token: r }).then(() => setSessionReady(true)); return }
     }
-
-    // Also check query params
-    var access = params.get('access_token')
-    var refresh = params.get('refresh_token')
-    if (access && refresh) {
-      supabase.auth.setSession({ access_token: access, refresh_token: refresh }).then(() => {
-        setSessionReady(true)
-      })
-      return
-    }
-
-    // Check if already logged in
-    supabase.auth.getUser().then(r => {
-      if (r.data.user) setSessionReady(true)
-    })
+    var a2 = params.get('access_token'), r2 = params.get('refresh_token')
+    if (a2 && r2) { supabase.auth.setSession({ access_token: a2, refresh_token: r2 }).then(() => setSessionReady(true)); return }
+    supabase.auth.getUser().then(r => { if (r.data.user) setSessionReady(true) })
   }, [])
 
   var valid = password.length >= 8 && password === confirm
@@ -56,34 +35,32 @@ export default function SetPasswordPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!valid) return
-    setLoading(true)
-    setError('')
-
+    setLoading(true); setError('')
     var { error: err } = await supabase.auth.updateUser({ password })
-    if (err) {
-      setError(err.message)
-      setLoading(false)
-    } else {
-      setDone(true)
-      setTimeout(() => router.push('/welcome'), 2000)
-    }
+    if (err) { setError(err.message); setLoading(false) }
+    else { setDone(true); setTimeout(() => router.push('/welcome'), 2000) }
   }
 
-  var inputClass = 'w-full px-4 py-3.5 bg-[#0a0a0c] border border-white/[0.08] rounded-xl text-[15px] text-white placeholder:text-white/20 focus:outline-none focus:border-[#00e5a0]/30 transition-all'
-
   return (
-    <div className="min-h-screen bg-[#08080a] text-white flex flex-col antialiased">
+    <div className="min-h-[100dvh] bg-[#08080a] text-white flex flex-col antialiased">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: "body{font-family:'Inter',-apple-system,sans-serif;background:#08080a}.mono{font-family:'JetBrains Mono',monospace}" }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        body{font-family:'Inter',-apple-system,sans-serif;background:#08080a;-webkit-text-size-adjust:100%}
+        .mono{font-family:'JetBrains Mono',monospace}
+        .grid-bg{background-image:linear-gradient(rgba(255,255,255,.007) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.007) 1px,transparent 1px);background-size:50px 50px}
+        input{font-size:16px!important}
+      `}} />
 
       <nav className="border-b border-white/[0.04]">
-        <div className="max-w-7xl mx-auto px-6 md:px-10 h-14 flex items-center">
-          <Link href="/"><img src="/logo.webp" alt="PulseWave" className="h-7" /></Link>
+        <div className="max-w-7xl mx-auto px-5 sm:px-6 md:px-10 h-14 flex items-center">
+          <Link href="/"><img src="/logo.webp" alt="PulseWave" className="h-6 sm:h-7" /></Link>
         </div>
       </nav>
 
-      <div className="flex-1 flex items-center justify-center px-5 py-16">
-        <div className="w-full max-w-sm">
+      <div className="flex-1 flex items-center justify-center px-5 py-10 sm:py-16 grid-bg relative">
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
+
+        <div className="w-full max-w-sm relative z-10">
 
           {done ? (
             <div className="text-center">
@@ -117,7 +94,7 @@ export default function SetPasswordPage() {
               {sessionReady && (
                 <form onSubmit={handleSubmit} className="space-y-3">
                   {error && (
-                    <div className="text-[12px] text-[#ff4d4d] bg-[#ff4d4d]/[0.05] border border-[#ff4d4d]/10 rounded-xl px-4 py-2.5">
+                    <div className="text-[13px] text-[#ff4d4d] bg-[#ff4d4d]/[0.05] border border-[#ff4d4d]/10 rounded-xl px-4 py-3">
                       {error}
                     </div>
                   )}
@@ -128,12 +105,15 @@ export default function SetPasswordPage() {
                       value={password}
                       onChange={e => setPassword(e.target.value)}
                       placeholder="New password (min. 8 characters)"
-                      className={inputClass}
+                      className="w-full px-4 py-3.5 min-h-[48px] bg-[#0a0a0c] border border-white/[0.08] rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:border-[#00e5a0]/30 transition-all"
                       minLength={8}
                       required
                       autoFocus
+                      autoComplete="new-password"
                     />
-                    <button type="button" onClick={() => setShow(!show)} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/15 hover:text-white/30 transition-colors text-[12px] mono">
+                    <button type="button" onClick={() => setShow(!show)}
+                      className="absolute right-0 top-0 bottom-0 w-14 flex items-center justify-center text-white/15 hover:text-white/30 active:text-white/40 transition-colors text-[12px] mono border-none bg-transparent cursor-pointer"
+                      style={{WebkitTapHighlightColor: 'transparent'}}>
                       {show ? 'HIDE' : 'SHOW'}
                     </button>
                   </div>
@@ -154,26 +134,28 @@ export default function SetPasswordPage() {
                     value={confirm}
                     onChange={e => setConfirm(e.target.value)}
                     placeholder="Confirm password"
-                    className={inputClass}
+                    className="w-full px-4 py-3.5 min-h-[48px] bg-[#0a0a0c] border border-white/[0.08] rounded-xl text-white placeholder:text-white/20 focus:outline-none focus:border-[#00e5a0]/30 transition-all"
                     minLength={8}
                     required
+                    autoComplete="new-password"
                   />
 
                   {confirm.length > 0 && password !== confirm && (
-                    <p className="text-[11px] text-[#ff4d4d]/50 px-1">Passwords don't match</p>
+                    <p className="text-[12px] text-[#ff4d4d]/50 px-1">Passwords don't match</p>
                   )}
 
                   <button
                     type="submit"
                     disabled={loading || !valid}
-                    className="w-full py-3.5 bg-[#00e5a0] text-black rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-2"
+                    className="w-full min-h-[48px] py-3.5 bg-[#00e5a0] text-[#08080a] rounded-xl font-bold text-[15px] hover:bg-[#00cc8e] active:scale-[0.985] transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-1"
+                    style={{WebkitTapHighlightColor: 'transparent'}}
                   >
                     {loading ? 'Setting password...' : 'Set Password'}
                   </button>
                 </form>
               )}
 
-              <p className="text-[10px] text-white/10 text-center mt-6">
+              <p className="text-[11px] text-white/10 text-center mt-6 pb-[env(safe-area-inset-bottom)]">
                 Having trouble? <a href="mailto:support@pulsewavelabs.io" className="underline hover:text-white/20">Contact support</a>
               </p>
             </>
