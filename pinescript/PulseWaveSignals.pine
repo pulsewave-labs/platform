@@ -1,0 +1,530 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PulseWave Labs
+
+//@version=6
+indicator("PulseWave Signals", shorttitle="PW Signals", overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+
+// ══════════════════════════════════════════════════════════════════════════════
+// INPUTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+// S/R Engine
+grpSR          = "Support / Resistance Engine"
+pivotPeriod    = input.int(10, "Pivot Lookback", minval=2, maxval=50, group=grpSR, tooltip="Bars left/right for pivot detection")
+maxPivots      = input.int(60, "Max Pivots", minval=10, maxval=200, group=grpSR)
+channelWidthPct = input.int(10, "Channel Width %", minval=1, maxval=30, group=grpSR, tooltip="Clustering tolerance as % of price range")
+maxLevels      = input.int(8, "Max S/R Levels", minval=2, maxval=20, group=grpSR)
+minStrength    = input.int(3, "Min Cluster Strength", minval=2, maxval=10, group=grpSR)
+srLookback     = input.int(400, "Channel Width Lookback", minval=50, maxval=1000, group=grpSR)
+srcMode        = input.string("High/Low", "Pivot Source", options=["High/Low", "Close/Open"], group=grpSR)
+
+// Regime Detection
+grpRegime      = "Regime Detection"
+atrPeriod      = input.int(14, "ATR Period", group=grpRegime)
+adxPeriod      = input.int(14, "ADX Period", group=grpRegime)
+bbPeriod       = input.int(20, "Bollinger Period", group=grpRegime)
+bbStd          = input.float(2.0, "Bollinger StdDev", group=grpRegime)
+emaFast        = input.int(20, "EMA Fast", group=grpRegime)
+emaSlow        = input.int(50, "EMA Slow", group=grpRegime)
+
+// Confluence Scoring
+grpConf        = "Confluence Scoring"
+rsiPeriod      = input.int(14, "RSI Period", group=grpConf)
+volMaPeriod    = input.int(20, "Volume MA Period", group=grpConf)
+proximityPct   = input.float(2.0, "S/R Proximity %", step=0.1, group=grpConf, tooltip="Max distance from S/R to score points")
+
+// Signal Filters
+grpSig         = "Signal Filters"
+minConfluence  = input.float(45.0, "Min Confluence Score", minval=0, maxval=100, step=5, group=grpSig)
+minRR          = input.float(1.5, "Min Risk:Reward", minval=0.5, maxval=5, step=0.1, group=grpSig)
+maxSlPct       = input.float(3.0, "Max Stop Loss %", minval=0.5, maxval=10, step=0.5, group=grpSig)
+
+// Display
+grpDisp        = "Display"
+showZones      = input.bool(true, "Show S/R Zones", group=grpDisp)
+showSignals    = input.bool(true, "Show Entry Signals", group=grpDisp)
+showSLTP       = input.bool(true, "Show SL/TP Lines", group=grpDisp)
+showDash       = input.bool(true, "Show Dashboard", group=grpDisp)
+showRegime     = input.bool(true, "Show Regime", group=grpDisp)
+zoneTransp     = input.int(88, "Zone Transparency", minval=70, maxval=97, group=grpDisp)
+
+// Alerts
+grpAlert       = "Alerts"
+alertLong      = input.bool(true, "Alert Long Signals", group=grpAlert)
+alertShort     = input.bool(true, "Alert Short Signals", group=grpAlert)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// S/R ENGINE — Pivot-Based Clustering (matches Python sr_engine.py exactly)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Pivot source selection
+float srcHi = srcMode == "High/Low" ? high : math.max(close, open)
+float srcLo = srcMode == "High/Low" ? low  : math.min(close, open)
+
+// Detect pivots
+float ph = ta.pivothigh(srcHi, pivotPeriod, pivotPeriod)
+float pl = ta.pivotlow(srcLo, pivotPeriod, pivotPeriod)
+
+// Rolling pivot buffer
+var float[] pivotArr = array.new_float(0)
+
+if not na(ph)
+    array.unshift(pivotArr, ph)
+if not na(pl)
+    array.unshift(pivotArr, pl)
+
+// Trim to maxPivots
+while array.size(pivotArr) > maxPivots
+    array.pop(pivotArr)
+
+// Channel width calculation
+float cwHigh = ta.highest(high, srLookback)
+float cwLow  = ta.lowest(low, srLookback)
+float channelWidth = (cwHigh - cwLow) * channelWidthPct / 100.0
+
+// Clustering arrays (max 20 clusters)
+var float[] clHigh     = array.new_float(20, 0.0)
+var float[] clLow      = array.new_float(20, 0.0)
+var int[]   clStrength = array.new_int(20, 0)
+var int     clCount    = 0
+
+// Run clustering every bar (lightweight enough)
+if barstate.islast or barstate.isconfirmed
+    // Reset
+    clCount := 0
+    for k = 0 to 19
+        array.set(clHigh, k, 0.0)
+        array.set(clLow, k, 0.0)
+        array.set(clStrength, k, 0)
+
+    int pvtSize = array.size(pivotArr)
+    if pvtSize >= minStrength and channelWidth > 0
+        // Temp arrays for building clusters
+        var float[] tmpHi  = array.new_float(0)
+        var float[] tmpLo  = array.new_float(0)
+        var int[]   tmpStr = array.new_int(0)
+
+        array.clear(tmpHi)
+        array.clear(tmpLo)
+        array.clear(tmpStr)
+
+        for i = 0 to pvtSize - 1
+            float base = array.get(pivotArr, i)
+            float cLo  = base
+            float cHi  = base
+            int   cnt  = 0
+
+            for j = 0 to pvtSize - 1
+                float test = array.get(pivotArr, j)
+                float w = test <= cLo ? cHi - test : test - cLo
+                if w <= channelWidth
+                    cLo := math.min(cLo, test)
+                    cHi := math.max(cHi, test)
+                    cnt += 1
+
+            if cnt >= minStrength
+                // Check overlap with existing tmp clusters
+                bool valid = true
+                int[] removeIdx = array.new_int(0)
+
+                for k = 0 to array.size(tmpHi) - 1
+                    float eHi = array.get(tmpHi, k)
+                    float eLo = array.get(tmpLo, k)
+                    int   eStr = array.get(tmpStr, k)
+
+                    bool overlaps = (eHi >= cLo and eHi <= cHi) or (eLo >= cLo and eLo <= cHi)
+                    if overlaps
+                        if cnt >= eStr
+                            array.push(removeIdx, k)
+                        else
+                            valid := false
+                            break
+
+                if valid
+                    // Remove weaker overlapping (reverse order)
+                    if array.size(removeIdx) > 0
+                        for r = array.size(removeIdx) - 1 to 0
+                            int idx = array.get(removeIdx, r)
+                            array.remove(tmpHi, idx)
+                            array.remove(tmpLo, idx)
+                            array.remove(tmpStr, idx)
+
+                    array.push(tmpHi, cHi)
+                    array.push(tmpLo, cLo)
+                    array.push(tmpStr, cnt)
+
+        // Sort by strength descending (simple bubble sort, small N)
+        int n = array.size(tmpStr)
+        for i2 = 0 to math.max(n - 2, 0)
+            for j2 = 0 to math.max(n - i2 - 2, 0)
+                if array.get(tmpStr, j2) < array.get(tmpStr, j2 + 1)
+                    float swH = array.get(tmpHi, j2)
+                    float swL = array.get(tmpLo, j2)
+                    int   swS = array.get(tmpStr, j2)
+                    array.set(tmpHi, j2, array.get(tmpHi, j2 + 1))
+                    array.set(tmpLo, j2, array.get(tmpLo, j2 + 1))
+                    array.set(tmpStr, j2, array.get(tmpStr, j2 + 1))
+                    array.set(tmpHi, j2 + 1, swH)
+                    array.set(tmpLo, j2 + 1, swL)
+                    array.set(tmpStr, j2 + 1, swS)
+
+        clCount := math.min(n, maxLevels)
+        for k = 0 to clCount - 1
+            array.set(clHigh, k, array.get(tmpHi, k))
+            array.set(clLow, k, array.get(tmpLo, k))
+            array.set(clStrength, k, array.get(tmpStr, k))
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REGIME DETECTION (matches Python regime_detector.py)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// ATR
+float atrVal = ta.atr(atrPeriod)
+float atrMA  = ta.sma(atrVal, 20)
+float atrRatio = atrMA > 0 ? atrVal / atrMA : 1.0
+
+// ADX
+[diPlus, diMinus, adxVal] = ta.dmi(adxPeriod, adxPeriod)
+
+// Bollinger Band Width
+float bbBasis = ta.sma(close, bbPeriod)
+float bbDev   = ta.stdev(close, bbPeriod) * bbStd
+float bbUpper = bbBasis + bbDev
+float bbLower = bbBasis - bbDev
+float bbWidth = bbBasis > 0 ? (bbUpper - bbLower) / bbBasis * 100 : 0
+
+// EMAs
+float emaF = ta.ema(close, emaFast)
+float emaS = ta.ema(close, emaSlow)
+float emaTrend = emaS > 0 ? (emaF - emaS) / emaS * 100 : 0
+float priceVsEmaF = emaF > 0 ? (close - emaF) / emaF * 100 : 0
+float priceVsEmaS = emaS > 0 ? (close - emaS) / emaS * 100 : 0
+
+// Momentum
+float momFast = close[5] > 0 ? (close - close[5]) / close[5] * 100 : 0
+float momSlow = close[20] > 0 ? (close - close[20]) / close[20] * 100 : 0
+
+// Trend strength score
+float trendStrength = adxVal >= 25 ? math.min((adxVal - 25) / 25, 1.0) : 0.0
+bool  isUptrend     = emaTrend > 0
+
+// Volatility score
+float atrScore = math.min(math.max(atrRatio - 1.0, 0.0) / 1.0, 1.0)
+float bbScore  = math.min(math.max(bbWidth - 2.0, 0.0) / 8.0, 1.0)
+float volScore = (atrScore + bbScore) / 2.0
+
+// Momentum alignment
+int bullSignals = (priceVsEmaF > 0 ? 1 : 0) + (priceVsEmaS > 0 ? 1 : 0) + (momFast > 0 ? 1 : 0) + (momSlow > 0 ? 1 : 0)
+float momAlign  = bullSignals >= 3 ? bullSignals / 4.0 : (4 - bullSignals) >= 3 ? (4 - bullSignals) / 4.0 : 0.5
+bool  isMomBull = bullSignals >= 3 ? true : (4 - bullSignals) >= 3 ? false : momFast > momSlow
+
+// Regime classification: 0=RANGING, 1=TREND_UP, 2=TREND_DOWN, 3=VOLATILE
+var int regime = 0
+var float regimeConf = 50.0
+
+if volScore > 0.7
+    if trendStrength > 0.6 and momAlign > 0.7
+        regime := isUptrend and isMomBull ? 1 : 2
+        regimeConf := math.min(85 + trendStrength * 15, 95)
+    else
+        regime := 3
+        regimeConf := math.min(60 + volScore * 30, 85)
+else if trendStrength > 0.5 and momAlign > 0.6
+    if isUptrend == isMomBull
+        regime := isUptrend ? 1 : 2
+        regimeConf := math.min(70 + trendStrength * 20 + momAlign * 10, 95)
+    else
+        regime := 0
+        regimeConf := 60
+else
+    regime := 0
+    regimeConf := math.min(50 + (1 - trendStrength) * 20 + (1 - momAlign) * 15, 80)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CONFLUENCE SCORING (matches Python confluence_scorer.py — 7 factors, 100pts)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// RSI
+float rsiVal = ta.rsi(close, rsiPeriod)
+
+// Volume ratio
+float volMA    = ta.sma(volume, volMaPeriod)
+float volRatio = volMA > 0 ? volume / volMA : 1.0
+
+// Find nearest support and resistance from clusters
+float nearestSup    = na
+float nearestRes    = na
+int   nearestSupStr = 0
+int   nearestResStr = 0
+float nearestSupDist = 999.0
+float nearestResDist = 999.0
+
+if clCount > 0
+    for k = 0 to clCount - 1
+        float mid = (array.get(clHigh, k) + array.get(clLow, k)) / 2.0
+        float dist = math.abs(mid - close) / close * 100
+        if mid < close and dist < nearestSupDist
+            nearestSup := mid
+            nearestSupStr := array.get(clStrength, k)
+            nearestSupDist := dist
+        if mid >= close and dist < nearestResDist
+            nearestRes := mid
+            nearestResStr := array.get(clStrength, k)
+            nearestResDist := dist
+
+
+// ── Score for LONG direction ──
+float longProxScore = 0.0
+if not na(nearestSup)
+    longProxScore := nearestSupDist <= proximityPct ? 20 - (nearestSupDist / proximityPct * 10) : nearestSupDist <= proximityPct * 2 ? 10 - ((nearestSupDist - proximityPct) / proximityPct * 5) : 2.0
+    longProxScore := math.max(longProxScore, 0)
+
+float longStrScore = nearestSupStr >= 10 ? 15.0 : nearestSupStr >= 7 ? 12.0 : nearestSupStr >= 5 ? 8.0 : nearestSupStr >= minStrength ? 4.0 : 0.0
+
+float longRegScore = regime == 1 ? regimeConf / 100 * 20 : regime == 0 ? 8.0 : regime == 3 ? 5.0 : 2.0
+
+float longRsiScore = rsiVal <= 30 ? 15.0 : rsiVal <= 40 ? 10.0 : rsiVal <= 50 ? 6.0 : rsiVal <= 70 ? 3.0 : 1.0
+
+float priceChg = close[1] > 0 ? (close - close[1]) / close[1] : 0
+float longVolScore = volRatio > 1.5 and priceChg > 0 ? 10.0 : volRatio > 1.2 ? 7.0 : volRatio > 0.8 ? 5.0 : 2.0
+
+// MTF agreement — single TF mode, give 5 (neutral)
+float longMtfScore = 5.0
+
+float longTrendScore = priceVsEmaS > 1 and emaTrend > 0.1 ? 10.0 : priceVsEmaS > 0 and emaTrend > 0 ? 7.0 : priceVsEmaS > -1 ? 5.0 : 2.0
+
+float longTotal = longProxScore + longStrScore + longRegScore + longRsiScore + longVolScore + longMtfScore + longTrendScore
+
+
+// ── Score for SHORT direction ──
+float shortProxScore = 0.0
+if not na(nearestRes)
+    shortProxScore := nearestResDist <= proximityPct ? 20 - (nearestResDist / proximityPct * 10) : nearestResDist <= proximityPct * 2 ? 10 - ((nearestResDist - proximityPct) / proximityPct * 5) : 2.0
+    shortProxScore := math.max(shortProxScore, 0)
+
+float shortStrScore = nearestResStr >= 10 ? 15.0 : nearestResStr >= 7 ? 12.0 : nearestResStr >= 5 ? 8.0 : nearestResStr >= minStrength ? 4.0 : 0.0
+
+float shortRegScore = regime == 2 ? regimeConf / 100 * 20 : regime == 0 ? 8.0 : regime == 3 ? 5.0 : 2.0
+
+float shortRsiScore = rsiVal >= 70 ? 15.0 : rsiVal >= 60 ? 10.0 : rsiVal >= 50 ? 6.0 : rsiVal >= 30 ? 3.0 : 1.0
+
+float shortVolScore = volRatio > 1.5 and priceChg < 0 ? 10.0 : volRatio > 1.2 ? 7.0 : volRatio > 0.8 ? 5.0 : 2.0
+
+float shortMtfScore = 5.0
+
+float shortTrendScore = priceVsEmaS < -1 and emaTrend < -0.1 ? 10.0 : priceVsEmaS < 0 and emaTrend < 0 ? 7.0 : priceVsEmaS < 1 ? 5.0 : 2.0
+
+float shortTotal = shortProxScore + shortStrScore + shortRegScore + shortRsiScore + shortVolScore + shortMtfScore + shortTrendScore
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// SIGNAL GENERATION (matches Python signal_generator.py)
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Detect S/R interactions (bounce/rejection)
+bool longOpp  = false
+bool shortOpp = false
+
+if clCount > 0
+    for k = 0 to clCount - 1
+        float mid  = (array.get(clHigh, k) + array.get(clLow, k)) / 2.0
+        float dist = math.abs(mid - close) / close * 100
+        float cHi  = array.get(clHigh, k)
+        float cLo  = array.get(clLow, k)
+
+        if dist <= 3.0
+            // Bounce off support
+            if mid < close and close[1] <= mid and close > mid
+                longOpp := true
+            // Rejection at resistance
+            if mid > close and close[1] >= mid and close < mid
+                shortOpp := true
+            // Near-level breakout potential
+            if dist <= 1.0
+                if mid >= close
+                    longOpp := true   // potential breakout up
+                else
+                    shortOpp := true  // potential breakdown
+
+// Pick best direction
+float bestScore = 0.0
+int   sigDir    = 0  // 0=neutral, 1=long, -1=short
+
+if longOpp and longTotal > bestScore
+    bestScore := longTotal
+    sigDir    := 1
+if shortOpp and shortTotal > bestScore
+    bestScore := shortTotal
+    sigDir    := -1
+
+// Apply minimum confluence filter
+bool passConf = bestScore >= minConfluence
+
+// Calculate SL/TP
+float entryPrice = close
+float slPrice    = na
+float tpPrice    = na
+float rrRatio    = 0.0
+
+if passConf and sigDir != 0
+    float maxSlDist = entryPrice * maxSlPct / 100
+    float atrSl     = atrVal * 1.5
+
+    if sigDir == 1  // LONG
+        // SL: nearest support low or ATR-based
+        float slAtr = entryPrice - atrSl
+        float slSr  = na(nearestSup) ? slAtr : nearestSup - (array.get(clHigh, 0) - array.get(clLow, 0)) * 0.1
+        slPrice := math.max(slAtr, not na(slSr) ? slSr : slAtr)
+        if entryPrice - slPrice > maxSlDist
+            slPrice := entryPrice - maxSlDist
+
+        // TP: nearest resistance or minimum R:R
+        float risk = entryPrice - slPrice
+        float minTarget = entryPrice + risk * minRR
+        tpPrice := not na(nearestRes) and nearestRes >= minTarget ? nearestRes : minTarget
+
+        rrRatio := risk > 0 ? (tpPrice - entryPrice) / risk : 0
+
+    else  // SHORT
+        float slAtr = entryPrice + atrSl
+        float slSr  = na(nearestRes) ? slAtr : nearestRes + (array.get(clHigh, 0) - array.get(clLow, 0)) * 0.1
+        slPrice := math.min(slAtr, not na(slSr) ? slSr : slAtr)
+        if slPrice - entryPrice > maxSlDist
+            slPrice := entryPrice + maxSlDist
+
+        float risk = slPrice - entryPrice
+        float minTarget = entryPrice - risk * minRR
+        tpPrice := not na(nearestSup) and nearestSup <= minTarget ? nearestSup : minTarget
+
+        rrRatio := risk > 0 ? (entryPrice - tpPrice) / risk : 0
+
+// Final signal validity
+bool validSignal = passConf and sigDir != 0 and rrRatio >= minRR
+bool longSignal  = validSignal and sigDir == 1
+bool shortSignal = validSignal and sigDir == -1
+
+// Debounce — don't repeat same direction within 5 bars
+var int lastSigBar = 0
+var int lastSigDir = 0
+
+bool newLong  = longSignal  and (bar_index - lastSigBar > 5 or lastSigDir != 1)
+bool newShort = shortSignal and (bar_index - lastSigBar > 5 or lastSigDir != -1)
+
+if newLong
+    lastSigBar := bar_index
+    lastSigDir := 1
+if newShort
+    lastSigBar := bar_index
+    lastSigDir := -1
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DRAWING — S/R Zones
+// ══════════════════════════════════════════════════════════════════════════════
+
+if showZones and barstate.islast and clCount > 0
+    for k = 0 to clCount - 1
+        float cHi  = array.get(clHigh, k)
+        float cLo  = array.get(clLow, k)
+        float mid  = (cHi + cLo) / 2.0
+        int   str  = array.get(clStrength, k)
+        bool  isRes = mid >= close
+
+        color zCol = isRes ? color.new(#ff4d4d, zoneTransp) : color.new(#00e5a0, zoneTransp)
+        color bCol = isRes ? color.new(#ff4d4d, zoneTransp + 4) : color.new(#00e5a0, zoneTransp + 4)
+
+        box.new(bar_index - 60, cHi, bar_index + 10, cLo, border_color=bCol, bgcolor=zCol, border_width=0)
+
+        // Strength label
+        label.new(bar_index + 12, mid, str(str), style=label.style_none, textcolor=isRes ? color.new(#ff4d4d, 40) : color.new(#00e5a0, 40), size=size.tiny)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DRAWING — Signals + SL/TP
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Entry arrows
+plotshape(showSignals and newLong,  title="Long",  location=location.belowbar, style=shape.triangleup,   color=#00e5a0, size=size.small, text="LONG",  textcolor=#00e5a0)
+plotshape(showSignals and newShort, title="Short", location=location.abovebar, style=shape.triangledown, color=#ff4d4d, size=size.small, text="SHORT", textcolor=#ff4d4d)
+
+// SL / TP lines (persist for 20 bars)
+var line slLine = na
+var line tpLine = na
+var label slLbl = na
+var label tpLbl = na
+
+if showSLTP and (newLong or newShort)
+    // Clean previous
+    if not na(slLine)
+        line.delete(slLine)
+        line.delete(tpLine)
+        label.delete(slLbl)
+        label.delete(tpLbl)
+
+    slLine := line.new(bar_index, slPrice, bar_index + 20, slPrice, color=color.new(#ff4d4d, 30), style=line.style_dashed, width=1)
+    tpLine := line.new(bar_index, tpPrice, bar_index + 20, tpPrice, color=color.new(#00e5a0, 30), style=line.style_dashed, width=1)
+    slLbl  := label.new(bar_index + 21, slPrice, "SL " + str.tostring(slPrice, format.mintick), style=label.style_none, textcolor=color.new(#ff4d4d, 30), size=size.tiny)
+    tpLbl  := label.new(bar_index + 21, tpPrice, "TP " + str.tostring(tpPrice, format.mintick), style=label.style_none, textcolor=color.new(#00e5a0, 30), size=size.tiny)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// DASHBOARD TABLE
+// ══════════════════════════════════════════════════════════════════════════════
+
+if showDash and barstate.islast
+    var table dash = table.new(position.top_right, 2, 10, bgcolor=color.new(#0a0a0f, 5), border_color=color.new(#ffffff, 92), border_width=1, frame_color=color.new(#ffffff, 92), frame_width=1)
+
+    string regStr = regime == 1 ? "TRENDING UP" : regime == 2 ? "TRENDING DN" : regime == 3 ? "VOLATILE" : "RANGING"
+    color  regClr = regime == 1 ? #00e5a0 : regime == 2 ? #ff4d4d : regime == 3 ? #ff9f43 : #888888
+
+    string sigStr = newLong ? "LONG" : newShort ? "SHORT" : sigDir == 1 ? "long (wait)" : sigDir == -1 ? "short (wait)" : "—"
+    color  sigClr = newLong ? #00e5a0 : newShort ? #ff4d4d : #666666
+
+    table.cell(dash, 0, 0, "PulseWave Signals", text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
+    table.cell(dash, 1, 0, "", text_size=size.small)
+
+    table.cell(dash, 0, 1, "Regime",     text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 1, regStr,        text_color=regClr,               text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 2, "Confidence",  text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 2, str.tostring(regimeConf, "#.0") + "%", text_color=color.new(#ffffff, 40), text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 3, "Signal",      text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 3, sigStr,         text_color=sigClr,               text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 4, "Confluence",   text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 4, str.tostring(bestScore, "#.0") + "/100", text_color=bestScore >= 70 ? #00e5a0 : bestScore >= 45 ? #ff9f43 : #ff4d4d, text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 5, "R:R",          text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 5, str.tostring(rrRatio, "#.##"),  text_color=rrRatio >= 2 ? #00e5a0 : rrRatio >= 1.5 ? #ff9f43 : #ff4d4d, text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 6, "RSI",          text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 6, str.tostring(rsiVal, "#.0"),    text_color=rsiVal <= 30 or rsiVal >= 70 ? #ff9f43 : color.new(#ffffff, 40), text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 7, "ADX",          text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 7, str.tostring(adxVal, "#.0"),    text_color=adxVal >= 25 ? #00e5a0 : color.new(#ffffff, 40), text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 8, "S/R Levels",   text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 8, str.tostring(clCount), text_color=color.new(#ffffff, 40), text_size=size.tiny, text_halign=text.align_right)
+
+    table.cell(dash, 0, 9, "Vol Ratio",    text_color=color.new(#ffffff, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 9, str.tostring(volRatio, "#.##") + "x", text_color=volRatio > 1.5 ? #00e5a0 : color.new(#ffffff, 40), text_size=size.tiny, text_halign=text.align_right)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// REGIME BAR COLORING (optional)
+// ══════════════════════════════════════════════════════════════════════════════
+
+barcolor(showRegime ? (regime == 1 ? color.new(#00e5a0, 70) : regime == 2 ? color.new(#ff4d4d, 70) : regime == 3 ? color.new(#ff9f43, 75) : na) : na)
+
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ALERTS
+// ══════════════════════════════════════════════════════════════════════════════
+
+alertcondition(alertLong  and newLong,  title="PW Long Signal",  message="PulseWave LONG | {{ticker}} @ {{close}} | Confluence: " + str.tostring(bestScore) + " | R:R: " + str.tostring(rrRatio))
+alertcondition(alertShort and newShort, title="PW Short Signal", message="PulseWave SHORT | {{ticker}} @ {{close}} | Confluence: " + str.tostring(bestScore) + " | R:R: " + str.tostring(rrRatio))
+alertcondition(alertLong and newLong or alertShort and newShort, title="PW Any Signal", message="PulseWave {{ticker}} @ {{close}} | Score: " + str.tostring(bestScore))
