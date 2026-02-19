@@ -22,17 +22,17 @@ export async function GET(request: NextRequest) {
 
     // Admin bypass
     if (ADMIN_EMAILS.includes(email)) {
-      return NextResponse.json({ active: true, status: 'active', plan: 'admin' })
+      return NextResponse.json({ active: true, status: 'active', plan: 'admin', email: email, created_at: user.created_at || null })
     }
 
     var { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('subscription_status, subscription_plan')
+      .select('subscription_status, subscription_plan, subscription_expires_at, email, created_at')
       .eq('id', user.id)
       .single()
 
     if (profileError || !profile) {
-      return NextResponse.json({ active: false, status: 'none', plan: null })
+      return NextResponse.json({ active: false, status: 'none', plan: null, email: email, created_at: null })
     }
 
     var status = profile.subscription_status || 'none'
@@ -42,6 +42,9 @@ export async function GET(request: NextRequest) {
       active: active,
       status: status,
       plan: profile.subscription_plan || null,
+      expires_at: profile.subscription_expires_at || null,
+      email: profile.email || email,
+      created_at: profile.created_at || null,
     })
   } catch (err) {
     console.error('[subscription] Error:', err)

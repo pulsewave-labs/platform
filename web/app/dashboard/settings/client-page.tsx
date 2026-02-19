@@ -3,21 +3,45 @@
 import { useState, useEffect } from 'react'
 
 export default function SettingsClientPage() {
-  const [telegramEnabled, setTelegramEnabled] = useState(true)
-  const [emailEnabled, setEmailEnabled] = useState(false)
-  const [telegramLinked, setTelegramLinked] = useState(false)
-  const [telegramLinkedAt, setTelegramLinkedAt] = useState('')
-  const [linkLoading, setLinkLoading] = useState(false)
-  const [deepLink, setDeepLink] = useState('')
-  const [checkingLink, setCheckingLink] = useState(true)
+  var [telegramEnabled, setTelegramEnabled] = useState(true)
+  var [emailEnabled, setEmailEnabled] = useState(false)
+  var [telegramLinked, setTelegramLinked] = useState(false)
+  var [telegramLinkedAt, setTelegramLinkedAt] = useState('')
+  var [linkLoading, setLinkLoading] = useState(false)
+  var [deepLink, setDeepLink] = useState('')
+  var [checkingLink, setCheckingLink] = useState(true)
+  var [userEmail, setUserEmail] = useState('')
+  var [memberSince, setMemberSince] = useState('')
+  var [subStatus, setSubStatus] = useState('none')
+  var [subPlan, setSubPlan] = useState('')
+  var [subExpires, setSubExpires] = useState('')
+  var [whopUrl] = useState('https://whop.com/pulsewave-indicator')
+
+  // Fetch user profile + subscription on mount
+  useEffect(function() {
+    async function loadProfile() {
+      try {
+        var res = await fetch('/api/subscription')
+        if (res.ok) {
+          var data = await res.json()
+          setSubStatus(data.status || 'none')
+          setSubPlan(data.plan || '')
+          if (data.expires_at) setSubExpires(data.expires_at)
+          if (data.email) setUserEmail(data.email)
+          if (data.created_at) setMemberSince(data.created_at)
+        }
+      } catch (e) {}
+    }
+    loadProfile()
+  }, [])
 
   // Check Telegram link status on mount
   useEffect(function() {
     async function checkStatus() {
       try {
-        const res = await fetch('/api/telegram/link')
+        var res = await fetch('/api/telegram/link')
         if (res.ok) {
-          const data = await res.json()
+          var data = await res.json()
           setTelegramLinked(data.linked)
           if (data.linked_at) setTelegramLinkedAt(data.linked_at)
         }
@@ -30,9 +54,9 @@ export default function SettingsClientPage() {
   async function handleConnectTelegram() {
     setLinkLoading(true)
     try {
-      const res = await fetch('/api/telegram/link', { method: 'POST' })
+      var res = await fetch('/api/telegram/link', { method: 'POST' })
       if (res.ok) {
-        const data = await res.json()
+        var data = await res.json()
         setDeepLink(data.deep_link)
       }
     } catch (e) {}
@@ -41,7 +65,7 @@ export default function SettingsClientPage() {
 
   async function handleDisconnectTelegram() {
     try {
-      const res = await fetch('/api/telegram/link', { method: 'DELETE' })
+      var res = await fetch('/api/telegram/link', { method: 'DELETE' })
       if (res.ok) {
         setTelegramLinked(false)
         setTelegramLinkedAt('')
@@ -50,8 +74,64 @@ export default function SettingsClientPage() {
     } catch (e) {}
   }
 
+  function formatDate(d) {
+    if (!d) return '—'
+    return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  }
+
+  var statusColor = subStatus === 'active' ? '#00e5a0' : subStatus === 'cancelled' ? '#c9a227' : '#ff4d4d'
+  var statusLabel = subStatus === 'active' ? 'ACTIVE' : subStatus === 'cancelled' ? 'CANCELLED' : subStatus === 'expired' ? 'EXPIRED' : 'INACTIVE'
+  var planLabel = subPlan === 'annual' ? 'Annual — $1,490/year' : subPlan === 'monthly' ? 'Monthly — $149/month' : 'No active plan'
+
   return (
     <div className="max-w-lg space-y-4">
+
+      {/* Account */}
+      <section>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">ACCOUNT</div>
+        <div className="border border-[#161616] rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
+            <span className="text-[14px] text-[#666]">Email</span>
+            <span className="text-[14px] text-[#ccc] mono">{userEmail || '—'}</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414] bg-[#0c0c0c]">
+            <span className="text-[14px] text-[#666]">Member since</span>
+            <span className="text-[14px] text-[#ccc] mono">{formatDate(memberSince)}</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Subscription */}
+      <section>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">SUBSCRIPTION</div>
+        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
+          <div className="px-4 py-3">
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <div className="text-[15px] text-[#ccc] font-medium">{planLabel}</div>
+                {subExpires && subStatus === 'active' && (
+                  <div className="text-[12px] text-[#666] mono mt-0.5">Renews {formatDate(subExpires)}</div>
+                )}
+                {subExpires && subStatus === 'cancelled' && (
+                  <div className="text-[12px] text-[#c9a227] mono mt-0.5">Access until {formatDate(subExpires)}</div>
+                )}
+              </div>
+              <span className="text-[11px] mono px-2 py-0.5 border rounded tracking-wider" style={{color: statusColor, backgroundColor: statusColor + '14', borderColor: statusColor + '26'}}>{statusLabel}</span>
+            </div>
+          </div>
+          <div className="border-t border-[#141414] px-4 py-3 flex items-center justify-between">
+            <span className="text-[13px] text-[#666]">Manage billing, change plan, or cancel</span>
+            <a
+              href={whopUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] mono text-[#00e5a0] hover:text-[#00cc8e] transition-colors"
+            >
+              MANAGE →
+            </a>
+          </div>
+        </div>
+      </section>
 
       {/* Telegram Connection */}
       <section>
@@ -75,7 +155,7 @@ export default function SettingsClientPage() {
               </div>
               {telegramLinkedAt && (
                 <div className="text-[13px] text-[#777] mono">
-                  Linked {new Date(telegramLinkedAt).toLocaleDateString()}
+                  Linked {formatDate(telegramLinkedAt)}
                 </div>
               )}
             </div>
@@ -89,14 +169,14 @@ export default function SettingsClientPage() {
                 rel="noopener noreferrer"
                 className="block w-full text-center py-3 bg-[#0088cc] hover:bg-[#0099dd] text-white text-sm font-medium rounded-lg transition-colors"
               >
-                Open in Telegram →
+                Open in Telegram
               </a>
               <div className="text-[13px] text-[#666] mono mt-2 text-center">
-                Then come back here — it updates automatically
+                Then come back here, it updates automatically
               </div>
               <button
-                onClick={function() { setCheckingLink(true); fetch('/api/telegram/link').then(r => r.json()).then(d => { setTelegramLinked(d.linked); if(d.linked_at) setTelegramLinkedAt(d.linked_at); if(d.linked) setDeepLink(''); setCheckingLink(false); }).catch(() => setCheckingLink(false)); }}
-                className="block w-full text-center mt-2 text-[13px] mono text-[#888] hover:text-[#888] transition-colors"
+                onClick={function() { setCheckingLink(true); fetch('/api/telegram/link').then(function(r) { return r.json() }).then(function(d) { setTelegramLinked(d.linked); if(d.linked_at) setTelegramLinkedAt(d.linked_at); if(d.linked) setDeepLink(''); setCheckingLink(false); }).catch(function() { setCheckingLink(false) }); }}
+                className="block w-full text-center mt-2 text-[13px] mono text-[#888] hover:text-[#ccc] transition-colors"
               >
                 CHECK STATUS
               </button>
@@ -137,7 +217,7 @@ export default function SettingsClientPage() {
               <span className={'absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ' + (telegramEnabled ? 'left-[18px] bg-white' : 'left-0.5 bg-[#555]')}></span>
             </button>
           </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414]">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414] bg-[#0c0c0c]">
             <div>
               <div className="text-sm text-[#ccc] font-medium">Email Digest</div>
               <div className="text-[13px] text-[#777] mono">Daily performance summary</div>
@@ -152,31 +232,18 @@ export default function SettingsClientPage() {
         </div>
       </section>
 
-      {/* Subscription */}
+      {/* Danger Zone */}
       <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">SUBSCRIPTION</div>
-        <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] px-4 py-3">
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">DANGER ZONE</div>
+        <div className="border border-[#ff4d4d]/10 rounded-lg bg-[#0c0c0c] px-4 py-3">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm text-[#ccc] font-medium">Pro Plan</div>
-              <div className="text-[13px] text-[#777] mono">$149/month</div>
+              <div className="text-sm text-[#ccc] font-medium">Delete Account</div>
+              <div className="text-[13px] text-[#666] mono">Permanently remove your account and data</div>
             </div>
-            <span className="text-[11px] mono text-[#00e5a0] px-2 py-0.5 bg-[#00e5a0]/8 border border-[#00e5a0]/15 rounded tracking-wider">ACTIVE</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Account */}
-      <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">ACCOUNT</div>
-        <div className="border border-[#161616] rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
-            <span className="text-[14px] text-[#888]">Email</span>
-            <span className="text-[14px] text-[#888] mono">—</span>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#141414]">
-            <span className="text-[14px] text-[#888]">Member since</span>
-            <span className="text-[14px] text-[#888] mono">—</span>
+            <button className="text-[13px] mono text-[#ff4d4d]/60 hover:text-[#ff4d4d] transition-colors">
+              DELETE
+            </button>
           </div>
         </div>
       </section>
