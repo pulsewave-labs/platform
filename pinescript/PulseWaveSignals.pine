@@ -127,19 +127,21 @@ if barstate.islast or barstate.isconfirmed
                 // Check overlap with existing tmp clusters
                 bool valid = true
                 int[] removeIdx = array.new_int(0)
+                int tmpSize = array.size(tmpHi)
 
-                for k = 0 to array.size(tmpHi) - 1
-                    float eHi = array.get(tmpHi, k)
-                    float eLo = array.get(tmpLo, k)
-                    int   eStr = array.get(tmpStr, k)
+                if tmpSize > 0
+                    for k = 0 to tmpSize - 1
+                        float eHi = array.get(tmpHi, k)
+                        float eLo = array.get(tmpLo, k)
+                        int   eStr = array.get(tmpStr, k)
 
-                    bool overlaps = (eHi >= cLo and eHi <= cHi) or (eLo >= cLo and eLo <= cHi)
-                    if overlaps
-                        if cnt >= eStr
-                            array.push(removeIdx, k)
-                        else
-                            valid := false
-                            break
+                        bool overlaps = (eHi >= cLo and eHi <= cHi) or (eLo >= cLo and eLo <= cHi)
+                        if overlaps
+                            if cnt >= eStr
+                                array.push(removeIdx, k)
+                            else
+                                valid := false
+                                break
 
                 if valid
                     // Remove weaker overlapping (reverse order)
@@ -156,24 +158,26 @@ if barstate.islast or barstate.isconfirmed
 
         // Sort by strength descending (simple bubble sort, small N)
         int n = array.size(tmpStr)
-        for i2 = 0 to math.max(n - 2, 0)
-            for j2 = 0 to math.max(n - i2 - 2, 0)
-                if array.get(tmpStr, j2) < array.get(tmpStr, j2 + 1)
-                    float swH = array.get(tmpHi, j2)
-                    float swL = array.get(tmpLo, j2)
-                    int   swS = array.get(tmpStr, j2)
-                    array.set(tmpHi, j2, array.get(tmpHi, j2 + 1))
-                    array.set(tmpLo, j2, array.get(tmpLo, j2 + 1))
-                    array.set(tmpStr, j2, array.get(tmpStr, j2 + 1))
-                    array.set(tmpHi, j2 + 1, swH)
-                    array.set(tmpLo, j2 + 1, swL)
-                    array.set(tmpStr, j2 + 1, swS)
+        if n >= 2
+            for i2 = 0 to n - 2
+                for j2 = 0 to n - i2 - 2
+                    if array.get(tmpStr, j2) < array.get(tmpStr, j2 + 1)
+                        float swH = array.get(tmpHi, j2)
+                        float swL = array.get(tmpLo, j2)
+                        int   swS = array.get(tmpStr, j2)
+                        array.set(tmpHi, j2, array.get(tmpHi, j2 + 1))
+                        array.set(tmpLo, j2, array.get(tmpLo, j2 + 1))
+                        array.set(tmpStr, j2, array.get(tmpStr, j2 + 1))
+                        array.set(tmpHi, j2 + 1, swH)
+                        array.set(tmpLo, j2 + 1, swL)
+                        array.set(tmpStr, j2 + 1, swS)
 
         clCount := math.min(n, maxLevels)
-        for k = 0 to clCount - 1
-            array.set(clHigh, k, array.get(tmpHi, k))
-            array.set(clLow, k, array.get(tmpLo, k))
-            array.set(clStrength, k, array.get(tmpStr, k))
+        if clCount > 0
+            for k = 0 to clCount - 1
+                array.set(clHigh, k, array.get(tmpHi, k))
+                array.set(clLow, k, array.get(tmpLo, k))
+                array.set(clStrength, k, array.get(tmpStr, k))
 
 
 // ══════════════════════════════════════════════════════════════════════════════
