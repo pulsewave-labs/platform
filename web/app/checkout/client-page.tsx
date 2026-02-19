@@ -335,6 +335,10 @@ export default function CheckoutClientPage() {
         </div>
 
       </div>
+
+      <div className="text-center py-6 px-4">
+        <p className="text-[9px] text-white/15 leading-relaxed max-w-lg mx-auto">For educational and research purposes only. Not financial advice. Past performance is not indicative of future results. Trading with leverage involves substantial risk. <a href="/disclaimer" className="underline">Full disclaimer</a>.</p>
+      </div>
     </div>
   )
 }

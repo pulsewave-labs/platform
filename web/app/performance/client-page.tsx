@@ -513,10 +513,18 @@ export default function PerformanceClientPage() {
       </section>
 
 
+      {/* Disclaimer */}
+      <section className="py-6 px-4 md:px-10 border-t border-white/[0.02]">
+        <div className="max-w-3xl mx-auto text-center text-[10px] text-white/20 leading-relaxed space-y-2">
+          <p>For educational and research purposes only. Not financial advice. Trading cryptocurrencies with leverage carries a high level of risk. Past performance is not indicative of future results. All data shown is based on verified historical analysis. PulseWave Labs is not a registered investment advisor. You are solely responsible for your own investment decisions.</p>
+          <p><Link href="/disclaimer" className="underline hover:text-white/30 transition-colors">Full risk disclosure</Link></p>
+        </div>
+      </section>
+
       {/* Footer */}
-      <footer className="border-t border-white/[0.04] py-6 px-6 md:px-10">
+      <footer className="border-t border-white/[0.04] py-6 px-4 md:px-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-          <span className="text-[10px] text-white/20">© 2026 PulseWave Labs · Past performance does not guarantee future results.</span>
+          <span className="text-[10px] text-white/20">© 2026 PulseWave Labs</span>
           <div className="flex gap-5 text-[11px] text-white/25">
             <Link href="/disclaimer" className="hover:text-white/40 transition-colors">Disclaimer</Link>
             <Link href="/privacy" className="hover:text-white/40 transition-colors">Privacy</Link>

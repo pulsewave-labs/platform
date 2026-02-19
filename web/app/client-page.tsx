@@ -932,9 +932,14 @@ export default function LandingClientPage() {
 
 
       {/* DISCLAIMER */}
-      <section className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
-        <div className="max-w-2xl mx-auto text-center">
-          <p className="text-[10px] text-white/25 leading-relaxed">Past performance does not guarantee future results. Trading crypto with leverage involves substantial risk of loss. All results from verified historical data. PulseWave Labs provides signals for informational purposes only. Not a registered investment advisor. <Link href="/disclaimer" className="underline hover:text-white/35 transition-colors">Full risk disclosure</Link>.</p>
+      <section className="py-8 px-5 md:px-10 border-t border-white/[0.02]">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="text-[10px] text-white/20 leading-relaxed space-y-2">
+            <p>IMPORTANT DISCLAIMER: PulseWave Labs and its signals are for educational and research purposes only. Nothing on this site constitutes financial advice, investment advice, trading advice, or any other sort of advice. You should not treat any of the content as such. PulseWave Labs does not recommend that any cryptocurrency or financial instrument should be bought, sold, or held by you.</p>
+            <p>Trading cryptocurrencies with leverage carries a high level of risk and may not be suitable for all investors. You could lose substantially more than your initial investment. Past performance is not indicative of future results. All performance data shown is based on verified historical analysis and is not a guarantee of future returns.</p>
+            <p>PulseWave Labs is not a registered investment advisor, broker/dealer, or financial planner. All content is provided as-is with no warranty. You are solely responsible for your own investment decisions. Always do your own research and consult with a licensed financial professional before making any investment.</p>
+            <p><Link href="/disclaimer" className="underline hover:text-white/30 transition-colors">Full risk disclosure and disclaimer</Link></p>
+          </div>
         </div>
       </section>
 
