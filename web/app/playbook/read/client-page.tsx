@@ -15,7 +15,7 @@ function R({ children, className = '' }: { children: React.ReactNode, className?
   return <div ref={ref} className={`transition-all duration-[900ms] ease-out ${v ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'} ${className}`}>{children}</div>
 }
 
-const W = 'max-w-[1080px] mx-auto px-5 md:px-8' // consistent container
+const W = 'max-w-[1080px] mx-auto px-5 md:px-8'
 
 export default function PlaybookRead() {
   const [pct, setPct] = useState(0)
@@ -69,11 +69,11 @@ export default function PlaybookRead() {
             </div>
 
             <h1 className="text-[32px] md:text-[56px] font-black leading-[1.05] tracking-[-0.03em] mb-6 max-w-3xl">
-              How We Turned $10K<br className="hidden md:block" /> Into <span className="text-[#00e5a0]">$218K</span> Trading 5 Crypto Pairs
+              The 5-Pair Playbook
             </h1>
 
-            <p className="text-[16px] md:text-[18px] text-zinc-500 leading-relaxed max-w-2xl mb-12">
-              The exact framework, the real numbers, and the trades we'd rather not show you — but do anyway.
+            <p className="text-[16px] md:text-[19px] text-zinc-500 leading-relaxed max-w-2xl mb-12">
+              The framework behind $10K → $218K across 624 trades. The exact pairs, how we score every setup, how we read levels, and how we size positions — step by step, so you can use it yourself.
             </p>
 
             <div className="flex flex-wrap items-center gap-8 md:gap-12">
@@ -94,26 +94,18 @@ export default function PlaybookRead() {
       </section>
 
 
-      {/* ══════════ INTRO ══════════ */}
+      {/* ══════════ QUICK CONTEXT ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
           <div className="max-w-2xl">
-            <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-8">
-              I'm going to tell you something most trading "gurus" never will:
-            </p>
-
-            <div className="py-6 px-6 md:px-8 rounded-2xl bg-white/[0.02] border border-white/[0.05] relative overflow-hidden mb-8">
-              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#00e5a0]/30 to-transparent rounded-full"></div>
-              <p className="text-[22px] md:text-[30px] font-bold leading-[1.2] tracking-[-0.01em] text-white/80">
-                We lose more trades than we win.
-              </p>
-            </div>
-
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
-              Our win rate is 40.7%. Out of every 10 trades, we lose about 6. And yet, a $10,000 account following our signals grew to <strong className="text-white/70">$218,000</strong> across 624 trades.
+              Before we get into the system: our win rate is <strong className="text-white/70">40.7%</strong>. We lose more trades than we win. If that scares you, good — it means you're paying attention.
+            </p>
+            <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8] mb-6">
+              The reason a $10K account grew to $218K isn't win rate. It's that our average winner is <strong className="text-white/70">+3.2%</strong> and our average loser is <strong className="text-white/70">-1.4%</strong>. The wins are more than 2x the losses. Over hundreds of trades, that compounds aggressively.
             </p>
             <p className="text-[17px] md:text-[19px] text-zinc-400 leading-[1.8]">
-              How? That's what this playbook is about. Not hype. Not cherry-picked screenshots. The actual system — including the math that makes losing profitable.
+              This playbook breaks down the full system. Every chapter is something you can actually apply to your own trading today.
             </p>
           </div>
         </R>
@@ -122,43 +114,54 @@ export default function PlaybookRead() {
       <div className="divider"></div>
 
 
-      {/* ══════════ CH 1: 5 PAIRS ══════════ */}
+      {/* ══════════ CH 1: WHY 5 PAIRS ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">01 — THE PAIRS</span>
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">01 — PAIR SELECTION</span>
           <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5 max-w-2xl">
-            Why we only trade 5 pairs.
+            Why only 5 pairs — and which ones.
           </h2>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-4 max-w-2xl">
-            I had 40 pairs on my watchlist. I'd chase anything that moved. No edge, no consistency. I lost $14,000 in two weeks trading pairs I barely understood.
+            Most traders watch too many charts. 20, 30, 40 tickers. They think more coverage = more opportunities. In practice, it means you know nothing well and you're reacting to every candle.
+          </p>
+          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-4 max-w-2xl">
+            We filtered down to 5 pairs that meet three criteria: <strong className="text-white/60">deep liquidity</strong> (so S/R levels hold), <strong className="text-white/60">clean structure</strong> (so zones are readable), and <strong className="text-white/60">enough daily range</strong> (so trades can hit 2:1+ R:R).
           </p>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">
-            So I stripped it down to 5 — best liquidity, cleanest S/R, enough volatility to matter:
+            Here's what each one gives us and <strong className="text-white/60">how to think about it</strong> for your own watchlist:
           </p>
         </R>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-10">
           {[
-            {s:'BTC',d:'Highest liquidity. S/R levels hold like law.'},
-            {s:'ETH',d:'Strong trends. When it moves, it moves with conviction.'},
-            {s:'SOL',d:'High volatility = high R:R. Regularly gives 3:1 setups.'},
-            {s:'AVAX',d:'Mean-reverting. Patient entries get rewarded.'},
-            {s:'XRP',d:'News-driven spikes. Sharp, fast entries at key levels.'},
+            {s:'BTC',sub:'$40B+ daily vol',points:['S/R levels hold for weeks/months','Best for swing trades — slower, cleaner','Institutional money anchors the structure']},
+            {s:'ETH',sub:'Strong trends',points:['Trends hard — less chop than most alts','Great for regime-based entries','Follows BTC but with its own structure']},
+            {s:'SOL',sub:'High range',points:['4-8% daily range is common','Regularly gives 3:1 R:R setups','More aggressive — suited for smaller size']},
+            {s:'AVAX',sub:'Mean-reverting',points:['Bounces between zones reliably','Works well with S/R proximity scoring','Rewards patience — enter at the zone, not before']},
+            {s:'XRP',sub:'Catalyst-driven',points:['News creates sharp moves to key levels','Fast entries — tight windows','Size down — it\'s the most unpredictable of the 5']},
           ].map((p,i) => (
             <R key={i}>
               <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-colors h-full">
-                <div className="mono text-[18px] text-[#00e5a0]/60 font-bold mb-3">{p.s}</div>
-                <p className="text-[13px] text-zinc-500 leading-relaxed">{p.d}</p>
+                <div className="mono text-[18px] text-[#00e5a0]/60 font-bold">{p.s}</div>
+                <div className="text-[11px] text-zinc-600 mb-4">{p.sub}</div>
+                <div className="space-y-2">
+                  {p.points.map((pt,j) => (
+                    <div key={j} className="flex items-start gap-2">
+                      <span className="text-[#00e5a0]/30 text-[10px] mt-[5px] shrink-0">▸</span>
+                      <span className="text-[12px] text-zinc-500 leading-relaxed">{pt}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </R>
           ))}
         </div>
 
         <R>
-          <div className="flex items-start gap-3 p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl">
-            <span className="text-[#00e5a0]/40 text-lg shrink-0 mt-0.5">→</span>
-            <p className="text-[15px] text-zinc-400 leading-relaxed">
-              <strong className="text-white/60">Mastery beats coverage.</strong> A trader who knows 5 pairs deeply will outperform one who skims 50.
+          <div className="p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl">
+            <p className="text-[13px] font-semibold text-white/50 mb-2">Try this yourself</p>
+            <p className="text-[14px] text-zinc-400 leading-relaxed">
+              Pick 3-5 pairs you actually understand. Check their average daily range on ATR(14). Check that their S/R zones hold (zoom out to daily — do pivots cluster?). If a pair doesn't have clean structure, drop it. You want pairs you can <em className="text-white/50">predict</em>, not pairs that are "exciting."
             </p>
           </div>
         </R>
@@ -170,40 +173,67 @@ export default function PlaybookRead() {
       {/* ══════════ CH 2: CONFLUENCE ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">02 — THE SCORING</span>
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">02 — THE SCORING SYSTEM</span>
           <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5 max-w-2xl">
-            The Confluence System.
+            How we score every trade 0-100.
           </h2>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-4 max-w-2xl">
-            Every trade passes through a multi-factor scoring system rated <strong className="text-white/60">0 to 100</strong>. Below 45? We don't trade. Period.
+            This is the core of the system. Every potential entry gets scored across 7 factors. If the total score is below <strong className="text-white/60">45</strong>, we don't take the trade. No exceptions, no overrides, no "but the chart looks good."
           </p>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">
-            7 factors. The 3 core pillars carry 80% of the weight:
+            Here are the 3 primary factors — they carry <strong className="text-white/60">80% of the weight</strong>. You can implement these in your own trading immediately:
           </p>
         </R>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
           {[
-            {pts:'35',title:'S/R Proximity + Strength',body:'How close is price to a proven zone? A level tested 10+ times is institutional. Maximum points at a battle-tested zone.'},
-            {pts:'20',title:'Regime Alignment',body:'Trending, ranging, or volatile? A long in an uptrend gets full marks. A long in a downtrend gets penalized. Don\'t fight the regime.'},
-            {pts:'25',title:'RSI + Volume',body:'RSI below 30 on a long = max points. Volume 1.5x average = institutional confirmation. Both must align with direction.'},
+            {pts:'35',title:'S/R Proximity + Strength',
+              what:'How close is price to a real support/resistance zone, and how strong is that zone?',
+              how:'We measure two things: (1) distance — price must be within 0.5% of the zone for full points, and (2) touch count — zones with 8+ touches get maximum strength score. A level that\'s been tested 10 times and held is institutional.',
+              use:'On your chart: find a horizontal level with 3+ touches. Wait for price to reach it. Don\'t enter between levels — that\'s where retail gets chopped up.'},
+            {pts:'20',title:'Market Regime',
+              what:'Is the market trending up, trending down, ranging, or in volatile chaos?',
+              how:'We classify regime using three indicators: ATR (volatility), ADX (trend strength), and EMA crossover (direction). A long signal in an uptrend gets full marks. A long signal in a downtrend gets penalized heavily — you\'re fighting momentum.',
+              use:'Quick check: Is price above the 50 EMA? Is ADX above 25? If yes to both, you have a trending market. Trade with that trend, not against it.'},
+            {pts:'25',title:'RSI + Volume Confirmation',
+              what:'Is momentum aligned with your direction, and is real money behind the move?',
+              how:'For longs: RSI below 35 = maximum points (oversold + reversal setup). For shorts: RSI above 65. Volume must be 1.2x+ above the 20-period average — that\'s institutional participation, not retail noise.',
+              use:'Add RSI(14) and a volume MA(20) to your chart. If RSI is oversold AND volume is above average on the bounce candle, the setup has confirmation. Without volume, it\'s just an oversold bounce — and those fail constantly.'},
           ].map((p,i) => (
             <R key={i}>
               <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.04] h-full">
                 <div className="inline-block mono text-[11px] px-2.5 py-1 rounded-md bg-[#00e5a0]/[0.06] border border-[#00e5a0]/[0.1] text-[#00e5a0]/60 font-semibold mb-4">
                   {p.pts} PTS
                 </div>
-                <h3 className="text-[16px] font-bold text-white/70 mb-3">{p.title}</h3>
-                <p className="text-[14px] text-zinc-500 leading-[1.7]">{p.body}</p>
+                <h3 className="text-[16px] font-bold text-white/70 mb-2">{p.title}</h3>
+                <p className="text-[13px] text-zinc-500 leading-relaxed mb-4">{p.what}</p>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-[11px] mono text-zinc-600 tracking-wider mb-1">HOW WE SCORE IT</p>
+                    <p className="text-[13px] text-zinc-400 leading-relaxed">{p.how}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] mono text-[#00e5a0]/30 tracking-wider mb-1">USE IT YOURSELF</p>
+                    <p className="text-[13px] text-zinc-400 leading-relaxed">{p.use}</p>
+                  </div>
+                </div>
               </div>
             </R>
           ))}
         </div>
 
         <R>
-          <p className="text-[14px] text-zinc-600 italic max-w-2xl">
-            Remaining 20 points: trend alignment (EMA position) + multi-timeframe agreement.
-          </p>
+          <div className="max-w-2xl">
+            <p className="text-[14px] text-zinc-600 mb-6">
+              The remaining 20 points: <strong className="text-zinc-500">EMA trend alignment</strong> (10 pts — is price on the right side of the 50/200 EMA?) and <strong className="text-zinc-500">multi-timeframe agreement</strong> (10 pts — does the 1H agree with the 4H?).
+            </p>
+            <div className="p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06]">
+              <p className="text-[13px] font-semibold text-white/50 mb-2">Build your own scorecard</p>
+              <p className="text-[14px] text-zinc-400 leading-relaxed">
+                You don't need 7 factors. Start with 3: <strong className="text-white/50">Is price at a real level?</strong> (S/R) + <strong className="text-white/50">Am I trading with the trend?</strong> (Regime) + <strong className="text-white/50">Does volume confirm?</strong> Score each 1-10. If your total is below 15/30, skip the trade. This alone will eliminate most bad entries.
+              </p>
+            </div>
+          </div>
         </R>
       </section>
 
@@ -213,21 +243,29 @@ export default function PlaybookRead() {
       {/* ══════════ CH 3: S/R ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">03 — THE ZONES</span>
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">03 — SUPPORT & RESISTANCE</span>
           <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5 max-w-2xl">
-            Reading S/R like institutions.
+            How to find the levels that actually hold.
           </h2>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">
-            Forget trendlines. Institutions care about <strong className="text-white/60">zones</strong> — horizontal areas where enough orders sit to move price.
+            Most traders draw too many lines. Institutions don't use trendlines — they use <strong className="text-white/60">horizontal zones</strong> where real orders cluster. Here's the step-by-step method you can do right now on TradingView:
           </p>
         </R>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
           {[
-            {n:'01',t:'Find Pivot Clusters',d:'Scan for pivot highs/lows with a 10-bar lookback. Points where price actually reversed — not where you think it might.'},
-            {n:'02',t:'Cluster Into Zones',d:'Pivots in the same price band get grouped. A single pivot is noise. Five pivots in the same zone is a wall.'},
-            {n:'03',t:'Rank by Strength',d:'3 touches = suggestion. 10+ touches = institutional. We only trade the strongest levels on the chart.'},
-            {n:'04',t:'Enter AT the Zone',d:'Support at $95K, price at $97K? You wait. Enter when price reaches the zone and confirms. Patience is the edge.'},
+            {n:'01',t:'Find Pivot Highs & Lows',
+              d:'Open a 4H chart. Look for swing highs (candle high is higher than the 10 candles on each side) and swing lows (opposite). These are real reversal points — not guesses. TradingView\'s pivot indicator does this automatically.',
+              tip:'Set lookback to 10 bars. More bars = fewer, stronger pivots.'},
+            {n:'02',t:'Group Into Zones',
+              d:'Look for clusters — multiple pivots in the same price area (within 0.5-1%). Draw a horizontal rectangle across the cluster. This is your zone. The tighter the cluster, the more precise. Single pivots are noise. 3+ in the same band = a real level.',
+              tip:'Use rectangle tool, not lines. Zones have width. A zone from $95,100-$95,400 is more realistic than "support at $95,200."'},
+            {n:'03',t:'Count Touches & Rank',
+              d:'How many times has price tested this zone? 3 touches = worth watching. 5+ = strong. 8+ = institutional. Rank your zones by touch count and only trade the top 3-4 per pair. Delete the weak ones — they\'ll distract you.',
+              tip:'If a zone gets broken cleanly (4H close through it), it flips. Old support becomes resistance. Re-label it.'},
+            {n:'04',t:'Enter AT the Zone, Not Before',
+              d:'The #1 retail mistake: entering between zones. Support at $95K, price at $97K, and you feel bullish so you buy. Then price drops to $95K (the actual level) and you\'re -2% before the trade even starts. Wait for the zone.',
+              tip:'Set alerts on your zones instead of watching charts. Price hits the zone → you evaluate. Otherwise, you\'re spectating.'},
           ].map((s,i) => (
             <R key={i}>
               <div className="p-5 rounded-xl bg-white/[0.02] border border-white/[0.04] h-full">
@@ -235,11 +273,24 @@ export default function PlaybookRead() {
                   <span className="mono text-[11px] px-2 py-0.5 rounded bg-white/[0.04] text-zinc-500 font-semibold">{s.n}</span>
                   <h4 className="text-[15px] font-bold text-white/65">{s.t}</h4>
                 </div>
-                <p className="text-[14px] text-zinc-500 leading-[1.7]">{s.d}</p>
+                <p className="text-[14px] text-zinc-500 leading-[1.7] mb-3">{s.d}</p>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-[#00e5a0]/[0.02] border border-[#00e5a0]/[0.04]">
+                  <span className="text-[#00e5a0]/30 text-xs shrink-0 mt-0.5">TIP</span>
+                  <p className="text-[12px] text-zinc-400 leading-relaxed">{s.tip}</p>
+                </div>
               </div>
             </R>
           ))}
         </div>
+
+        <R>
+          <div className="p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl">
+            <p className="text-[13px] font-semibold text-white/50 mb-2">Right now, do this</p>
+            <p className="text-[14px] text-zinc-400 leading-relaxed">
+              Open BTC/USDT on a 4H chart. Zoom out to 3 months. Find the 3 strongest horizontal zones (most touches). Set price alerts on each. Next time BTC reaches one of those zones, check RSI and volume — that's a potential trade. You just built a basic version of our system.
+            </p>
+          </div>
+        </R>
       </section>
 
       <div className="divider"></div>
@@ -248,9 +299,9 @@ export default function PlaybookRead() {
       {/* ══════════ CH 4: THE WIN ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">04 — REAL TRADE</span>
-          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5">The Win.</h2>
-          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">Real trade. Real money. What a 74-score signal looks like, entry to exit.</p>
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">04 — WINNING TRADE BREAKDOWN</span>
+          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5">A real win — step by step.</h2>
+          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">Here's how the scoring system works on a live trade. Every number is real.</p>
         </R>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -259,18 +310,18 @@ export default function PlaybookRead() {
               <div className="px-5 py-4 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#00e5a0]"></span>
-                  <span className="mono text-[14px] text-white/70 font-semibold">BTC/USDT</span>
+                  <span className="mono text-[14px] text-white/70 font-semibold">BTC/USDT LONG</span>
                 </div>
                 <span className="mono text-[11px] text-zinc-600">4H · Feb 12</span>
               </div>
               <div className="px-5 py-1">
                 {[
-                  {k:'Direction',v:'LONG',c:'text-[#00e5a0] font-semibold'},
                   {k:'Entry',v:'$96,420',c:'text-white/60'},
                   {k:'Stop Loss',v:'$95,180 (-1.29%)',c:'text-[#ff4d4d]/50'},
                   {k:'Take Profit',v:'$99,650 (+3.35%)',c:'text-[#00e5a0]/60'},
+                  {k:'Risk:Reward',v:'1 : 2.60',c:'text-white/50'},
                   {k:'Confluence',v:'74 / 100',c:'text-[#00e5a0]/70'},
-                  {k:'R:R',v:'2.60',c:'text-white/50'},
+                  {k:'Time to TP',v:'16 hours',c:'text-white/40'},
                   {k:'Result',v:'+3.35% ✓',c:'text-[#00e5a0] font-bold'},
                 ].map((r,i) => (
                   <div key={i} className="flex items-center justify-between py-3 border-b border-white/[0.03] last:border-0">
@@ -283,30 +334,41 @@ export default function PlaybookRead() {
           </R>
 
           <R>
-            <div className="rounded-xl p-6 bg-white/[0.02] border border-white/[0.04] h-full flex flex-col justify-center">
-              <h3 className="mono text-[11px] text-zinc-500 font-semibold tracking-wider mb-5">WHY THE SYSTEM TOOK IT</h3>
+            <div className="rounded-xl p-6 bg-white/[0.02] border border-white/[0.04] h-full">
+              <h3 className="mono text-[11px] text-zinc-500 font-semibold tracking-wider mb-5">SCORE BREAKDOWN</h3>
               <div className="space-y-4">
                 {[
-                  {label:'S/R Proximity',score:'18/20',desc:'0.4% from a 10-touch support zone'},
-                  {label:'Regime',score:'16/20',desc:'Uptrend, 78% confidence'},
-                  {label:'RSI',score:'10/15',desc:'RSI at 38, approaching oversold'},
-                  {label:'Volume',score:'8/10',desc:'1.3x average on the bounce candle'},
+                  {label:'S/R Proximity',score:'18/20',pct:90,desc:'Price was 0.4% from a zone tested 10 times over 3 months'},
+                  {label:'S/R Strength',score:'13/15',pct:87,desc:'10-touch zone = near-maximum strength score'},
+                  {label:'Regime',score:'16/20',pct:80,desc:'Uptrend: price above 50 & 200 EMA, ADX at 31'},
+                  {label:'RSI',score:'10/15',pct:67,desc:'RSI(14) at 38 — approaching oversold, not extreme'},
+                  {label:'Volume',score:'7/10',pct:70,desc:'1.3x above 20-period average — decent, not exceptional'},
                 ].map((f,i) => (
-                  <div key={i} className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="text-[13px] text-white/50 font-medium">{f.label}</p>
-                      <p className="text-[12px] text-zinc-600 mt-0.5">{f.desc}</p>
+                  <div key={i}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-[12px] text-white/45 font-medium">{f.label}</span>
+                      <span className="mono text-[12px] text-[#00e5a0]/50 font-semibold">{f.score}</span>
                     </div>
-                    <span className="mono text-[13px] text-[#00e5a0]/50 font-semibold shrink-0">{f.score}</span>
+                    <div className="w-full h-1 rounded-full bg-white/[0.04] mb-1">
+                      <div className="h-full rounded-full bg-[#00e5a0]/30" style={{width:f.pct+'%'}}></div>
+                    </div>
+                    <p className="text-[11px] text-zinc-600">{f.desc}</p>
                   </div>
                 ))}
               </div>
-              <div className="mt-6 pt-4 border-t border-white/[0.04]">
-                <p className="text-[14px] text-zinc-500">Hit TP in <strong className="text-white/60">16 hours</strong>. No guessing. Math.</p>
+              <div className="mt-5 pt-4 border-t border-white/[0.04] flex items-center justify-between">
+                <span className="text-[13px] text-white/50 font-medium">Total Score</span>
+                <span className="mono text-[16px] text-[#00e5a0] font-bold">74 / 100</span>
               </div>
             </div>
           </R>
         </div>
+
+        <R>
+          <p className="text-[15px] text-zinc-500 leading-[1.8] mt-8 max-w-2xl">
+            <strong className="text-white/60">What to learn from this:</strong> The entry wasn't random — it was at a proven zone, with the trend, with RSI leaning oversold, and volume confirming. The stop was below the zone (if the zone breaks, the thesis is dead). The target was the next resistance zone above. Every piece of the trade was defined before entry.
+          </p>
+        </R>
       </section>
 
       <div className="divider"></div>
@@ -315,9 +377,9 @@ export default function PlaybookRead() {
       {/* ══════════ CH 5: THE LOSS ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#ff4d4d]/25 tracking-[.2em] font-medium">05 — THE UGLY TRUTH</span>
-          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5">The Loss.</h2>
-          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">The part most services skip. The screenshot that "accidentally" gets deleted. We don't skip it.</p>
+          <span className="mono text-[11px] text-[#ff4d4d]/25 tracking-[.2em] font-medium">05 — LOSING TRADE BREAKDOWN</span>
+          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5">A real loss — and why it's fine.</h2>
+          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">This is the part 99% of signal services hide. We show every loss because the math behind <em className="text-zinc-400">why losses are fine</em> is the most important thing in this playbook.</p>
         </R>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
@@ -326,13 +388,12 @@ export default function PlaybookRead() {
               <div className="px-5 py-4 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-[#ff4d4d]"></span>
-                  <span className="mono text-[14px] text-white/70 font-semibold">ETH/USDT</span>
+                  <span className="mono text-[14px] text-white/70 font-semibold">ETH/USDT SHORT</span>
                 </div>
                 <span className="mono text-[11px] text-zinc-600">4H · Feb 8</span>
               </div>
               <div className="px-5 py-1">
                 {[
-                  {k:'Direction',v:'SHORT',c:'text-[#ff4d4d]/70 font-semibold'},
                   {k:'Entry',v:'$2,845',c:'text-white/60'},
                   {k:'Stop Loss',v:'$2,912 (+2.35%)',c:'text-[#ff4d4d]/50'},
                   {k:'Confluence',v:'52 / 100',c:'text-[#ff9f43]/60'},
@@ -344,33 +405,53 @@ export default function PlaybookRead() {
                   </div>
                 ))}
               </div>
+
+              <div className="px-5 py-4 border-t border-white/[0.04]">
+                <p className="text-[13px] text-zinc-500 leading-relaxed">
+                  ETH broke through the resistance zone. Ran through the stop. Trade over. <strong className="text-white/50">Score was 52</strong> — above the 45 cutoff, but not a high-conviction setup.
+                </p>
+              </div>
             </div>
           </R>
 
           <R>
             <div className="rounded-xl p-6 bg-white/[0.02] border border-white/[0.04] h-full flex flex-col justify-center">
-              <h3 className="mono text-[11px] text-zinc-500 font-semibold tracking-wider mb-5">THE MATH THAT MATTERS</h3>
-              <p className="text-[15px] text-zinc-500 leading-relaxed mb-5">
-                How are we profitable losing 60% of trades? One number: <strong className="text-white/60">profit factor</strong>.
+              <h3 className="mono text-[11px] text-zinc-500 font-semibold tracking-wider mb-5">THE PROFIT FACTOR EQUATION</h3>
+              <p className="text-[15px] text-zinc-400 leading-relaxed mb-5">
+                This is the single most important concept in this playbook. It's not win rate. It's <strong className="text-white/60">how much you make when you win vs. how much you lose when you lose.</strong>
               </p>
-              <div className="p-4 rounded-lg bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] mb-5">
-                <div className="mono text-[10px] text-zinc-500 mb-2 tracking-wide">AVG WIN +3.2% · AVG LOSS -1.4% · WR 40.7%</div>
-                <div className="mono text-[15px] text-[#00e5a0]/80">
-                  (3.2 × .407) ÷ (1.4 × .593) = <strong className="text-[#00e5a0]">1.52</strong>
+              <div className="space-y-3 mb-5">
+                <div className="flex justify-between items-center py-2 px-4 rounded-lg bg-white/[0.015]">
+                  <span className="text-[13px] text-zinc-500">Average win</span>
+                  <span className="mono text-[14px] text-[#00e5a0]/70 font-semibold">+3.2%</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-4 rounded-lg bg-white/[0.015]">
+                  <span className="text-[13px] text-zinc-500">Average loss</span>
+                  <span className="mono text-[14px] text-[#ff4d4d]/60 font-semibold">-1.4%</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-4 rounded-lg bg-white/[0.015]">
+                  <span className="text-[13px] text-zinc-500">Win rate</span>
+                  <span className="mono text-[14px] text-white/50 font-semibold">40.7%</span>
                 </div>
               </div>
-              <p className="text-[14px] text-zinc-500 leading-relaxed">
-                For every $1 risked, $1.52 back. Winners are bigger than losers.
+              <div className="p-4 rounded-lg bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] mb-5">
+                <div className="mono text-[10px] text-zinc-500 mb-1 tracking-wide">PROFIT FACTOR</div>
+                <div className="mono text-[16px] text-[#00e5a0]/80">
+                  (3.2 × .407) ÷ (1.4 × .593) = <strong className="text-[#00e5a0]">1.57</strong>
+                </div>
+              </div>
+              <p className="text-[13px] text-zinc-500 leading-relaxed">
+                Above 1.0 = profitable. <strong className="text-white/50">For every $1 lost, $1.57 comes back.</strong> The wins are 2.3x larger than the losses. That's the edge — not predicting the future, just making sure winners pay more than losers cost.
               </p>
             </div>
           </R>
         </div>
 
         <R>
-          <div className="py-5 px-6 rounded-xl bg-white/[0.02] border border-white/[0.04] relative overflow-hidden max-w-2xl">
-            <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#ff9f43]/20 to-transparent rounded-full"></div>
-            <p className="text-[16px] text-zinc-400 leading-[1.7]">
-              Any service that only shows wins is <strong className="text-white/60">lying</strong>. We publish every trade. That's not marketing — it's the bare minimum for trust.
+          <div className="p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl">
+            <p className="text-[13px] font-semibold text-white/50 mb-2">Apply this to your own trading</p>
+            <p className="text-[14px] text-zinc-400 leading-relaxed">
+              Go through your last 20 trades. Calculate your average win size and average loss size. If your losses are bigger than your wins, <em className="text-zinc-300">that's</em> your problem — not your win rate. Fix it by: (1) tightening stop losses, (2) only entering at strong S/R zones (tighter stops), and (3) targeting 2:1 R:R minimum.
             </p>
           </div>
         </R>
@@ -382,20 +463,59 @@ export default function PlaybookRead() {
       {/* ══════════ CH 6: POSITION SIZING ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">06 — RISK MANAGEMENT</span>
-          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5 max-w-2xl">Position Sizing.</h2>
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">06 — POSITION SIZING</span>
+          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5 max-w-2xl">
+            The formula that keeps you alive.
+          </h2>
+          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-4 max-w-2xl">
+            Every blown account has the same story: "I was right about the direction but I sized too big." Position sizing isn't optional — it's the difference between a drawdown and a blown account.
+          </p>
           <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">
-            The best system will blow your account with bad sizing. Golden rule: <strong className="text-white/60">never risk more than 1-2% per trade.</strong>
+            Here's the exact formula:
           </p>
         </R>
 
         <R>
-          <div className="rounded-xl border border-white/[0.04] overflow-hidden max-w-2xl">
+          <div className="p-6 rounded-xl bg-white/[0.02] border border-white/[0.04] max-w-2xl mb-8">
+            <div className="mono text-[10px] text-zinc-600 tracking-wider mb-3">POSITION SIZE FORMULA</div>
+            <div className="mono text-[15px] md:text-[17px] text-white/70 mb-4 leading-relaxed">
+              Position Size = (Account × Risk %) ÷ (Entry − Stop Loss)
+            </div>
+            <div className="divider mb-4"></div>
+            <div className="mono text-[10px] text-zinc-600 tracking-wider mb-3">EXAMPLE: BTC LONG</div>
+            <div className="space-y-1.5 mb-4">
+              {[
+                {k:'Account',v:'$10,000'},
+                {k:'Risk %',v:'1% = $100'},
+                {k:'Entry',v:'$96,420'},
+                {k:'Stop Loss',v:'$95,180'},
+                {k:'Distance',v:'$1,240 (1.29%)'},
+              ].map((r,i) => (
+                <div key={i} className="flex items-center justify-between text-[13px]">
+                  <span className="text-zinc-500">{r.k}</span>
+                  <span className="mono text-white/50">{r.v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="p-3 rounded-lg bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06]">
+              <div className="mono text-[14px] text-[#00e5a0]/80">
+                $100 ÷ $1,240 = <strong className="text-[#00e5a0]">0.0806 BTC</strong> (~$7,770 position)
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-1">If BTC hits stop loss, you lose exactly $100 (1% of account). Not $500. Not $2,000. $100.</p>
+            </div>
+          </div>
+        </R>
+
+        <R>
+          <div className="rounded-xl border border-white/[0.04] overflow-hidden max-w-2xl mb-8">
+            <div className="px-5 py-3 bg-white/[0.02] border-b border-white/[0.04]">
+              <span className="mono text-[10px] text-[#00e5a0]/40 font-semibold tracking-wider">MAX RISK PER TRADE AT DIFFERENT ACCOUNT SIZES</span>
+            </div>
             <table className="w-full">
               <thead>
-                <tr className="bg-white/[0.02]">
+                <tr>
                   {['ACCOUNT','1% RISK','2% RISK'].map((h,i) => (
-                    <th key={i} className={`px-5 py-3 mono text-[10px] text-[#00e5a0]/40 font-semibold tracking-wider border-b border-white/[0.04] ${i===0?'text-left':'text-center'}`}>{h}</th>
+                    <th key={i} className={`px-5 py-2.5 mono text-[10px] text-zinc-600 font-semibold tracking-wider border-b border-white/[0.04] ${i===0?'text-left':'text-center'}`}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -405,9 +525,9 @@ export default function PlaybookRead() {
                   ['$25,000','$250','$500'],['$50,000','$500','$1,000'],['$100,000','$1,000','$2,000'],
                 ].map((r,i) => (
                   <tr key={i} className={i%2===0 ? 'bg-white/[0.01]' : ''}>
-                    <td className="px-5 py-3 mono text-[13px] text-white/50 font-medium border-b border-white/[0.02]">{r[0]}</td>
-                    <td className="px-5 py-3 text-center text-[13px] text-zinc-500 border-b border-white/[0.02]">{r[1]}</td>
-                    <td className="px-5 py-3 text-center text-[13px] text-zinc-500 border-b border-white/[0.02]">{r[2]}</td>
+                    <td className="px-5 py-2.5 mono text-[13px] text-white/50 font-medium border-b border-white/[0.02]">{r[0]}</td>
+                    <td className="px-5 py-2.5 text-center text-[13px] text-zinc-500 border-b border-white/[0.02]">{r[1]}</td>
+                    <td className="px-5 py-2.5 text-center text-[13px] text-zinc-500 border-b border-white/[0.02]">{r[2]}</td>
                   </tr>
                 ))}
               </tbody>
@@ -416,11 +536,14 @@ export default function PlaybookRead() {
         </R>
 
         <R>
-          <div className="flex items-start gap-3 p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl mt-6">
+          <div className="flex items-start gap-3 p-5 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] max-w-2xl">
             <span className="text-[#00e5a0]/40 text-lg shrink-0 mt-0.5">→</span>
-            <p className="text-[14px] text-zinc-400 leading-relaxed">
-              <strong className="text-white/60">Start at 0.5-1%</strong> until you trust the system. Size up later. You can never un-blow an account.
-            </p>
+            <div>
+              <p className="text-[13px] font-semibold text-white/50 mb-1">The rule that saves accounts</p>
+              <p className="text-[14px] text-zinc-400 leading-relaxed">
+                Start at <strong className="text-white/50">0.5-1%</strong>. Even if you're "sure" about a trade. Especially if you're sure. Conviction has blown more accounts than bad analysis. Calculate your size before every trade, or don't take the trade.
+              </p>
+            </div>
           </div>
         </R>
       </section>
@@ -431,10 +554,13 @@ export default function PlaybookRead() {
       {/* ══════════ CH 7: FULL NUMBERS ══════════ */}
       <section className={`${W} py-16 md:py-24`}>
         <R>
-          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">07 — THE PROOF</span>
-          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-10">
-            624 trades. Every one public.
+          <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">07 — COMPLETE TRACK RECORD</span>
+          <h2 className="text-[26px] md:text-[40px] font-extrabold leading-[1.1] tracking-[-0.02em] mt-3 mb-5">
+            624 trades. All public.
           </h2>
+          <p className="text-[17px] text-zinc-500 leading-[1.8] mb-10 max-w-2xl">
+            Not highlights. Not a curated selection. The complete, unedited record — because you should never trust a system that hides its results.
+          </p>
         </R>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
@@ -454,25 +580,41 @@ export default function PlaybookRead() {
         </div>
 
         <R>
-          <div className="rounded-xl border border-white/[0.04] overflow-hidden max-w-2xl mb-10">
-            {[
-              {k:'Average Win',v:'+3.2%'},{k:'Average Loss',v:'-1.4%'},
-              {k:'Trades/Day',v:'2.8'},{k:'Max Drawdown',v:'-12.4%'},
-              {k:'Sharpe Ratio',v:'2.1'},{k:'Expectancy/Trade',v:'+0.47%'},
-              {k:'Best Streak',v:'8 wins'},{k:'Worst Streak',v:'11 losses'},
-            ].map((s,i) => (
-              <div key={i} className={`flex items-center justify-between px-5 py-3 border-b border-white/[0.03] last:border-0 ${i%2===0?'bg-white/[0.01]':''}`}>
-                <span className="text-[13px] text-zinc-600">{s.k}</span>
-                <span className="mono text-[13px] text-white/50 font-medium">{s.v}</span>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-3xl mb-10">
+            <div className="rounded-xl border border-white/[0.04] overflow-hidden">
+              {[
+                {k:'Average Win',v:'+3.2%'},{k:'Average Loss',v:'-1.4%'},
+                {k:'Win/Loss Ratio',v:'2.29x'},{k:'Expectancy/Trade',v:'+0.47%'},
+              ].map((s,i) => (
+                <div key={i} className={`flex items-center justify-between px-5 py-3 border-b border-white/[0.03] last:border-0 ${i%2===0?'bg-white/[0.01]':''}`}>
+                  <span className="text-[13px] text-zinc-600">{s.k}</span>
+                  <span className="mono text-[13px] text-white/50 font-medium">{s.v}</span>
+                </div>
+              ))}
+            </div>
+            <div className="rounded-xl border border-white/[0.04] overflow-hidden">
+              {[
+                {k:'Trades/Day',v:'2.8 avg'},{k:'Max Drawdown',v:'-12.4%'},
+                {k:'Best Streak',v:'8 wins'},{k:'Worst Streak',v:'11 losses'},
+              ].map((s,i) => (
+                <div key={i} className={`flex items-center justify-between px-5 py-3 border-b border-white/[0.03] last:border-0 ${i%2===0?'bg-white/[0.01]':''}`}>
+                  <span className="text-[13px] text-zinc-600">{s.k}</span>
+                  <span className="mono text-[13px] text-white/50 font-medium">{s.v}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </R>
 
         <R>
-          <p className="text-[17px] text-zinc-500 leading-[1.8] max-w-2xl">
-            Worst streak: <strong className="text-white/60">11 losses in a row.</strong> That happened. We didn't panic. Didn't change the system. The math worked — as it always does with a positive profit factor.
-          </p>
+          <div className="max-w-2xl">
+            <p className="text-[17px] text-zinc-500 leading-[1.8] mb-6">
+              The worst stretch: <strong className="text-white/60">11 consecutive losses.</strong> That's real. If you're risking 1% per trade, that's an 11% drawdown. Uncomfortable, but survivable. If you're risking 5% per trade, that's -55% and you're done.
+            </p>
+            <p className="text-[17px] text-zinc-500 leading-[1.8]">
+              This is exactly why position sizing (Chapter 6) exists. The system will have losing streaks. The question isn't whether you'll hit one — it's whether your sizing lets you survive it.
+            </p>
+          </div>
         </R>
       </section>
 
@@ -484,24 +626,24 @@ export default function PlaybookRead() {
 
         <div className={`relative ${W} py-20 md:py-28 text-center`}>
           <R>
-            <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">WHAT COMES NEXT</span>
+            <span className="mono text-[11px] text-[#00e5a0]/30 tracking-[.2em] font-medium">ONE MORE THING</span>
 
             <h2 className="text-[26px] md:text-[44px] font-black leading-[1.08] tracking-[-0.02em] mt-4 mb-5 max-w-2xl mx-auto">
-              PulseWave runs this exact system. <span className="text-[#00e5a0]">24/7.</span>
+              What if you didn't have to do this manually?
             </h2>
 
-            <p className="text-[16px] md:text-[18px] text-zinc-500 leading-relaxed max-w-lg mx-auto mb-10">
-              The scoring, the zones, the sizing — automated and delivered to your phone. Including the losses.
+            <p className="text-[16px] md:text-[18px] text-zinc-500 leading-relaxed max-w-xl mx-auto mb-10">
+              Everything in this playbook — the pair selection, the confluence scoring, the S/R zones, the position sizing — runs automatically as PulseWave Signals. 24/7, across all 5 pairs.
             </p>
 
             <div className="inline-grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-2.5 text-left mb-10">
               {[
-                'Real-time signals on all 5 pairs',
-                'Entry, SL, TP + position size',
-                'Telegram + email delivery',
-                'Every trade published',
+                'Signals delivered to Telegram + email',
+                'Entry, stop loss, take profit included',
+                'Position size calculated for your account',
+                'Every single trade published — wins & losses',
                 '30-day money-back guarantee',
-                'Cancel anytime',
+                'Cancel anytime — no lock-in',
               ].map((b,i) => (
                 <div key={i} className="flex items-center gap-2.5">
                   <span className="text-[#00e5a0]/40">→</span>
