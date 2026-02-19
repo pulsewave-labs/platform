@@ -439,7 +439,7 @@ if showZones and barstate.islast and clCount > 0
         box.new(bar_index - 60, cHi, bar_index + 10, cLo, border_color=bCol, bgcolor=zCol, border_width=0)
 
         // Strength label
-        label.new(bar_index + 12, mid, str(str), style=label.style_none, textcolor=isRes ? color.new(#ff4d4d, 40) : color.new(#00e5a0, 40), size=size.tiny)
+        label.new(bar_index + 12, mid, str.tostring(str), style=label.style_none, textcolor=isRes ? color.new(#ff4d4d, 40) : color.new(#00e5a0, 40), size=size.tiny)
 
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -525,6 +525,6 @@ barcolor(showRegime ? (regime == 1 ? color.new(#00e5a0, 70) : regime == 2 ? colo
 // ALERTS
 // ══════════════════════════════════════════════════════════════════════════════
 
-alertcondition(alertLong  and newLong,  title="PW Long Signal",  message="PulseWave LONG | {{ticker}} @ {{close}} | Confluence: " + str.tostring(bestScore) + " | R:R: " + str.tostring(rrRatio))
-alertcondition(alertShort and newShort, title="PW Short Signal", message="PulseWave SHORT | {{ticker}} @ {{close}} | Confluence: " + str.tostring(bestScore) + " | R:R: " + str.tostring(rrRatio))
-alertcondition(alertLong and newLong or alertShort and newShort, title="PW Any Signal", message="PulseWave {{ticker}} @ {{close}} | Score: " + str.tostring(bestScore))
+alertcondition(alertLong  and newLong,  title="PW Long Signal",  message="PulseWave LONG | {{ticker}} @ {{close}}")
+alertcondition(alertShort and newShort, title="PW Short Signal", message="PulseWave SHORT | {{ticker}} @ {{close}}")
+alertcondition(alertLong and newLong or alertShort and newShort, title="PW Any Signal", message="PulseWave Signal | {{ticker}} @ {{close}}")
