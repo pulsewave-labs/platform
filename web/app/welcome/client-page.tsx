@@ -2,36 +2,34 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 
 export default function WelcomeClient() {
   var router = useRouter()
-  var [step, setStep] = useState(0)
+  var [loggedIn, setLoggedIn] = useState(false)
+  var [userEmail, setUserEmail] = useState('')
   var [telegramLinked, setTelegramLinked] = useState(false)
   var [deepLink, setDeepLink] = useState('')
   var [linkLoading, setLinkLoading] = useState(false)
-  var [emailSignals, setEmailSignals] = useState(true)
-  var [userEmail, setUserEmail] = useState('')
   var [checking, setChecking] = useState(false)
   var [mounted, setMounted] = useState(false)
 
-  useEffect(function () {
+  useEffect(() => {
     setMounted(true)
-    // Load profile info
+    // Try to load profile (may fail if not logged in — that's fine)
     fetch('/api/subscription')
-      .then(function (r) { return r.json() })
-      .then(function (d) {
-        if (d.email) setUserEmail(d.email)
+      .then(r => r.json())
+      .then(d => {
+        if (d.email) { setUserEmail(d.email); setLoggedIn(true) }
       })
-      .catch(function () {})
+      .catch(() => {})
 
-    // Check telegram status
     fetch('/api/telegram/link')
-      .then(function (r) { return r.json() })
-      .then(function (d) {
-        setTelegramLinked(d.linked)
-        if (d.email_signals !== undefined) setEmailSignals(d.email_signals)
+      .then(r => r.json())
+      .then(d => {
+        if (d.linked) setTelegramLinked(true)
       })
-      .catch(function () {})
+      .catch(() => {})
   }, [])
 
   async function handleConnectTelegram() {
@@ -42,11 +40,11 @@ export default function WelcomeClient() {
         var data = await res.json()
         setDeepLink(data.deep_link)
       }
-    } catch (e) {}
+    } catch {}
     setLinkLoading(false)
   }
 
-  async function checkTelegramStatus() {
+  async function checkTelegram() {
     setChecking(true)
     try {
       var res = await fetch('/api/telegram/link')
@@ -54,303 +52,188 @@ export default function WelcomeClient() {
         var data = await res.json()
         setTelegramLinked(data.linked)
       }
-    } catch (e) {}
+    } catch {}
     setChecking(false)
   }
 
   if (!mounted) return null
 
   return (
-    <html lang="en">
-      <head>
-        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-        <meta name="theme-color" content="#050505" />
-        <title>Welcome to PulseWave Signals</title>
-      </head>
-      <body style={{ margin: 0, padding: 0, backgroundColor: '#050505', fontFamily: 'Inter, system-ui, sans-serif', color: '#e0e0e0', minHeight: '100vh' }}>
-        <style dangerouslySetInnerHTML={{ __html: `
-          .mono { font-family: 'JetBrains Mono', monospace; }
-          @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-          @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 20px rgba(0,229,160,0.1); } 50% { box-shadow: 0 0 40px rgba(0,229,160,0.2); } }
-          .fade-up { animation: fadeUp 0.6s ease-out forwards; }
-          .fade-up-1 { animation-delay: 0.1s; opacity: 0; }
-          .fade-up-2 { animation-delay: 0.2s; opacity: 0; }
-          .fade-up-3 { animation-delay: 0.3s; opacity: 0; }
-          .fade-up-4 { animation-delay: 0.4s; opacity: 0; }
-          .glow-pulse { animation: pulse-glow 3s ease-in-out infinite; }
-        `}} />
+    <div className="min-h-screen bg-[#000] text-white antialiased">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+      <style dangerouslySetInnerHTML={{ __html: `
+        body{font-family:'Inter',-apple-system,sans-serif;background:#000}
+        .mono{font-family:'JetBrains Mono',monospace}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+        .fu{animation:fadeUp .6s ease-out forwards}
+        .fu1{animation:fadeUp .6s ease-out .1s forwards;opacity:0}
+        .fu2{animation:fadeUp .6s ease-out .2s forwards;opacity:0}
+        .fu3{animation:fadeUp .6s ease-out .3s forwards;opacity:0}
+        .fu4{animation:fadeUp .6s ease-out .4s forwards;opacity:0}
+      `}} />
 
-        <div style={{ maxWidth: 520, margin: '0 auto', padding: '48px 20px 80px' }}>
+      <nav className="border-b border-white/[0.04]">
+        <div className="max-w-lg mx-auto px-5 h-14 flex items-center">
+          <Link href="/"><img src="/logo.webp" alt="PulseWave" className="h-5 opacity-50" /></Link>
+        </div>
+      </nav>
 
-          {/* Step indicator */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 48 }}>
-            {[0, 1, 2].map(function (i) {
-              return (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, flex: i < 2 ? 1 : undefined }}>
-                  <div style={{
-                    width: 28, height: 28, borderRadius: '50%',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 12, fontWeight: 700,
-                    backgroundColor: step >= i ? '#00e5a0' : '#111',
-                    color: step >= i ? '#050505' : '#444',
-                    border: step >= i ? 'none' : '1px solid #222',
-                    transition: 'all 0.3s ease',
-                    fontFamily: "'JetBrains Mono', monospace",
-                  }}>
-                    {step > i ? '✓' : i + 1}
-                  </div>
-                  {i < 2 && (
-                    <div style={{ flex: 1, height: 1, backgroundColor: step > i ? '#00e5a0' : '#1a1a1a', transition: 'all 0.3s ease' }} />
-                  )}
-                </div>
-              )
-            })}
+      <div className="max-w-lg mx-auto px-5 py-12 md:py-16">
+
+        {/* Header */}
+        <div className="fu mb-10">
+          <div className="w-14 h-14 rounded-full bg-[#00e5a0]/[0.06] border border-[#00e5a0]/[0.12] flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
           </div>
+          <h1 className="text-[26px] md:text-[32px] font-bold tracking-tight mb-3">You're in.</h1>
+          <p className="text-[15px] text-white/35 leading-relaxed">
+            Your subscription is active. Three things to do — takes about 60 seconds.
+          </p>
+        </div>
 
-          {/* STEP 0: Welcome */}
-          {step === 0 && (
-            <div>
-              <div className="fade-up" style={{ marginBottom: 8 }}>
-                <span className="mono" style={{ fontSize: 12, color: '#00e5a0', letterSpacing: 2, fontWeight: 600 }}>YOU'RE IN</span>
+        {/* ── CARD 1: Set Password ── */}
+        <div className="fu1 mb-3">
+          <div className="bg-[#0a0a0a] border border-[#00e5a0]/[0.15] rounded-xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-[#00e5a0]/[0.08] border border-[#00e5a0]/[0.15] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="mono text-[12px] text-[#00e5a0]/60 font-bold">1</span>
               </div>
-
-              <h1 className="fade-up fade-up-1" style={{ fontSize: 32, fontWeight: 700, color: '#fff', margin: '0 0 16px', lineHeight: 1.2 }}>
-                Welcome to PulseWave
-              </h1>
-
-              <p className="fade-up fade-up-2" style={{ fontSize: 15, color: '#777', lineHeight: 1.7, margin: '0 0 32px' }}>
-                You now have access to the same engine that turned $10K into $218K across 624 trades. Let's get you set up in 60 seconds.
-              </p>
-
-              {/* What you get */}
-              <div className="fade-up fade-up-3" style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 12, padding: 24, marginBottom: 32 }}>
-                <div className="mono" style={{ fontSize: 11, color: '#555', letterSpacing: 1, marginBottom: 16, fontWeight: 600 }}>WHAT YOU GET</div>
-
-                {[
-                  { icon: '⚡', label: 'Instant signal alerts', desc: 'Entry, stop loss, take profit — delivered in seconds' },
-                  { icon: '📊', label: '~25 signals per month', desc: '5 pairs, multiple timeframes, 24/7 scanning' },
-                  { icon: '🎯', label: '1.52 profit factor', desc: '40.7% win rate — winners are 2-3x larger than losers' },
-                  { icon: '📈', label: 'Live performance dashboard', desc: 'Every trade tracked. Every result verified.' },
-                ].map(function (item, i) {
-                  return (
-                    <div key={i} style={{ display: 'flex', gap: 14, marginBottom: i < 3 ? 16 : 0 }}>
-                      <div style={{ fontSize: 18, lineHeight: '24px', flexShrink: 0 }}>{item.icon}</div>
-                      <div>
-                        <div style={{ fontSize: 14, color: '#ccc', fontWeight: 600, marginBottom: 2 }}>{item.label}</div>
-                        <div style={{ fontSize: 13, color: '#555', lineHeight: 1.4 }}>{item.desc}</div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              <button
-                className="fade-up fade-up-4"
-                onClick={function () { setStep(1) }}
-                style={{
-                  width: '100%', padding: '14px 0',
-                  backgroundColor: '#00e5a0', color: '#050505',
-                  fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 8,
-                  cursor: 'pointer', letterSpacing: 0.3,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseOver={function (e) { e.currentTarget.style.backgroundColor = '#00cc8e' }}
-                onMouseOut={function (e) { e.currentTarget.style.backgroundColor = '#00e5a0' }}
-              >
-                Set Up Notifications →
-              </button>
-            </div>
-          )}
-
-          {/* STEP 1: Notifications */}
-          {step === 1 && (
-            <div>
-              <div className="fade-up" style={{ marginBottom: 8 }}>
-                <span className="mono" style={{ fontSize: 12, color: '#00e5a0', letterSpacing: 2, fontWeight: 600 }}>STEP 2 OF 3</span>
-              </div>
-
-              <h1 className="fade-up fade-up-1" style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 12px', lineHeight: 1.2 }}>
-                How do you want signals?
-              </h1>
-
-              <p className="fade-up fade-up-2" style={{ fontSize: 15, color: '#777', lineHeight: 1.7, margin: '0 0 32px' }}>
-                Choose how you receive trade alerts. You can always change this in settings.
-              </p>
-
-              {/* Telegram Card */}
-              <div className="fade-up fade-up-2" style={{
-                backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 12,
-                padding: 24, marginBottom: 16,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 22 }}>💬</span>
-                    <span style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>Telegram</span>
-                  </div>
-                  {telegramLinked && (
-                    <span className="mono" style={{ fontSize: 11, color: '#00e5a0', backgroundColor: '#00e5a0' + '14', padding: '3px 10px', borderRadius: 20, border: '1px solid #00e5a0' + '26' }}>CONNECTED</span>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-[15px] font-semibold text-white/80">Set your password</h2>
+                  {loggedIn && (
+                    <span className="mono text-[10px] text-[#00e5a0]/50 bg-[#00e5a0]/[0.06] px-2 py-0.5 rounded-full">DONE</span>
                   )}
                 </div>
-                <div style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.5 }}>
-                  Fastest delivery. Get push notifications the instant a signal fires.
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', backgroundColor: '#0088cc' + '10', borderRadius: 8, marginBottom: 16 }}>
-                  <span style={{ fontSize: 13 }}>⚡</span>
-                  <span className="mono" style={{ fontSize: 11, color: '#0088cc' }}>RECOMMENDED — INSTANT DELIVERY</span>
-                </div>
-
-                {telegramLinked ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#00e5a0' }} />
-                    <span style={{ fontSize: 14, color: '#ccc' }}>Telegram connected — you'll receive signals instantly</span>
-                  </div>
-                ) : deepLink ? (
-                  <div>
-                    <a href={deepLink} target="_blank" rel="noopener noreferrer" style={{
-                      display: 'block', width: '100%', textAlign: 'center', padding: '12px 0',
-                      backgroundColor: '#0088cc', color: '#fff', fontSize: 14, fontWeight: 600,
-                      textDecoration: 'none', borderRadius: 8, marginBottom: 8,
-                    }}>
-                      Open in Telegram
-                    </a>
-                    <button onClick={checkTelegramStatus} disabled={checking} style={{
-                      display: 'block', width: '100%', textAlign: 'center', padding: '8px 0',
-                      backgroundColor: 'transparent', border: 'none', color: '#666', fontSize: 13,
-                      cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace",
-                    }}>
-                      {checking ? 'Checking...' : 'I\'ve connected — check status'}
-                    </button>
+                <p className="text-[13px] text-white/30 leading-relaxed mb-3">
+                  We created your account automatically. Check your email for a link to set your password — you'll need it to access your dashboard.
+                </p>
+                {!loggedIn ? (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeOpacity="0.4" strokeWidth="1.5" strokeLinecap="round">
+                      <rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                    <span className="text-[12px] text-white/25">Check your inbox for <strong className="text-white/40">"Welcome to PulseWave Signals"</strong></span>
                   </div>
                 ) : (
-                  <button onClick={handleConnectTelegram} disabled={linkLoading} style={{
-                    width: '100%', padding: '12px 0',
-                    backgroundColor: '#0088cc', color: '#fff',
-                    fontSize: 14, fontWeight: 600, border: 'none', borderRadius: 8,
-                    cursor: 'pointer', opacity: linkLoading ? 0.5 : 1,
-                  }}>
-                    {linkLoading ? 'Generating link...' : 'Connect Telegram'}
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#00e5a0]"></div>
+                    <span className="text-[13px] text-white/40">Signed in as {userEmail}</span>
+                  </div>
                 )}
               </div>
-
-              {/* Email Card */}
-              <div className="fade-up fade-up-3" style={{
-                backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 12,
-                padding: 24, marginBottom: 32,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 22 }}>📧</span>
-                    <span style={{ fontSize: 16, fontWeight: 600, color: '#fff' }}>Email</span>
-                  </div>
-                  <span className="mono" style={{ fontSize: 11, color: '#00e5a0', backgroundColor: '#00e5a0' + '14', padding: '3px 10px', borderRadius: 20, border: '1px solid #00e5a0' + '26' }}>ON</span>
-                </div>
-                <div style={{ fontSize: 13, color: '#666', lineHeight: 1.5 }}>
-                  Signals delivered to <span style={{ color: '#aaa' }}>{userEmail || 'your email'}</span>. Includes entry, TP, SL, and position sizing. Enabled by default.
-                </div>
-              </div>
-
-              <button
-                className="fade-up fade-up-4"
-                onClick={function () { setStep(2) }}
-                style={{
-                  width: '100%', padding: '14px 0',
-                  backgroundColor: '#00e5a0', color: '#050505',
-                  fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 8,
-                  cursor: 'pointer', letterSpacing: 0.3,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseOver={function (e) { e.currentTarget.style.backgroundColor = '#00cc8e' }}
-                onMouseOut={function (e) { e.currentTarget.style.backgroundColor = '#00e5a0' }}
-              >
-                {telegramLinked ? 'Continue →' : 'Skip for now — I\'ll use email →'}
-              </button>
-
-              {!telegramLinked && (
-                <div style={{ textAlign: 'center', marginTop: 12 }}>
-                  <span style={{ fontSize: 12, color: '#444' }}>You can connect Telegram later in Settings</span>
-                </div>
-              )}
             </div>
-          )}
+          </div>
+        </div>
 
-          {/* STEP 2: Ready */}
-          {step === 2 && (
-            <div>
-              <div className="fade-up" style={{ textAlign: 'center', marginBottom: 32 }}>
-                <div className="glow-pulse" style={{
-                  width: 80, height: 80, borderRadius: '50%',
-                  backgroundColor: '#00e5a0' + '10', border: '1px solid #00e5a0' + '30',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  margin: '0 auto 24px', fontSize: 36,
-                }}>
-                  ✓
+        {/* ── CARD 2: Connect Telegram ── */}
+        <div className="fu2 mb-3">
+          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="mono text-[12px] text-white/30 font-bold">2</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-[15px] font-semibold text-white/80">Connect Telegram</h2>
+                  {telegramLinked && (
+                    <span className="mono text-[10px] text-[#00e5a0]/50 bg-[#00e5a0]/[0.06] px-2 py-0.5 rounded-full">CONNECTED</span>
+                  )}
                 </div>
-                <h1 style={{ fontSize: 28, fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>You're all set</h1>
-                <p style={{ fontSize: 15, color: '#777', lineHeight: 1.7, margin: 0 }}>
-                  The engine is scanning 5 pairs across multiple timeframes right now. When a setup forms, you'll know.
+                <p className="text-[13px] text-white/30 leading-relaxed mb-3">
+                  Get signal alerts pushed to your phone instantly. This is how most traders receive signals.
+                </p>
+
+                {telegramLinked ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#00e5a0]"></div>
+                    <span className="text-[13px] text-white/40">Telegram connected — signals will arrive instantly</span>
+                  </div>
+                ) : deepLink ? (
+                  <div className="space-y-2">
+                    <a href={deepLink} target="_blank" rel="noopener noreferrer"
+                      className="block w-full py-3 bg-[#0088cc] text-white text-[14px] font-semibold rounded-lg text-center hover:bg-[#0077b5] transition-colors">
+                      Open in Telegram
+                    </a>
+                    <button onClick={checkTelegram} disabled={checking}
+                      className="w-full py-2 text-[12px] text-white/20 mono hover:text-white/40 transition-colors bg-transparent border-none cursor-pointer">
+                      {checking ? 'Checking...' : "I've connected — verify →"}
+                    </button>
+                  </div>
+                ) : loggedIn ? (
+                  <button onClick={handleConnectTelegram} disabled={linkLoading}
+                    className="w-full py-3 bg-[#0088cc] text-white text-[14px] font-semibold rounded-lg hover:bg-[#0077b5] transition-colors disabled:opacity-50 border-none cursor-pointer">
+                    {linkLoading ? 'Generating...' : 'Connect Telegram'}
+                  </button>
+                ) : (
+                  <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.04]">
+                    <span className="text-[12px] text-white/20">Set your password first, then connect Telegram from your dashboard</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── CARD 3: Email Signals ── */}
+        <div className="fu3 mb-8">
+          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5">
+            <div className="flex items-start gap-4">
+              <div className="w-8 h-8 rounded-full bg-white/[0.03] border border-white/[0.06] flex items-center justify-center shrink-0 mt-0.5">
+                <span className="mono text-[12px] text-white/30 font-bold">3</span>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <h2 className="text-[15px] font-semibold text-white/80">Email signals</h2>
+                  <span className="mono text-[10px] text-[#00e5a0]/50 bg-[#00e5a0]/[0.06] px-2 py-0.5 rounded-full">ON</span>
+                </div>
+                <p className="text-[13px] text-white/30 leading-relaxed">
+                  Every signal is also sent to your email with full trade details. Already enabled — no action needed.
                 </p>
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* What happens next */}
-              <div className="fade-up fade-up-1" style={{
-                backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a', borderRadius: 12,
-                padding: 24, marginBottom: 24,
-              }}>
-                <div className="mono" style={{ fontSize: 11, color: '#555', letterSpacing: 1, marginBottom: 16, fontWeight: 600 }}>WHAT HAPPENS NEXT</div>
-
-                {[
-                  { icon: '🔔', text: 'You\'ll receive your first signal when the engine spots a setup' },
-                  { icon: '📱', text: telegramLinked ? 'Signals will hit your Telegram + email instantly' : 'Signals will be sent to your email' },
-                  { icon: '📊', text: 'Every trade is tracked on your dashboard in real time' },
-                  { icon: '🛑', text: 'Every signal includes a stop loss — always use it' },
-                ].map(function (item, i) {
-                  return (
-                    <div key={i} style={{ display: 'flex', gap: 12, marginBottom: i < 3 ? 14 : 0, alignItems: 'flex-start' }}>
-                      <span style={{ fontSize: 16, lineHeight: '22px', flexShrink: 0 }}>{item.icon}</span>
-                      <span style={{ fontSize: 14, color: '#999', lineHeight: 1.5 }}>{item.text}</span>
-                    </div>
-                  )
-                })}
+        {/* CTA */}
+        <div className="fu4">
+          {loggedIn ? (
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="w-full py-3.5 bg-[#00e5a0] text-black rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all border-none cursor-pointer"
+            >
+              Open Dashboard →
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-4 rounded-xl bg-[#00e5a0]/[0.03] border border-[#00e5a0]/[0.06] text-center">
+                <p className="text-[14px] text-white/50 mb-1">
+                  <strong className="text-white/70">Check your email</strong> to set your password and unlock your dashboard.
+                </p>
+                <p className="text-[11px] text-white/20">
+                  Look for "Welcome to PulseWave Signals" from hello@system.pulsewavelabs.io
+                </p>
               </div>
-
-              {/* Pro tip */}
-              <div className="fade-up fade-up-2" style={{
-                backgroundColor: '#00e5a0' + '08', border: '1px solid #00e5a0' + '15',
-                borderRadius: 12, padding: 20, marginBottom: 32,
-              }}>
-                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ fontSize: 16, flexShrink: 0 }}>💡</span>
-                  <div>
-                    <div style={{ fontSize: 14, color: '#00e5a0', fontWeight: 600, marginBottom: 4 }}>Pro tip</div>
-                    <div style={{ fontSize: 13, color: '#777', lineHeight: 1.5 }}>
-                      Don't risk more than 10% per trade. The engine's edge comes from consistency over dozens of trades, not from any single one.
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <button
-                className="fade-up fade-up-3"
-                onClick={function () { router.push('/dashboard') }}
-                style={{
-                  width: '100%', padding: '14px 0',
-                  backgroundColor: '#00e5a0', color: '#050505',
-                  fontSize: 14, fontWeight: 700, border: 'none', borderRadius: 8,
-                  cursor: 'pointer', letterSpacing: 0.3,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseOver={function (e) { e.currentTarget.style.backgroundColor = '#00cc8e' }}
-                onMouseOut={function (e) { e.currentTarget.style.backgroundColor = '#00e5a0' }}
+              <a
+                href="https://mail.google.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full py-3.5 bg-white/[0.04] border border-white/[0.06] text-white/50 rounded-xl font-semibold text-[14px] text-center hover:bg-white/[0.06] hover:text-white/70 transition-all no-underline"
               >
-                Open Dashboard →
-              </button>
+                Open Gmail →
+              </a>
             </div>
           )}
-
         </div>
-      </body>
-    </html>
+
+        {/* Footer note */}
+        <div className="fu4 mt-6 text-center">
+          <p className="text-[11px] text-white/12">
+            Questions? Email <a href="mailto:mason@pulsewavelabs.io" className="underline hover:text-white/25 transition-colors">mason@pulsewavelabs.io</a>
+          </p>
+        </div>
+
+      </div>
+    </div>
   )
 }
