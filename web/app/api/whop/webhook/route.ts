@@ -97,11 +97,16 @@ async function ensureUser(supabase: ReturnType<typeof getAdmin>, email: string, 
 export async function POST(request: NextRequest) {
   try {
     var body = await request.json()
-    var eventType = body.type || body.event
+    var eventType = (body.type || body.event || body.action || '').replace(/\./g, '_')
     var data = body.data || body
 
-    // Whop sometimes nests differently
-    var email = (data.email || data.user_email || body.email || '').toLowerCase()
+    // Whop nests email in different places depending on event
+    var email = (data.email || data.user_email || body.email || data.customer_email || '').toLowerCase()
+
+    // For membership events, email might be nested deeper
+    if (!email && data.user) {
+      email = (data.user.email || '').toLowerCase()
+    }
 
     if (!email) {
       console.log('[whop-webhook] No email in payload, event:', eventType)
@@ -110,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     var supabase = getAdmin()
 
-    if (eventType === 'membership.went_valid') {
+    if (eventType === 'membership_activated' || eventType === 'membership.went_valid') {
       // This is the main "new subscriber" event
       var userId = await ensureUser(supabase, email, data)
 
@@ -131,21 +136,21 @@ export async function POST(request: NextRequest) {
       // Send welcome email
       sendWelcomeEmail(email).catch((err) => console.error('[whop-webhook] welcome email error:', err))
 
-    } else if (eventType === 'membership.went_invalid') {
+    } else if (eventType === 'membership_deactivated' || eventType === 'membership.went_invalid') {
       var { data: profile } = await supabase.from('profiles').select('id').eq('email', email).single()
       if (profile) {
         await supabase.from('profiles').update({ subscription_status: 'expired' }).eq('id', profile.id)
       }
       console.log('[whop-webhook] membership.went_invalid for', email)
 
-    } else if (eventType === 'membership.cancelled') {
+    } else if (eventType === 'membership_cancelled' || eventType === 'membership.cancelled' || eventType === 'membership_cancel_at_period_end_changed') {
       var { data: profile2 } = await supabase.from('profiles').select('id').eq('email', email).single()
       if (profile2) {
         await supabase.from('profiles').update({ subscription_status: 'cancelled' }).eq('id', profile2.id)
       }
       console.log('[whop-webhook] membership.cancelled for', email)
 
-    } else if (eventType === 'payment.succeeded') {
+    } else if (eventType === 'payment_succeeded' || eventType === 'payment.succeeded') {
       // Ensure user exists on payment too (belt + suspenders)
       var payUserId = await ensureUser(supabase, email, data)
 
@@ -165,6 +170,9 @@ export async function POST(request: NextRequest) {
       }
 
       console.log('[whop-webhook] payment.succeeded for', email)
+
+    } else if (eventType === 'payment_failed') {
+      console.log('[whop-webhook] payment_failed for', email)
 
     } else {
       console.log('[whop-webhook] Unhandled event:', eventType)
