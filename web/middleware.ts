@@ -1,5 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createMiddlewareClient } from './lib/supabase/server'
+import { createClient } from '@supabase/supabase-js'
+
+const ADMIN_EMAILS = [
+  'hello@pulsewaveindicator.com',
+  'masonboroff@gmail.com',
+  'masonboroff@yahoo.com',
+  'mason@pulsewavelabs.com',
+  'mason@pulsewavelabs.io',
+]
 
 export async function middleware(request: NextRequest) {
   try {
@@ -30,6 +39,7 @@ export async function middleware(request: NextRequest) {
     const isApiRoute = pathname.startsWith('/api/')
     const isPublicRoute = pathname === '/' || 
                          pathname.startsWith('/api/waitlist') ||
+                         pathname.startsWith('/api/whop') ||
                          pathname.startsWith('/_next') ||
                          pathname.startsWith('/favicon.ico') ||
                          pathname.match(/\.(svg|png|jpg|jpeg|gif|webp)$/)
@@ -68,6 +78,34 @@ export async function middleware(request: NextRequest) {
         const redirectTo = url.searchParams.get('redirectTo') || '/dashboard'
         const redirectUrl = new URL(redirectTo, request.url)
         return NextResponse.redirect(redirectUrl)
+      }
+      
+      // Subscription gating for dashboard routes
+      if (isDashboardRoute) {
+        const email = (user.email || '').toLowerCase()
+        
+        // Admin bypass
+        if (!ADMIN_EMAILS.includes(email)) {
+          // Check subscription status via service role
+          const adminSupabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+            process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+          )
+          
+          const { data: profile } = await adminSupabase
+            .from('profiles')
+            .select('subscription_status')
+            .eq('id', user.id)
+            .single()
+          
+          const status = profile?.subscription_status || 'none'
+          
+          if (status !== 'active') {
+            const checkoutUrl = new URL('/checkout', request.url)
+            checkoutUrl.searchParams.set('expired', 'true')
+            return NextResponse.redirect(checkoutUrl)
+          }
+        }
       }
       
       // Allow access to protected routes

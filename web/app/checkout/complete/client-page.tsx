@@ -1,22 +1,47 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 export default function CompleteClientPage() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const status = searchParams.get('status')
   const plan = searchParams.get('plan')
   const [step, setStep] = useState(0)
+  const [subActive, setSubActive] = useState(false)
 
   useEffect(() => {
     if (status === 'success') {
-      const t1 = setTimeout(() => setStep(1), 400)
-      const t2 = setTimeout(() => setStep(2), 1000)
-      const t3 = setTimeout(() => setStep(3), 1600)
-      return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+      var t1 = setTimeout(function() { setStep(1) }, 400)
+      var t2 = setTimeout(function() { setStep(2) }, 1000)
+      var t3 = setTimeout(function() { setStep(3) }, 1600)
+      return function() { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
     }
+  }, [status])
+
+  // Poll subscription status after successful checkout
+  useEffect(() => {
+    if (status !== 'success') return
+    var attempts = 0
+    var maxAttempts = 10
+    var timer = setInterval(function() {
+      attempts++
+      fetch('/api/subscription')
+        .then(function(r) { return r.json() })
+        .then(function(data) {
+          if (data.active) {
+            setSubActive(true)
+            clearInterval(timer)
+          }
+        })
+        .catch(function() {})
+      if (attempts >= maxAttempts) {
+        clearInterval(timer)
+      }
+    }, 3000)
+    return function() { clearInterval(timer) }
   }, [status])
 
   if (status === 'error') {

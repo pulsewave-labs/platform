@@ -4,6 +4,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '../../lib/supabase/client'
 import { ErrorBoundary } from '../../components/error-boundary'
+import { useEffect, useState } from 'react'
 
 const tabs = [
   { label: 'Overview', href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
@@ -14,11 +15,41 @@ const tabs = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
+  var [subBanner, setSubBanner] = useState(false)
+
+  useEffect(function() {
+    fetch('/api/subscription')
+      .then(function(r) { return r.json() })
+      .then(function(data) {
+        if (!data.active) {
+          setSubBanner(true)
+          setTimeout(function() { router.push('/checkout?expired=true') }, 3000)
+        }
+      })
+      .catch(function() {})
+  }, [])
 
   async function handleSignOut() {
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/auth/login')
+  }
+
+  if (subBanner) {
+    return (
+      <html lang="en">
+        <body className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+          <div className="text-center max-w-md px-6">
+            <div className="w-16 h-16 rounded-full border border-[#ff4d4d]/15 bg-[#ff4d4d]/[0.03] flex items-center justify-center mx-auto mb-6">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" strokeWidth="2" strokeLinecap="round"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h1 className="text-xl font-bold mb-2">Subscription Required</h1>
+            <p className="text-sm text-white/40 mb-4">Your subscription is inactive. Redirecting to checkout...</p>
+            <a href="/checkout?expired=true" className="inline-block px-6 py-2.5 bg-[#00e5a0] text-black text-sm font-bold rounded-lg">Subscribe Now</a>
+          </div>
+        </body>
+      </html>
+    )
   }
 
   return (
