@@ -122,22 +122,26 @@ export default function LandingClientPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
 
         <div className="w-full max-w-4xl mx-auto relative z-10">
+          <p className="fu text-[15px] text-white/40 mb-5 leading-relaxed max-w-lg">
+            Tired of staring at charts, second-guessing every trade, and still losing money?
+          </p>
+
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
             Crypto signals that tell you<br/>exactly <span className="text-[#00e5a0] glow">when to buy and sell.</span>
           </h1>
           <p className="fu2 text-[16px] text-white/85 leading-relaxed max-w-xl mb-4">
-            The engine scans 5 pairs 24/7. When it spots a setup, you get the entry, stop loss, and take profit — straight to your phone.
+            Our engine scans 5 pairs around the clock. When it spots a setup, you get the exact entry, stop loss, and take profit — straight to your phone. Copy it. Place it. Done.
           </p>
-          <p className="fu2 text-[14px] text-white/65 max-w-md mb-10 leading-relaxed">
-            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Every result tracked in real time.
+          <p className="fu2 text-[14px] text-white/50 max-w-md mb-10 leading-relaxed">
+            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Every win and every loss published. Check for yourself.
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
-            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
-              Start receiving signals
+            <Link href="/performance" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
+              See every trade we've made
             </Link>
-            <Link href="/performance" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
-              See all {totalTrades} trades
+            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
+              Start for $49/mo
             </Link>
           </div>
 
@@ -208,35 +212,34 @@ export default function LandingClientPage() {
       <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[12px] text-[#ff4d4d]/75 mono tracking-[.2em] mb-3">THE UGLY TRUTH</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
-              90% of signal services exist to<br className="hidden md:block"/> take your money, not make it.
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
+              Sound familiar?
             </h2>
+            <p className="text-[15px] text-white/40 max-w-lg mx-auto leading-relaxed">
+              Be honest with yourself. How many of these have you lived through?
+            </p>
           </div>
 
           <div className="space-y-3 mb-12">
             {[
-              { title:'They show you 5 winning screenshots. They hide the 40 losses.', desc:'Cherry-picked results are the oldest trick in trading. If a service won\'t show you EVERY trade. they\'re hiding something. We publish all '+totalTrades+' trades, including the 59% that lost.'},
-              { title:'"Trust me bro" is not a track record.', desc:'Lamborghini photos. Vague "10x this week" claims. No timestamps. No stop losses. No data. Just vibes and desperation disguised as confidence.'},
-              { title:'5 signals before lunch. Zero risk management.', desc:'High-frequency signal spam with no position sizing. You\'re not trading. you\'re feeding the house. One bad streak and your account is gone because nobody told you how much to risk.'},
+              { title:'You watch the charts for hours... then miss the move anyway.', desc:'You had the right idea. You just couldn\'t pull the trigger in time. Or worse, you pulled it too early and watched it reverse.'},
+              { title:'You followed a "signal group" that only showed you the wins.', desc:'Screenshots of 10x trades. Lamborghini photos. Then you subscribed and lost 40% in the first month. They stopped replying to your DMs.'},
+              { title:'You know you should use stop losses... but you don\'t.', desc:'You move them. You widen them. You remove them entirely because "it\'ll come back." It didn\'t come back. And now you\'re starting over.'},
             ].map((p,i)=>(
-              <div key={i} className="border border-[#ff4d4d]/[0.04] rounded-xl p-6 md:p-7 flex gap-5 items-start hover:border-[#ff4d4d]/[0.08] transition-colors">
-                
-                <div>
-                  <h3 className="text-[16px] font-bold text-white/85 mb-2 leading-snug">{p.title}</h3>
-                  <p className="text-[14px] text-white/45 leading-relaxed">{p.desc}</p>
-                </div>
+              <div key={i} className="border border-white/[0.04] rounded-xl p-6 md:p-7 hover:border-white/[0.06] transition-colors">
+                <h3 className="text-[16px] font-bold text-white/85 mb-2 leading-snug">{p.title}</h3>
+                <p className="text-[14px] text-white/40 leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>
 
           <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 md:p-8 text-center">
-            <p className="text-[15px] text-white/60 leading-relaxed max-w-xl mx-auto">
-              We built PulseWave because we got burned too. So we made one rule: <strong className="text-white/90">publish everything</strong>: wins, losses, fees, drawdowns. Every entry. Every exit. Every dollar.
+            <p className="text-[15px] text-white/55 leading-relaxed max-w-xl mx-auto mb-2">
+              The problem isn't you. It's that you're trying to do everything yourself — find the setup, time the entry, manage the risk, control your emotions — all at once.
             </p>
-            <Link href="/performance" className="inline-flex items-center gap-2 mt-4 text-[13px] text-[#00e5a0]/60 hover:text-[#00e5a0] mono tracking-wider transition-colors">
-              AUDIT ALL {totalTrades} TRADES <span className="text-[16px]">→</span>
-            </Link>
+            <p className="text-[15px] text-white/70 leading-relaxed max-w-xl mx-auto">
+              <strong className="text-white/90">What if you just got a notification that said: buy here, stop here, target here?</strong>
+            </p>
           </div>
         </div>
       </section>
@@ -280,6 +283,33 @@ export default function LandingClientPage() {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+
+
+      <div className="divider mx-6 md:mx-10"></div>
+
+
+      {/* ════════ 3.5 OBJECTION SURFACING ════════ */}
+      <section className="py-14 md:py-24 px-5 md:px-10">
+        <div className="max-w-3xl mx-auto text-center">
+          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight mb-4">
+            Here's what you're probably thinking.
+          </h2>
+          <p className="text-[14px] text-white/35 mb-10 max-w-lg mx-auto">And you'd be smart to think it. Let's get it out in the open.</p>
+
+          <div className="space-y-4 text-left">
+            {[
+              { objection:'"Only 40% of trades win? That sounds terrible."', answer:'It does — until you do the math. Our winners are 2-3× larger than our losers. That\'s a profit factor of '+profitFactor.toFixed(2)+', meaning for every $1 lost, $'+profitFactor.toFixed(2)+' comes back. Over '+totalTrades+' trades, $10K became $'+Math.round(finalBalance).toLocaleString()+'. Win rate is a vanity metric. Profit factor is what pays your rent.'},
+              { objection:'"How do I know the results are real?"', answer:'You don\'t have to trust us. Audit them yourself. Every single trade — all '+totalTrades+' of them — is published with timestamps, prices, and P&L. Including the '+redMonths+' red months. We\'re the only signal service that does this, and there\'s a reason most don\'t.'},
+              { objection:'"I\'ve been burned by signal groups before."', answer:'Of course you have. Most of them are scams. That\'s why we publish everything. No screenshots, no "trust me bro." Just raw data. If our numbers looked bad, we wouldn\'t show them. They don\'t look bad.'},
+            ].map((o,i)=>(
+              <div key={i} className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-6 md:p-7">
+                <p className="text-[15px] text-white/70 font-semibold italic mb-3">{o.objection}</p>
+                <p className="text-[14px] text-white/40 leading-relaxed">{o.answer}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -693,7 +723,7 @@ export default function LandingClientPage() {
             </div>
 
             <div className="t-visible lift relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
-              <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[14px] font-bold mono tracking-wider rounded-sm z-10">SAVE $298</div>
+              <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[14px] font-bold mono tracking-wider rounded-sm z-10">SAVE $98</div>
               <div className="p-7">
                 <div className="text-[12px] text-[#00e5a0]/60 mono tracking-wider mb-4">ANNUAL</div>
                 <div className="flex items-baseline gap-1 mb-1">
@@ -896,27 +926,19 @@ export default function LandingClientPage() {
       <section className="py-20 md:py-32 px-5 md:px-10 relative overflow-hidden">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.04) 0%,transparent 60%)'}}/>
         <div className="max-w-2xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2 mb-8">
-            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
-            <span className="text-[12px] text-[#00e5a0]/60 mono tracking-wider">ENGINE SCANNING NOW</span>
-          </div>
 
-          <div className="mb-8">
-            <span className="text-[36px] md:text-[64px] font-bold mono text-[#00e5a0] glow leading-none">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
-          </div>
-
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-            You've scrolled this far for a reason.
+          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-5 leading-tight">
+            Here's the deal.
           </h2>
-          <p className="text-[15px] text-white/50 mb-3 max-w-md mx-auto leading-relaxed">
-            You're either going to keep trading on emotion, gut feelings, and hope, or you're going to plug into a system that's done {totalTrades} trades and turned $10K into ${Math.round(finalBalance).toLocaleString()}.
-          </p>
-          <p className="text-[14px] text-white/30 mb-10 max-w-sm mx-auto">
-            The next signal could fire tonight. Public log is delayed 48 hours. Subscribers get it instantly.
-          </p>
+          <div className="text-[15px] text-white/50 max-w-lg mx-auto leading-relaxed space-y-4 mb-10">
+            <p>You've seen the {totalTrades} trades. You've seen the losses. You know this isn't a magic button — it's a system with a real edge, run by math, not emotions.</p>
+            <p>If this landed for you — if looking at the data made you think <em className="text-white/70">"this is different from the other stuff I've seen"</em> — then I'd like to invite you to try it.</p>
+            <p className="text-white/65"><strong className="text-white/85">$49/mo.</strong> Cancel anytime. Every trade public. If the signals don't pay for themselves, you shouldn't be paying for them.</p>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto mb-4">
             <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
-              Start receiving signals. $49/mo
+              Start receiving signals
             </Link>
           </div>
           <Link href="/performance" className="text-[13px] text-white/35 mono tracking-wider hover:text-white/55 transition-colors">
