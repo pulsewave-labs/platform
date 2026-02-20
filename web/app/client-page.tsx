@@ -254,10 +254,10 @@ export default function LandingClientPage() {
           <div className="text-center mb-14">
             <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
             <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
-              The same method institutions use.<br className="hidden md:block"/> Automated. Delivered to your phone.
+              Think of it like a security camera<br className="hidden md:block"/> for 5 crypto markets.
             </h2>
             <p className="text-[14px] text-white/45 max-w-xl mx-auto leading-relaxed">
-              While retail chases RSI crossovers, institutional traders follow <strong className="text-white/70">Break of Structure</strong> and <strong className="text-white/70">Order Blocks</strong>, where real money enters the market. Our engine runs this 24/7 across 5 pairs.
+              You wouldn't watch 5 security feeds 24/7 with your own eyes. You'd set up motion detection and let it alert you. That's what this is — except instead of motion, it detects the same price structures that institutional traders act on. When it spots one, your phone buzzes.
             </p>
           </div>
 
@@ -267,9 +267,9 @@ export default function LandingClientPage() {
 
             <div className="grid md:grid-cols-3 gap-6 relative z-10">
               {[
-                {n:'1',t:'Engine scans',sub:'You don\'t.',d:'BTC, ETH, SOL, AVAX, XRP, monitored around the clock. No fatigue. No FOMO. No emotion. It waits for the exact setup, then fires.', accent:'from-[#00e5a0]/20 to-[#00e5a0]/5'},
-                {n:'2',t:'Signal hits Telegram',sub:'In under 60 seconds.',d:'Entry, stop loss, take profit, position size for YOUR account, calculated instantly. One notification. Everything you need to place the trade.', accent:'from-[#00e5a0]/15 to-[#00e5a0]/5'},
-                {n:'3',t:'You place it',sub:'Done.',d:'Copy 5 numbers into your exchange. Same risk management every time. 10% fixed risk, mathematically sized. The system removes the thing that kills traders: you.', accent:'from-[#00e5a0]/10 to-[#00e5a0]/5'},
+                {n:'1',t:'The engine watches',sub:'So you don\'t have to.',d:'BTC, ETH, SOL, AVAX, XRP — all monitored around the clock. Like having a trader with perfect discipline who never sleeps, never gets emotional, and never chases a pump.', accent:'from-[#00e5a0]/20 to-[#00e5a0]/5'},
+                {n:'2',t:'Your phone buzzes',sub:'Under 60 seconds.',d:'You get one notification with everything: entry price, stop loss, take profit, and the exact position size for your account. No interpretation needed. No chart reading. Just numbers.', accent:'from-[#00e5a0]/15 to-[#00e5a0]/5'},
+                {n:'3',t:'You copy 5 numbers',sub:'That\'s it.',d:'Open your exchange, paste them in, and go back to whatever you were doing. The hard part — finding the trade, sizing the risk, controlling your emotions — is already done.', accent:'from-[#00e5a0]/10 to-[#00e5a0]/5'},
               ].map((s,i)=>(
                 <div key={i} className="relative group">
                   <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-7 hover:border-[#00e5a0]/[0.08] transition-all duration-300">
@@ -550,8 +550,8 @@ export default function LandingClientPage() {
       <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-14">
-            <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">HONEST TAKE</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Most people shouldn't<br className="hidden md:block" /> subscribe to this.</h2>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Is this actually for you?</h2>
+            <p className="text-[14px] text-white/35 max-w-lg mx-auto">Honestly — maybe not. This isn't for everyone, and we'd rather you know that now than find out after you pay.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
@@ -662,16 +662,81 @@ export default function LandingClientPage() {
       <div className="divider mx-6 md:mx-10"></div>
 
 
+      {/* ════════ 7.5 ACCOUNT SIMULATOR ════════ */}
+      <section className="py-14 md:py-24 px-5 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
+              Find your account size.
+            </h2>
+            <p className="text-[14px] text-white/40 max-w-lg mx-auto">
+              Every subscriber gets the same signals. The difference is how much capital you put behind them. Here's what the verified track record looks like at your level.
+            </p>
+          </div>
+
+          {/* Desktop: 5-column grid */}
+          <div className="hidden md:block bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
+            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
+              {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+                var multiplier = acct / 10000
+                var tp = totalProfit * multiplier
+                var ma = avgMonthly * multiplier
+                var isBase = acct === 10000
+                return (
+                  <div key={acct} className={'p-5 text-center relative ' + (isBase ? 'bg-[#00e5a0]/[0.03]' : 'bg-[#0a0a0c]')}>
+                    {isBase && <div className="absolute top-0 left-0 right-0 h-px bg-[#00e5a0]/20"></div>}
+                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/70 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
+                    <div className={'text-[16px] mono font-bold mb-4 ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
+                    <div className="text-[22px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/25 mb-3">total profit</div>
+                    <div className="h-px bg-white/[0.04] mb-3"></div>
+                    <div className="text-[14px] mono text-white/50 font-medium">${Math.round(ma).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/20">per month avg</div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Mobile: stacked rows */}
+          <div className="md:hidden space-y-2">
+            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
+              var multiplier = acct / 10000
+              var tp = totalProfit * multiplier
+              var ma = avgMonthly * multiplier
+              var isBase = acct === 10000
+              return (
+                <div key={acct} className={'flex items-center justify-between rounded-xl px-5 py-4 border ' + (isBase ? 'bg-[#00e5a0]/[0.03] border-[#00e5a0]/[0.12]' : 'bg-[#0a0a0c] border-white/[0.04]')}>
+                  <div className="flex items-center gap-3">
+                    <div className={'text-[18px] mono font-bold ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
+                    {isBase && <span className="text-[10px] mono text-[#00e5a0]/60 tracking-wider font-bold bg-[#00e5a0]/[0.08] px-2 py-0.5 rounded">BASE</span>}
+                  </div>
+                  <div className="text-right">
+                    <div className="text-[18px] mono font-bold text-[#00e5a0]">+${Math.round(tp).toLocaleString()}</div>
+                    <div className="text-[11px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results. 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
+        </div>
+      </section>
+
+
+      <div className="divider mx-6 md:mx-10"></div>
+
+
       {/* ════════ 8. PRICING ════════ */}
       <section id="pricing" className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">PRICING</p>
             <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
-              Less than one winning trade.
+              You just saw what the signals return.<br className="hidden md:block"/> Here's what they cost.
             </h2>
-            <p className="text-[14px] text-white/65 max-w-lg mx-auto">
-              Our average winning trade returns +${Math.round(avgWinTrade).toLocaleString()} on a $10K account. Your subscription pays for itself on the first signal that hits.
+            <p className="text-[14px] text-white/50 max-w-lg mx-auto">
+              The average winning trade returns +${Math.round(avgWinTrade).toLocaleString()} on a $10K account. One signal that hits pays for the subscription. The rest is profit.
             </p>
           </div>
 
@@ -785,79 +850,12 @@ export default function LandingClientPage() {
       <div className="divider mx-6 md:mx-10"></div>
 
 
-      {/* ════════ 8.5. ACCOUNT SIMULATOR ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">SCALE IT</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
-              Same signals. Your account size.
-            </h2>
-            <p className="text-[14px] text-white/40 max-w-md mx-auto">
-              10% fixed risk scales linearly. Here's what the verified track record looks like at different account sizes.
-            </p>
-          </div>
-
-          {/* Desktop: 5-column grid */}
-          <div className="hidden md:block bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
-              {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-                var multiplier = acct / 10000
-                var tp = totalProfit * multiplier
-                var ma = avgMonthly * multiplier
-                var isBase = acct === 10000
-                return (
-                  <div key={acct} className={'p-5 text-center relative ' + (isBase ? 'bg-[#00e5a0]/[0.03]' : 'bg-[#0a0a0c]')}>
-                    {isBase && <div className="absolute top-0 left-0 right-0 h-px bg-[#00e5a0]/20"></div>}
-                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/70 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
-                    <div className={'text-[16px] mono font-bold mb-4 ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
-                    <div className="text-[22px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/25 mb-3">total profit</div>
-                    <div className="h-px bg-white/[0.04] mb-3"></div>
-                    <div className="text-[14px] mono text-white/50 font-medium">${Math.round(ma).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/20">per month avg</div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Mobile: stacked rows */}
-          <div className="md:hidden space-y-2">
-            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-              var multiplier = acct / 10000
-              var tp = totalProfit * multiplier
-              var ma = avgMonthly * multiplier
-              var isBase = acct === 10000
-              return (
-                <div key={acct} className={'flex items-center justify-between rounded-xl px-5 py-4 border ' + (isBase ? 'bg-[#00e5a0]/[0.03] border-[#00e5a0]/[0.12]' : 'bg-[#0a0a0c] border-white/[0.04]')}>
-                  <div className="flex items-center gap-3">
-                    <div className={'text-[18px] mono font-bold ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
-                    {isBase && <span className="text-[10px] mono text-[#00e5a0]/60 tracking-wider font-bold bg-[#00e5a0]/[0.08] px-2 py-0.5 rounded">BASE</span>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[18px] mono font-bold text-[#00e5a0]">+${Math.round(tp).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results. 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
       {/* ════════ REVIEWS ════════ */}
       <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-10">
-            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">FROM SUBSCRIBERS</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">What traders are saying.</h2>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Don't take our word for it.</h2>
+            <p className="text-[14px] text-white/35 max-w-md mx-auto">Here's what actual subscribers say — including the parts about losing months.</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -896,8 +894,8 @@ export default function LandingClientPage() {
       <section className="py-14 md:py-24 px-5 md:px-10">
         <div className="max-w-3xl mx-auto">
           <div className="text-center mb-12">
-            <div className="text-[12px] text-white/25 mono tracking-[.2em] mb-3">QUESTIONS</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">Before you decide.</h2>
+            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Still thinking it over?</h2>
+            <p className="text-[14px] text-white/35 max-w-md mx-auto">Good. You should be. Here are the questions smart traders ask before committing.</p>
           </div>
 
           <div className="space-y-3">
