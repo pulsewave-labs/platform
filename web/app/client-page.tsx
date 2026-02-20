@@ -128,13 +128,13 @@ export default function LandingClientPage() {
           </div>
 
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
-            While you were sleeping,<br/>our engine made <span className="text-[#00e5a0] glow">{totalProfit>0?'+$'+Math.round(totalProfit).toLocaleString():'—'}</span>
+            Crypto signals that tell you<br/>exactly <span className="text-[#00e5a0] glow">when to buy and sell.</span>
           </h1>
           <p className="fu2 text-[16px] text-white/85 leading-relaxed max-w-xl mb-4">
-            Most traders lose because they trade on emotion. Our Market Structure engine doesn't have emotions. It scans. It waits. It strikes.
+            The engine scans 5 pairs 24/7. When it spots a setup, you get the entry, stop loss, and take profit — straight to your phone.
           </p>
           <p className="fu2 text-[14px] text-white/65 max-w-md mb-10 leading-relaxed">
-            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Now it sends you the exact same signals, straight to Telegram.
+            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Every result tracked in real time.
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
