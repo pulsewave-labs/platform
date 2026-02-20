@@ -122,11 +122,6 @@ export default function LandingClientPage() {
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
 
         <div className="w-full max-w-4xl mx-auto relative z-10">
-          <div className="fu flex items-center gap-2 mb-8">
-            <span className="relative flex h-1.5 w-1.5"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00e5a0] opacity-75"></span><span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span></span>
-            <span className="text-[14px] text-white/55 mono tracking-[.15em]">LIVE · SCANNING 5 PAIRS · 24/7</span>
-          </div>
-
           <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
             Crypto signals that tell you<br/>exactly <span className="text-[#00e5a0] glow">when to buy and sell.</span>
           </h1>
