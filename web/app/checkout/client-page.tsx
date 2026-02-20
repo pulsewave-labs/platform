@@ -7,8 +7,8 @@ import { createBrowserClient } from '@supabase/ssr'
 import { WhopCheckoutEmbed } from '@whop/checkout/react'
 
 const PLANS = {
-  monthly: { id: 'plan_kaL9L5TvxU8Bg', price: '$149', period: '/mo', label: 'Monthly', save: '' },
-  annual: { id: 'plan_KXHGlrE70uC9q', price: '$1,490', period: '/yr', label: 'Annual', save: 'Save $298' },
+  monthly: { id: 'plan_kaL9L5TvxU8Bg', price: '$49', period: '/mo', label: 'Monthly', save: '' },
+  annual: { id: 'plan_KXHGlrE70uC9q', price: '$490', period: '/yr', label: 'Annual', save: 'Save $98' },
 }
 
 export default function CheckoutClientPage() {

@@ -161,7 +161,7 @@ export default function PerformanceClientPage() {
           {/* Inline CTA */}
           <div className="flex items-center justify-center gap-3 mb-2">
             <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-6 py-2.5 bg-[#00e5a0] text-black text-[13px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors">
-              Get These Signals for $149/mo
+              Get These Signals for $49/mo
             </Link>
             <span className="text-[12px] text-white/20 mono">or</span>
             <span className="text-[12px] text-white/30 mono">keep scrolling to verify every trade</span>
@@ -295,7 +295,7 @@ export default function PerformanceClientPage() {
             <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-8 py-3 bg-[#00e5a0] text-black text-[14px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors shadow-[0_0_30px_rgba(0,229,160,.1)]">
               Start Receiving Signals
             </Link>
-            <div className="text-[12px] text-white/20 mono mt-3">$149/mo · Cancel anytime</div>
+            <div className="text-[12px] text-white/20 mono mt-3">$49/mo · Cancel anytime</div>
           </div>
         </div>
       </section>
@@ -500,7 +500,7 @@ export default function PerformanceClientPage() {
             The next signal fires to Telegram the moment a setup confirms. Subscribers get it instantly.
           </p>
           <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-10 py-4 bg-[#00e5a0] text-black text-[15px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors shadow-[0_0_40px_rgba(0,229,160,.12)]">
-            Get Signals for $149/mo
+            Get Signals for $49/mo
           </Link>
           <div className="flex items-center justify-center gap-4 mt-4 text-[11px] text-white/20 mono">
             <span>Cancel anytime</span>

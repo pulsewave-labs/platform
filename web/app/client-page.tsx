@@ -674,7 +674,7 @@ export default function LandingClientPage() {
             <div className="mt-5 text-center">
               <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2">
                 <span className="text-[14px] text-white/50">PulseWave Signals</span>
-                <span className="text-[16px] mono font-bold text-[#00e5a0]">$149/mo</span>
+                <span className="text-[16px] mono font-bold text-[#00e5a0]">$49/mo</span>
                 <span className="text-[13px] text-white/30">· verified results, zero guesswork</span>
               </div>
             </div>
@@ -685,7 +685,7 @@ export default function LandingClientPage() {
               <div className="p-7">
                 <div className="text-[14px] text-white/65 mono tracking-wider mb-4">MONTHLY</div>
                 <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-[36px] font-bold mono">$149</span>
+                  <span className="text-[36px] font-bold mono">$49</span>
                   <span className="text-white/65 text-[14px]">/mo</span>
                 </div>
                 <div className="space-y-2.5 text-[14px] text-white/55 mb-8">
@@ -702,7 +702,7 @@ export default function LandingClientPage() {
               <div className="p-7">
                 <div className="text-[12px] text-[#00e5a0]/60 mono tracking-wider mb-4">ANNUAL</div>
                 <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[36px] font-bold mono text-[#00e5a0]">$1,490</span>
+                  <span className="text-[36px] font-bold mono text-[#00e5a0]">$490</span>
                   <span className="text-white/65 text-[14px]">/yr</span>
                 </div>
                 <div className="text-[14px] text-[#00e5a0]/50 mono mb-6">2 months free</div>
@@ -723,13 +723,13 @@ export default function LandingClientPage() {
 
               <div className="text-center mb-8">
                 <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
-                <p className="text-[14px] text-white/40">What $149/mo looks like on a $10K account</p>
+                <p className="text-[14px] text-white/40">What $49/mo looks like on a $10K account</p>
               </div>
 
               <div className="flex items-center justify-center gap-2 md:gap-5 mb-8 flex-wrap">
                 <div className="text-center px-3">
                   <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">You pay</div>
-                  <div className="text-[22px] md:text-[28px] font-bold mono text-white/70">$149</div>
+                  <div className="text-[22px] md:text-[28px] font-bold mono text-white/70">$49</div>
                   <div className="text-[10px] md:text-[11px] text-white/25 mono">/month</div>
                 </div>
 
@@ -745,7 +745,7 @@ export default function LandingClientPage() {
 
                 <div className="text-center px-3">
                   <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">ROI</div>
-                  <div className="text-[30px] md:text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/149)+'x':'—'}</div>
+                  <div className="text-[30px] md:text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/49)+'x':'—'}</div>
                 </div>
               </div>
 
@@ -843,7 +843,7 @@ export default function LandingClientPage() {
               { name:'James K.', since:'10 months', text:'The transparency is what sold me. I audited every trade on the performance page before subscribing. 40% win rate scared me at first, but the profit factor means winners are 2-3x larger than losers. Numbers don\'t lie.', tag:'$25K account' },
               { name:'Sofia L.', since:'7 months', text:'I lost $12K following Twitter calls before this. No more guessing, no more "trust me bro." Every signal has a stop loss. Every trade is documented. Worst month I had was down $400. Best month was up $9K.', tag:'Crypto trader' },
               { name:'Ryan M.', since:'9 months', text:'Showed my buddy the performance page and he said "that can\'t be real, nobody publishes their losses." That\'s exactly why I trust it. 3 red months out of 9 for me, still up 118% total.', tag:'SOL/AVAX focused' },
-              { name:'Angela W.', since:'6 months', text:'$149/mo felt expensive until I did the math. Averaging $4K-5K/mo on a $10K account. That\'s a 30x return on the subscription. I spend more on DoorDash.', tag:'$10K account' },
+              { name:'Angela W.', since:'6 months', text:'$49/mo felt expensive until I did the math. Averaging $4K-5K/mo on a $10K account. That\'s a 30x return on the subscription. I spend more on DoorDash.', tag:'$10K account' },
               { name:'Tommy H.', since:'20 months', text:'Been here since nearly the start. The algo doesn\'t chase pumps, doesn\'t panic sell. It waits for structure breaks at key levels. Some weeks nothing happens. Then 3 signals hit in a day and you remember why you\'re here.', tag:'Day one subscriber' },
             ].map(function(r, i) {
               return (
@@ -921,7 +921,7 @@ export default function LandingClientPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto mb-4">
             <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
-              Start receiving signals. $149/mo
+              Start receiving signals. $49/mo
             </Link>
           </div>
           <Link href="/performance" className="text-[13px] text-white/35 mono tracking-wider hover:text-white/55 transition-colors">

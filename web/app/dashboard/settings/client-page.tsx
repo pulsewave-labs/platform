@@ -109,7 +109,7 @@ export default function SettingsClientPage() {
 
   var statusColor = subStatus === 'active' ? '#00e5a0' : subStatus === 'cancelled' ? '#c9a227' : '#ff4d4d'
   var statusLabel = subStatus === 'active' ? 'ACTIVE' : subStatus === 'cancelled' ? 'CANCELLED' : subStatus === 'expired' ? 'EXPIRED' : 'INACTIVE'
-  var planLabel = subPlan === 'annual' ? 'Annual \u2014 $1,490/year' : subPlan === 'monthly' ? 'Monthly \u2014 $149/month' : subPlan === 'admin' ? 'Admin' : 'No active plan'
+  var planLabel = subPlan === 'annual' ? 'Annual \u2014 $490/year' : subPlan === 'monthly' ? 'Monthly \u2014 $49/month' : subPlan === 'admin' ? 'Admin' : 'No active plan'
 
   return (
     <div className="max-w-lg space-y-4">

@@ -45,8 +45,8 @@ export default function TermsPage() {
 
             <p className="font-semibold text-white mb-2">Pricing</p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
-              <li>Monthly plan: $149/month, billed monthly</li>
-              <li>Annual plan: $1,490/year, billed annually (saves $298)</li>
+              <li>Monthly plan: $49/month, billed monthly</li>
+              <li>Annual plan: $490/year, billed annually (saves $98)</li>
               <li>All prices in USD</li>
             </ul>
 
