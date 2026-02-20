@@ -137,11 +137,11 @@ export default function LandingClientPage() {
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
-            <Link href="/performance" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
-              See every trade we've made
+            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
+              Get started now
             </Link>
-            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
-              Start for $49/mo
+            <Link href="/performance" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
+              See every trade we've made
             </Link>
           </div>
 
