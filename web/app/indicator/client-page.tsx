@@ -30,7 +30,7 @@ export default function IndicatorClient() {
   }, [])
 
   var scrollTo = function(id: string) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenu(false) }
-  var whopUrl = 'https://whop.com/checkout/plan_LFA5ev192mjHb'
+  var whopUrl = 'https://whop.com/checkout/plan_QqI3V1DyBSPyw'
 
   var s1 = useInView(), s2 = useInView(), s3 = useInView(), s4 = useInView(), s5 = useInView(), s6 = useInView(), s7 = useInView(), s8 = useInView()
 
@@ -73,7 +73,7 @@ export default function IndicatorClient() {
           <button onClick={function(){scrollTo('how')}} className="block text-white/50 text-[14px]">How It Works</button>
           <button onClick={function(){scrollTo('reviews')}} className="block text-white/50 text-[14px]">Reviews</button>
           <button onClick={function(){scrollTo('pricing')}} className="block text-white/50 text-[14px]">Pricing</button>
-          <a href={whopUrl} className="inline-block px-5 py-2.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px]">Get Access — $87</a>
+          <a href={whopUrl} className="inline-block px-5 py-2.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px]">Get Access — $49</a>
         </div>}
       </nav>
 
@@ -98,12 +98,12 @@ export default function IndicatorClient() {
           </p>
 
           <p className="fu3 text-[13px] text-white/25 mono mb-10">
-            $87 once · lifetime access · 30-day guarantee
+            $49/mo · cancel anytime · 30-day guarantee
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 justify-center mb-12 max-w-sm mx-auto">
             <a href={whopUrl} className="flex-1 px-8 py-4 bg-[#00e5a0] text-[#06060a] rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all text-center shadow-[0_0_40px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-              Get Lifetime Access — $87
+              Get Access — $49/mo
             </a>
           </div>
 
@@ -125,7 +125,7 @@ export default function IndicatorClient() {
             {[
               {v:'Any market', s:'Crypto · Forex · Futures'},
               {v:'Zero config', s:'Install and trade'},
-              {v:'$87 once', s:'No subscriptions'},
+              {v:'$49/mo', s:'Cancel anytime'},
             ].map(function(s,i) { return (
               <div key={i} className={i > 0 ? 'hidden sm:block' : ''}>
                 <div className="text-[14px] font-semibold text-white/60">{s.v}</div>
@@ -275,7 +275,7 @@ export default function IndicatorClient() {
           <div className="text-center mb-14">
             <div className="text-[11px] text-white/20 mono tracking-[.25em] mb-4">INCLUDED</div>
             <h2 className="text-2xl md:text-[34px] font-bold tracking-tight leading-tight">
-              One purchase. Everything included.
+              Everything included.
             </h2>
           </div>
 
@@ -285,7 +285,7 @@ export default function IndicatorClient() {
               { title:'Green / Red zone system', desc:'Green = buyers are here. Red = sellers are here. One glance tells you the entire trade setup. Nothing to interpret.'},
               { title:'Every market, every timeframe', desc:'Crypto, forex, NQ, ES, Gold, crude, stocks — anything on TradingView. Scalp the 1-minute or swing the daily. Same system.'},
               { title:'Zero-config installation', desc:'No settings page. No parameter optimization. No "watch our 2-hour setup video." Install → open chart → trade.'},
-              { title:'Lifetime updates', desc:'Every algorithm improvement, every new feature, every optimization. Included forever. We\'re building this for the long haul.'},
+              { title:'Continuous updates', desc:'Every algorithm improvement, every new feature, every optimization — included with your subscription.'},
               { title:'Private Discord', desc:'Community of {memberCount}+ traders using PulseWave. Share setups, learn from others, get direct help from the creator.'.replace('{memberCount}', String(memberCount))},
             ].map(function(f,i) { return (
               <div key={i} className="card px-6 py-5 lift group flex items-start gap-4">
@@ -352,10 +352,10 @@ export default function IndicatorClient() {
           <div className="text-center mb-14">
             <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.25em] mb-4">PRICING</div>
             <h2 className="text-2xl md:text-[34px] font-bold tracking-tight mb-3 leading-tight">
-              One payment. Yours forever.
+              Simple, transparent pricing.
             </h2>
             <p className="text-[14px] text-white/30 max-w-md mx-auto leading-relaxed">
-              While other tools charge monthly, PulseWave is one price for life. No recurring fees. No "premium tiers." No surprise charges.
+              No contracts. No hidden fees. Cancel anytime with one click.
             </p>
           </div>
 
@@ -380,11 +380,11 @@ export default function IndicatorClient() {
               <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/25 to-transparent"></div>
               <div className="p-8 md:p-10">
                 <div className="text-center mb-8">
-                  <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.25em] mb-6">LIFETIME ACCESS</div>
+                  <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.25em] mb-6">FULL ACCESS</div>
                   <div className="mb-2">
-                    <span className="text-[64px] font-extrabold mono text-white leading-none tracking-tight">$87</span>
+                    <span className="text-[64px] font-extrabold mono text-white leading-none tracking-tight">$49</span><span className="text-[20px] text-white/30 mono">/mo</span>
                   </div>
-                  <div className="text-[13px] text-white/20 mono">one payment · forever</div>
+                  <div className="text-[13px] text-white/20 mono">$49 per month · cancel anytime</div>
                 </div>
 
                 <div className="h-px bg-white/[0.04] mb-7"></div>
@@ -395,7 +395,7 @@ export default function IndicatorClient() {
                     'Automatic support & resistance zones',
                     'Works on any market & timeframe',
                     'Compatible with free TradingView',
-                    'All future updates included',
+                    'All updates included',
                     'Private Discord community',
                     '30-day money-back guarantee',
                   ].map(function(f,i) { return (
@@ -407,12 +407,12 @@ export default function IndicatorClient() {
                 </div>
 
                 <a href={whopUrl} className="block w-full py-4 rounded-xl bg-[#00e5a0] text-[#06060a] text-[15px] font-bold text-center hover:bg-[#00d492] transition-all shadow-[0_0_30px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-                  Get Lifetime Access — $87
+                  Get Access — $49/mo
                 </a>
 
                 <p className="text-center text-[11px] text-white/15 mt-5 mono leading-relaxed">
                   30-day money-back guarantee · No questions asked<br/>
-                  Price increases to $197 at 500 members ({500 - memberCount} spots left)
+                  30-day money-back guarantee · Cancel anytime
                 </p>
               </div>
             </div>
@@ -464,11 +464,11 @@ export default function IndicatorClient() {
             {[
               {q:'Do I need a paid TradingView account?', a:'No. Works on free TradingView. No premium plan required.'},
               {q:'What markets does it work on?', a:'Everything on TradingView. Crypto, forex, NQ, ES, Gold, crude oil, stocks, indices. Any timeframe from 1-minute to monthly.'},
-              {q:'Is this a subscription?', a:'No. $87 once. Lifetime access. All future updates included. No recurring charges, ever.'},
+              {q:'Can I cancel anytime?', a:'Yes. Cancel with one click, no questions asked. No contracts, no commitments.'},
               {q:'How is this different from other indicators?', a:'Most indicators react to what already happened. PulseWave identifies where price will react next — the institutional S/R zones where real money sits. Green zone = buy area. Red zone = sell area. No interpretation needed.'},
               {q:'What if it doesn\'t work for me?', a:'Full refund within 30 days. Email us, money back. No questions, no forms, no hassle.'},
               {q:'Do I need to configure anything?', a:'No. Zero settings. Install it, open your chart, zones appear. That\'s it.'},
-              {q:'Will the price increase?', a:'Yes. At 500 members it goes to $197. Currently at '+memberCount+' — '+String(500-memberCount)+' spots left at $87.'},
+              {q:'Will the price increase?', a:'Current pricing is $49/mo. Early members lock in this rate.'},
             ].map(function(faq,i) { return (
               <button key={i} onClick={function(){setOpenFaq(openFaq===i?null:i)}} className="w-full text-left card px-6 py-5 block transition-all duration-200" style={openFaq===i?{borderColor:'rgba(255,255,255,.06)'}:{}}>
                 <div className="flex items-center justify-between gap-6">
@@ -498,14 +498,14 @@ export default function IndicatorClient() {
             Your chart already knows where price will go.
           </h2>
           <p className="text-[15px] text-white/35 mb-10 leading-[1.7]">
-            PulseWave shows you. One payment. Lifetime access. Money back if it doesn't work.
+            PulseWave shows you. $49/mo. Cancel anytime. Money back if it doesn't work.
           </p>
 
           <a href={whopUrl} className="inline-block px-12 py-4 bg-[#00e5a0] text-[#06060a] rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all shadow-[0_0_40px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-            Get Lifetime Access — $87
+            Get Access — $49/mo
           </a>
 
-          <p className="text-[11px] text-white/15 mono mt-6">{500 - memberCount} spots left at this price</p>
+          <p className="text-[11px] text-white/15 mono mt-6">30-day money-back guarantee</p>
         </div>
       </section>
 
