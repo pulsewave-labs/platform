@@ -355,7 +355,7 @@ export default function IndicatorClient() {
               Simple, transparent pricing.
             </h2>
             <p className="text-[14px] text-white/30 max-w-md mx-auto leading-relaxed">
-              No contracts. No hidden fees. Cancel anytime with one click.
+              No contracts. No hidden fees. Just results.
             </p>
           </div>
 
@@ -412,7 +412,7 @@ export default function IndicatorClient() {
 
                 <p className="text-center text-[11px] text-white/15 mt-5 mono leading-relaxed">
                   30-day money-back guarantee · No questions asked<br/>
-                  30-day money-back guarantee · Cancel anytime
+                  30-day money-back guarantee
                 </p>
               </div>
             </div>
@@ -464,7 +464,7 @@ export default function IndicatorClient() {
             {[
               {q:'Do I need a paid TradingView account?', a:'No. Works on free TradingView. No premium plan required.'},
               {q:'What markets does it work on?', a:'Everything on TradingView. Crypto, forex, NQ, ES, Gold, crude oil, stocks, indices. Any timeframe from 1-minute to monthly.'},
-              {q:'Can I cancel anytime?', a:'Yes. Cancel with one click, no questions asked. No contracts, no commitments.'},
+              {q:'What if it doesn't work for my strategy?', a:'Full refund within 30 days. No questions, no forms. We only want happy traders.'},
               {q:'How is this different from other indicators?', a:'Most indicators react to what already happened. PulseWave identifies where price will react next — the institutional S/R zones where real money sits. Green zone = buy area. Red zone = sell area. No interpretation needed.'},
               {q:'What if it doesn\'t work for me?', a:'Full refund within 30 days. Email us, money back. No questions, no forms, no hassle.'},
               {q:'Do I need to configure anything?', a:'No. Zero settings. Install it, open your chart, zones appear. That\'s it.'},
