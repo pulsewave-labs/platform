@@ -73,7 +73,7 @@ export default function IndicatorClient() {
           <button onClick={function(){scrollTo('how')}} className="block text-white/50 text-[14px]">How It Works</button>
           <button onClick={function(){scrollTo('reviews')}} className="block text-white/50 text-[14px]">Reviews</button>
           <button onClick={function(){scrollTo('pricing')}} className="block text-white/50 text-[14px]">Pricing</button>
-          <a href={whopUrl} className="inline-block px-5 py-2.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px]">Get Access — $49</a>
+          <a href={whopUrl} className="inline-block px-5 py-2.5 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px]">Get Access Now — $49</a>
         </div>}
       </nav>
 
@@ -98,12 +98,12 @@ export default function IndicatorClient() {
           </p>
 
           <p className="fu3 text-[13px] text-white/25 mono mb-10">
-            $49/mo · cancel anytime · 30-day guarantee
+            $49 · 30-day guarantee
           </p>
 
           <div className="fu3 flex flex-col sm:flex-row gap-3 justify-center mb-12 max-w-sm mx-auto">
             <a href={whopUrl} className="flex-1 px-8 py-4 bg-[#00e5a0] text-[#06060a] rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all text-center shadow-[0_0_40px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-              Get Access — $49/mo
+              Get Access Now — $49
             </a>
           </div>
 
@@ -125,7 +125,7 @@ export default function IndicatorClient() {
             {[
               {v:'Any market', s:'Crypto · Forex · Futures'},
               {v:'Zero config', s:'Install and trade'},
-              {v:'$49/mo', s:'Cancel anytime'},
+              {v:'$49', s:'30-day guarantee'},
             ].map(function(s,i) { return (
               <div key={i} className={i > 0 ? 'hidden sm:block' : ''}>
                 <div className="text-[14px] font-semibold text-white/60">{s.v}</div>
@@ -382,9 +382,9 @@ export default function IndicatorClient() {
                 <div className="text-center mb-8">
                   <div className="text-[11px] text-[#00e5a0]/40 mono tracking-[.25em] mb-6">FULL ACCESS</div>
                   <div className="mb-2">
-                    <span className="text-[64px] font-extrabold mono text-white leading-none tracking-tight">$49</span><span className="text-[20px] text-white/30 mono">/mo</span>
+                    <span className="text-[64px] font-extrabold mono text-white leading-none tracking-tight">$49</span>
                   </div>
-                  <div className="text-[13px] text-white/20 mono">$49 per month · cancel anytime</div>
+                  <div className="text-[13px] text-white/20 mono">one-time · instant access</div>
                 </div>
 
                 <div className="h-px bg-white/[0.04] mb-7"></div>
@@ -407,7 +407,7 @@ export default function IndicatorClient() {
                 </div>
 
                 <a href={whopUrl} className="block w-full py-4 rounded-xl bg-[#00e5a0] text-[#06060a] text-[15px] font-bold text-center hover:bg-[#00d492] transition-all shadow-[0_0_30px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-                  Get Access — $49/mo
+                  Get Access Now — $49
                 </a>
 
                 <p className="text-center text-[11px] text-white/15 mt-5 mono leading-relaxed">
@@ -468,7 +468,7 @@ export default function IndicatorClient() {
               {q:'How is this different from other indicators?', a:'Most indicators react to what already happened. PulseWave identifies where price will react next — the institutional S/R zones where real money sits. Green zone = buy area. Red zone = sell area. No interpretation needed.'},
               {q:'What if it doesn\'t work for me?', a:'Full refund within 30 days. Email us, money back. No questions, no forms, no hassle.'},
               {q:'Do I need to configure anything?', a:'No. Zero settings. Install it, open your chart, zones appear. That\'s it.'},
-              {q:'Will the price increase?', a:'Current pricing is $49/mo. Early members lock in this rate.'},
+              {q:'Will the price increase?', a:'Current pricing is $49. Early members lock in this rate.'},
             ].map(function(faq,i) { return (
               <button key={i} onClick={function(){setOpenFaq(openFaq===i?null:i)}} className="w-full text-left card px-6 py-5 block transition-all duration-200" style={openFaq===i?{borderColor:'rgba(255,255,255,.06)'}:{}}>
                 <div className="flex items-center justify-between gap-6">
@@ -498,11 +498,11 @@ export default function IndicatorClient() {
             Your chart already knows where price will go.
           </h2>
           <p className="text-[15px] text-white/35 mb-10 leading-[1.7]">
-            PulseWave shows you. $49/mo. Cancel anytime. Money back if it doesn't work.
+            PulseWave shows you. $49. Money back if it doesn't work.
           </p>
 
           <a href={whopUrl} className="inline-block px-12 py-4 bg-[#00e5a0] text-[#06060a] rounded-xl font-bold text-[15px] hover:bg-[#00d492] transition-all shadow-[0_0_40px_rgba(0,229,160,.08),0_2px_8px_rgba(0,229,160,.15)]">
-            Get Access — $49/mo
+            Get Access Now — $49
           </a>
 
           <p className="text-[11px] text-white/15 mono mt-6">30-day money-back guarantee</p>
