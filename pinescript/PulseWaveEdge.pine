@@ -1,0 +1,389 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PulseWave Labs
+
+//@version=6
+indicator("PulseWave Edge", "PW Edge", overlay=true, max_boxes_count=500, max_lines_count=500, max_labels_count=500)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Regime
+g_regime    = "Market Regime"
+kijunLen    = input.int(26,   "Kijun Length",          group=g_regime, minval=5)
+adxLen      = input.int(14,   "ADX Length",            group=g_regime, minval=5)
+adxThresh   = input.int(20,   "ADX Trend Threshold",   group=g_regime, minval=10, maxval=40)
+rangeMin    = input.int(8,    "Min Bars for Range",    group=g_regime, minval=4)
+
+// Levels
+g_levels    = "Smart Levels"
+pivotLeft   = input.int(5,    "Pivot Lookback",        group=g_levels, minval=2, maxval=20)
+pivotRight  = input.int(2,    "Pivot Confirm",         group=g_levels, minval=1, maxval=10)
+zoneWidth   = input.float(0.3,"Zone Width %",          group=g_levels, minval=0.05, maxval=2.0, step=0.05)
+maxTouches  = input.int(5,    "Max Touches (Rule of 5)", group=g_levels, minval=2, maxval=10)
+
+// Signals
+g_signals   = "Signals"
+showSL_TP   = input.bool(true, "Show SL / TP Lines",  group=g_signals)
+riskReward  = input.float(2.0, "R:R Target",           group=g_signals, minval=1.0, maxval=6.0, step=0.5)
+slBuffer    = input.float(0.2, "SL Buffer %",          group=g_signals, minval=0.05, maxval=1.0, step=0.05)
+
+// Visuals
+g_vis       = "Visuals"
+showKijun   = input.bool(true, "Show Kijun Line",      group=g_vis)
+showZones   = input.bool(true, "Show S/R Zones",       group=g_vis)
+showRegime  = input.bool(true, "Show Regime Table",    group=g_vis)
+bullColor   = input.color(color.new(#00e5a0, 0), "Bull Color", group=g_vis)
+bearColor   = input.color(color.new(#ff4976, 0), "Bear Color", group=g_vis)
+kijunColor  = input.color(color.new(#f0b90b, 0), "Kijun Color", group=g_vis)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// KIJUN-SEN (Dynamic 50% Fib)
+// ──────────────────────────────────────────────────────────────────────────────
+
+kijunHigh = ta.highest(high, kijunLen)
+kijunLow  = ta.lowest(low, kijunLen)
+kijun     = (kijunHigh + kijunLow) / 2.0
+
+plot(showKijun ? kijun : na, "Kijun", kijunColor, 2)
+
+// Distance from Kijun (for overextension)
+kijunDist = math.abs(close - kijun) / kijun * 100.0
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARKET REGIME DETECTION
+// ──────────────────────────────────────────────────────────────────────────────
+
+// ADX for trend strength
+_dirmov(len) =>
+    _up   = ta.change(high)
+    _down = -ta.change(low)
+    plusDM  = na(_up)   ? na : (_up > _down and _up > 0   ? _up   : 0.0)
+    minusDM = na(_down) ? na : (_down > _up and _down > 0 ? _down : 0.0)
+    trSmooth = ta.rma(ta.tr, len)
+    plus  = 100.0 * ta.rma(plusDM, len) / trSmooth
+    minus = 100.0 * ta.rma(minusDM, len) / trSmooth
+    [plus, minus]
+
+[diPlus, diMinus] = _dirmov(adxLen)
+adxVal = 100.0 * ta.rma(math.abs(diPlus - diMinus) / (diPlus + diMinus == 0 ? 1.0 : diPlus + diMinus), adxLen)
+
+// Kijun slope for trend direction
+kijunSlope = kijun - kijun[3]
+
+// Regime classification
+isTrending = adxVal > adxThresh
+trendBull  = isTrending and kijunSlope > 0
+trendBear  = isTrending and kijunSlope < 0
+isRanging  = not isTrending
+
+// Regime string
+regimeStr = trendBull ? "TREND ▲" : trendBear ? "TREND ▼" : "RANGE ◆"
+regimeCol = trendBull ? bullColor : trendBear ? bearColor : color.new(#a0a0a0, 0)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SMART LEVELS — S/R with depletion (Rule of Fives)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Zone type
+type Zone
+    float   top
+    float   bot
+    float   mid
+    int     touches
+    bool    isBull
+    bool    alive
+    int     birthBar
+    box     bx
+
+// Storage
+var Zone[] zones = array.new<Zone>()
+
+// Detect pivot highs and lows
+pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
+pivLo = ta.pivotlow(low, pivotLeft, pivotRight)
+
+// Zone half-width
+halfZone(price) =>
+    price * zoneWidth / 100.0
+
+// Check if price is inside a zone
+priceInZone(price, z) =>
+    price >= z.bot and price <= z.top
+
+// Add new zones from pivots
+if not na(pivHi)
+    hw   = halfZone(pivHi)
+    _top = pivHi + hw
+    _bot = pivHi - hw
+    // Check if it merges with existing zone
+    merged = false
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive and not z.isBull
+            if math.abs(z.mid - pivHi) / pivHi < zoneWidth * 2.0 / 100.0
+                z.mid := (z.mid + pivHi) / 2.0
+                z.top := z.mid + halfZone(z.mid)
+                z.bot := z.mid - halfZone(z.mid)
+                merged := true
+                break
+    if not merged
+        newZone = Zone.new(_top, _bot, pivHi, 0, false, true, bar_index - pivotRight, na)
+        if showZones
+            newZone.bx := box.new(bar_index - pivotRight, _top, bar_index + 50, _bot, border_color=color.new(bearColor, 70), bgcolor=color.new(bearColor, 88))
+        array.push(zones, newZone)
+
+if not na(pivLo)
+    hw   = halfZone(pivLo)
+    _top = pivLo + hw
+    _bot = pivLo - hw
+    merged = false
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive and z.isBull
+            if math.abs(z.mid - pivLo) / pivLo < zoneWidth * 2.0 / 100.0
+                z.mid := (z.mid + pivLo) / 2.0
+                z.top := z.mid + halfZone(z.mid)
+                z.bot := z.mid - halfZone(z.mid)
+                merged := true
+                break
+    if not merged
+        newZone = Zone.new(_top, _bot, pivLo, 0, true, true, bar_index - pivotRight, na)
+        if showZones
+            newZone.bx := box.new(bar_index - pivotRight, _top, bar_index + 50, _bot, border_color=color.new(bullColor, 70), bgcolor=color.new(bullColor, 88))
+        array.push(zones, newZone)
+
+// Update zones — touch counting + depletion
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive
+        inZone = (low <= z.top and high >= z.bot)
+        wasOut = not (low[1] <= z.top and high[1] >= z.bot)
+        if inZone and wasOut
+            z.touches += 1
+        // Kill depleted zones
+        if z.touches >= maxTouches
+            z.alive := false
+            if not na(z.bx)
+                box.set_right(z.bx, bar_index)
+                box.set_bgcolor(z.bx, color.new(color.gray, 95))
+                box.set_border_color(z.bx, color.new(color.gray, 90))
+        // Extend alive zones
+        if z.alive and not na(z.bx)
+            box.set_right(z.bx, bar_index + 20)
+            // Fade opacity with touches
+            opac = 88 + z.touches * 2
+            if z.isBull
+                box.set_bgcolor(z.bx, color.new(bullColor, math.min(opac, 96)))
+            else
+                box.set_bgcolor(z.bx, color.new(bearColor, math.min(opac, 96)))
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RANGE DETECTION
+// ──────────────────────────────────────────────────────────────────────────────
+
+var float rangeHigh = na
+var float rangeLow  = na
+var float rangeMid  = na
+var int   rangeBars = 0
+
+if isRanging
+    if rangeBars == 0
+        rangeHigh := ta.highest(high, rangeMin)
+        rangeLow  := ta.lowest(low, rangeMin)
+    else
+        rangeHigh := math.max(rangeHigh, high)
+        rangeLow  := math.min(rangeLow, low)
+    rangeMid  := (rangeHigh + rangeLow) / 2.0
+    rangeBars += 1
+else
+    rangeBars := 0
+    rangeHigh := na
+    rangeLow  := na
+    rangeMid  := na
+
+// Plot range midpoint
+plot(isRanging and rangeBars > rangeMin ? rangeMid : na, "Range Mid", color.new(#a0a0a0, 40), 1, plot.style_cross)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// LTE TRIGGER DETECTION (Candle Patterns at Levels)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Body helpers
+bodyTop    = math.max(open, close)
+bodyBot    = math.min(open, close)
+bodySize   = bodyTop - bodyBot
+bodyTop1   = math.max(open[1], close[1])
+bodyBot1   = math.min(open[1], close[1])
+bodySize1  = bodyTop1 - bodyBot1
+bodyTop2   = math.max(open[2], close[2])
+bodyBot2   = math.min(open[2], close[2])
+bodySize2  = bodyTop2 - bodyBot2
+isGreen    = close > open
+isRed      = close < open
+isGreen1   = close[1] > open[1]
+isRed1     = close[1] < open[1]
+isGreen2   = close[2] > open[2]
+isRed2     = close[2] < open[2]
+
+// Bullish Engulfing
+bullEngulf = isRed1 and isGreen and bodyBot < bodyBot1 and bodyTop > bodyTop1 and bodySize > bodySize1
+
+// Bearish Engulfing
+bearEngulf = isGreen1 and isRed and bodyTop > bodyTop1 and bodyBot < bodyBot1 and bodySize > bodySize1
+
+// Three Inside Up (bullish)
+threeInsUp = isRed2 and isGreen1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isGreen and close > bodyTop2
+
+// Three Inside Down (bearish)
+threeInsDn = isGreen2 and isRed1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isRed and close < bodyBot2
+
+// SFP (Swing Failure Pattern) — wick through level, close back inside
+// Bullish SFP: low pierces below zone bot, close above zone bot
+// Bearish SFP: high pierces above zone top, close below zone top
+
+// Hammer / Shooting Star (simple)
+lowerWick = bodyBot - low
+upperWick = high - bodyTop
+isHammer  = lowerWick > bodySize * 2.0 and upperWick < bodySize * 0.5 and bodySize > 0
+isStar    = upperWick > bodySize * 2.0 and lowerWick < bodySize * 0.5 and bodySize > 0
+
+// Combined trigger flags
+bullTrigger = bullEngulf or threeInsUp or isHammer
+bearTrigger = bearEngulf or threeInsDn or isStar
+
+// ──────────────────────────────────────────────────────────────────────────────
+// LTE SIGNAL GENERATION — Level + Trigger + Entry
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Find if price is at a live zone with a trigger
+var bool longSignal  = false
+var bool shortSignal = false
+var float sigEntry   = na
+var float sigSL      = na
+var float sigTP      = na
+var int   sigBar     = na
+
+longSignal  := false
+shortSignal := false
+
+// Kijun confluence: is price near kijun? (within 0.5%)
+nearKijun = math.abs(close - kijun) / kijun * 100.0 < 0.8
+
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive and z.touches < maxTouches
+        inZone = low <= z.top and high >= z.bot
+
+        // LONG: bullish trigger at support zone
+        if inZone and z.isBull and bullTrigger
+            // Filter: trending bull OR ranging near range low OR kijun confluence
+            validLong = trendBull or (isRanging and not na(rangeLow) and low < rangeMid) or nearKijun
+            if validLong
+                longSignal := true
+                buf         = close * slBuffer / 100.0
+                sigEntry   := close
+                sigSL      := z.bot - buf
+                riskAmt     = sigEntry - sigSL
+                sigTP      := sigEntry + riskAmt * riskReward
+                sigBar     := bar_index
+
+        // SHORT: bearish trigger at resistance zone
+        if inZone and not z.isBull and bearTrigger
+            validShort = trendBear or (isRanging and not na(rangeHigh) and high > rangeMid) or nearKijun
+            if validShort
+                shortSignal := true
+                buf          = close * slBuffer / 100.0
+                sigEntry    := close
+                sigSL       := z.top + buf
+                riskAmt      = sigSL - sigEntry
+                sigTP       := sigEntry - riskAmt * riskReward
+                sigBar      := bar_index
+
+// ──────────────────────────────────────────────────────────────────────────────
+// KIJUN BOUNCE / REJECTION (Trending Markets Only)
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Kijun touch after extended time away
+kijunTouch   = (low <= kijun and high >= kijun) and not (low[1] <= kijun[1] and high[1] >= kijun[1])
+barsFromKijun = ta.barssince(low <= kijun[1] and high >= kijun[1])
+
+// Bullish kijun bounce: trending up, price touches kijun from above, bullish candle
+kijunLong  = trendBull and kijunTouch and isGreen and close > kijun and barsFromKijun > 5
+// Bearish kijun rejection: trending down, price touches kijun from below, bearish candle  
+kijunShort = trendBear and kijunTouch and isRed and close < kijun and barsFromKijun > 5
+
+if kijunLong and not longSignal
+    longSignal := true
+    buf         = close * slBuffer / 100.0
+    sigEntry   := close
+    sigSL      := kijunLow - buf
+    riskAmt     = sigEntry - sigSL
+    sigTP      := sigEntry + riskAmt * riskReward
+    sigBar     := bar_index
+
+if kijunShort and not shortSignal
+    shortSignal := true
+    buf          = close * slBuffer / 100.0
+    sigEntry    := close
+    sigSL       := kijunHigh + buf
+    riskAmt      = sigSL - sigEntry
+    sigTP       := sigEntry - riskAmt * riskReward
+    sigBar      := bar_index
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PLOT SIGNALS
+// ──────────────────────────────────────────────────────────────────────────────
+
+// Entry arrows
+plotshape(longSignal,  "Long",  shape.triangleup,   location.belowbar, bullColor, size=size.small)
+plotshape(shortSignal, "Short", shape.triangledown,  location.abovebar, bearColor, size=size.small)
+
+// SL / TP lines
+if longSignal and showSL_TP
+    line.new(bar_index, sigSL, bar_index + 15, sigSL, color=color.new(bearColor, 40), style=line.style_dotted, width=1)
+    line.new(bar_index, sigTP, bar_index + 15, sigTP, color=color.new(bullColor, 40), style=line.style_dotted, width=1)
+    label.new(bar_index + 15, sigTP, "TP " + str.tostring(riskReward, "#.#") + "R", color=color.new(bullColor, 80), textcolor=bullColor, style=label.style_label_left, size=size.tiny)
+    label.new(bar_index + 15, sigSL, "SL", color=color.new(bearColor, 80), textcolor=bearColor, style=label.style_label_left, size=size.tiny)
+
+if shortSignal and showSL_TP
+    line.new(bar_index, sigSL, bar_index + 15, sigSL, color=color.new(bearColor, 40), style=line.style_dotted, width=1)
+    line.new(bar_index, sigTP, bar_index + 15, sigTP, color=color.new(bullColor, 40), style=line.style_dotted, width=1)
+    label.new(bar_index + 15, sigTP, "TP " + str.tostring(riskReward, "#.#") + "R", color=color.new(bullColor, 80), textcolor=bullColor, style=label.style_label_left, size=size.tiny)
+    label.new(bar_index + 15, sigSL, "SL", color=color.new(bearColor, 80), textcolor=bearColor, style=label.style_label_left, size=size.tiny)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ALERTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+alertcondition(longSignal,  "PW Edge Long",  "PulseWave Edge — LONG signal at {{close}}")
+alertcondition(shortSignal, "PW Edge Short", "PulseWave Edge — SHORT signal at {{close}}")
+
+// ──────────────────────────────────────────────────────────────────────────────
+// INFO TABLE
+// ──────────────────────────────────────────────────────────────────────────────
+
+if showRegime and barstate.islast
+    var table t = table.new(position.top_right, 2, 5, bgcolor=color.new(#0a0a0c, 10), border_color=color.new(color.white, 85), border_width=1)
+
+    table.cell(t, 0, 0, "REGIME",    text_color=color.new(color.white, 40), text_size=size.tiny)
+    table.cell(t, 1, 0, regimeStr,   text_color=regimeCol,                  text_size=size.tiny)
+
+    table.cell(t, 0, 1, "ADX",       text_color=color.new(color.white, 40), text_size=size.tiny)
+    table.cell(t, 1, 1, str.tostring(adxVal, "#.#"), text_color=isTrending ? bullColor : color.new(color.white, 50), text_size=size.tiny)
+
+    table.cell(t, 0, 2, "KIJUN",     text_color=color.new(color.white, 40), text_size=size.tiny)
+    table.cell(t, 1, 2, str.tostring(kijun, "#.#"),  text_color=kijunColor, text_size=size.tiny)
+
+    kijunDistStr = str.tostring(kijunDist, "#.##") + "%"
+    kijunDistCol = kijunDist > 3.0 ? bearColor : kijunDist > 1.5 ? kijunColor : bullColor
+    table.cell(t, 0, 3, "DIST",      text_color=color.new(color.white, 40), text_size=size.tiny)
+    table.cell(t, 1, 3, kijunDistStr, text_color=kijunDistCol,              text_size=size.tiny)
+
+    zoneCount = 0
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive
+            zoneCount += 1
+    table.cell(t, 0, 4, "ZONES",     text_color=color.new(color.white, 40), text_size=size.tiny)
+    table.cell(t, 1, 4, str.tostring(zoneCount), text_color=color.new(color.white, 60), text_size=size.tiny)
