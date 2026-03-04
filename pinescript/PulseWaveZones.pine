@@ -2,7 +2,7 @@
 // © PulseWave Labs
 
 //@version=6
-indicator("PulseWave Zones", "PW Zones", overlay=true, max_labels_count=500)
+indicator("PulseWave Zones", "PW Zones", overlay=true, max_boxes_count=500, max_labels_count=500)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INPUTS
@@ -19,6 +19,7 @@ atrMult     = input.float(0.4, "ATR Width Multiplier",   group=g_detect, minval=
 
 g_rules     = "Zone Rules"
 maxTouches  = input.int(5,     "Max Touches (Depletion)", group=g_rules, minval=2, maxval=10)
+maxZones    = input.int(12,    "Max Zones Shown",        group=g_rules, minval=4, maxval=30)
 hideOld     = input.int(300,   "Hide Zones Older Than (bars)", group=g_rules, minval=50, maxval=2000)
 
 g_mtf       = "Multi-Timeframe"
@@ -28,21 +29,16 @@ htfPivotL   = input.int(10,    "HTF Pivot Lookback",     group=g_mtf, minval=2, 
 htfPivotR   = input.int(3,     "HTF Pivot Confirm",      group=g_mtf, minval=1, maxval=10)
 
 g_style     = "Style"
-supColorIn  = input.color(color.new(#00e5a0, 75), "Support Fill",    group=g_style)
-resColorIn  = input.color(color.new(#ff4976, 75), "Resistance Fill",  group=g_style)
-htfAlpha    = input.int(60, "HTF Fill Transparency", group=g_style, minval=0, maxval=95)
-freshColorIn = input.color(color.new(#ffd700, 70), "Fresh Zone Fill",  group=g_style)
-showLabels  = input.bool(true, "Show Zone Labels",       group=g_style)
+supAlpha    = input.int(85, "Support Fill Alpha",    group=g_style, minval=50, maxval=98)
+resAlpha    = input.int(85, "Resistance Fill Alpha",  group=g_style, minval=50, maxval=98)
+htfAlpha    = input.int(75, "HTF Fill Alpha",         group=g_style, minval=50, maxval=98)
+showLabels  = input.bool(true, "Show Zone Labels",    group=g_style)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// CONSTANTS — max 12 zone slots (12 top + 12 bot plot lines = 24 plots)
+// ZONE DATA (fixed-size parallel arrays)
 // ──────────────────────────────────────────────────────────────────────────────
 
-MAX_ZONES = 12
-
-// ──────────────────────────────────────────────────────────────────────────────
-// ZONE DATA (flat parallel arrays)
-// ──────────────────────────────────────────────────────────────────────────────
+MAX_ZONES = 20
 
 var float[] zTop       = array.new_float(MAX_ZONES, na)
 var float[] zBot       = array.new_float(MAX_ZONES, na)
@@ -52,7 +48,6 @@ var bool[]  zIsBull    = array.new_bool(MAX_ZONES, true)
 var bool[]  zAlive     = array.new_bool(MAX_ZONES, false)
 var bool[]  zFlipped   = array.new_bool(MAX_ZONES, false)
 var int[]   zBirth     = array.new_int(MAX_ZONES, 0)
-var int[]   zLastTouch = array.new_int(MAX_ZONES, 0)
 var bool[]  zIsHTF     = array.new_bool(MAX_ZONES, false)
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -73,8 +68,7 @@ findEmptySlot() =>
     result
 
 findWeakestSlot() =>
-    // Find alive zone with most touches (weakest) and oldest
-    worstIdx = -1
+    worstIdx = 0
     worstScore = -1.0
     for i = 0 to MAX_ZONES - 1
         if array.get(zAlive, i)
@@ -90,8 +84,6 @@ addZone(price, isBull, isHTF) =>
     _top = price + hw
     _bot = price - hw
     mDist = price * mergeDist / 100.0
-
-    // Try merge
     merged = false
     for i = 0 to MAX_ZONES - 1
         if array.get(zAlive, i) and array.get(zIsBull, i) == isBull and array.get(zIsHTF, i) == isHTF
@@ -104,7 +96,6 @@ addZone(price, isBull, isHTF) =>
                 array.set(zBot, i, newMid - getHalfWidth(newMid))
                 merged := true
                 break
-
     if not merged
         slot = findEmptySlot()
         if slot == -1
@@ -118,7 +109,6 @@ addZone(price, isBull, isHTF) =>
             array.set(zAlive, slot, true)
             array.set(zFlipped, slot, false)
             array.set(zBirth, slot, bar_index)
-            array.set(zLastTouch, slot, bar_index)
             array.set(zIsHTF, slot, isHTF)
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -133,7 +123,6 @@ if not na(pivHi)
 if not na(pivLo)
     addZone(pivLo, true, false)
 
-// HTF
 [htfH, htfL, htfC] = request.security(syminfo.tickerid, htfTF, [high, low, close])
 htfPivHi = ta.pivothigh(htfH, htfPivotL, htfPivotR)
 htfPivLo = ta.pivotlow(htfL, htfPivotL, htfPivotR)
@@ -151,17 +140,15 @@ if useMTF
 for i = 0 to MAX_ZONES - 1
     if not array.get(zAlive, i)
         continue
-
-    zt = array.get(zTop, i)
-    zb = array.get(zBot, i)
-    isBull = array.get(zIsBull, i)
+    zt      = array.get(zTop, i)
+    zb      = array.get(zBot, i)
+    isBull  = array.get(zIsBull, i)
     touches = array.get(zTouches, i)
 
     inZone = low <= zt and high >= zb
     prevIn = low[1] <= zt and high[1] >= zb
     if inZone and not prevIn
         array.set(zTouches, i, touches + 1)
-        array.set(zLastTouch, i, bar_index)
         touches := touches + 1
 
     if touches >= maxTouches
@@ -176,7 +163,6 @@ for i = 0 to MAX_ZONES - 1
             array.set(zTouches, i, math.max(0, touches - 2))
         else
             array.set(zAlive, i, false)
-
     if not isBull and close > zt and close[1] > zt
         if not flipped
             array.set(zFlipped, i, true)
@@ -189,111 +175,101 @@ for i = 0 to MAX_ZONES - 1
         array.set(zAlive, i, false)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// OUTPUT VALUES — each slot gets a top/bot value (na when inactive)
+// PRUNE
 // ──────────────────────────────────────────────────────────────────────────────
 
-getTop(idx) => array.get(zAlive, idx) ? array.get(zTop, idx) : na
-getBot(idx) => array.get(zAlive, idx) ? array.get(zBot, idx) : na
+aliveCount = 0
+for i = 0 to MAX_ZONES - 1
+    if array.get(zAlive, i)
+        aliveCount += 1
 
-getColor(idx) =>
-    if not array.get(zAlive, idx)
-        color(na)
-    else
-        isBull  = array.get(zIsBull, idx)
-        isHTF   = array.get(zIsHTF, idx)
-        isFresh = array.get(zTouches, idx) == 0
-        flipped = array.get(zFlipped, idx)
-        if flipped
-            color.new(#ffa500, 70)
-        else if isFresh
-            freshColorIn
-        else if isHTF
-            isBull ? color.new(#00e5a0, htfAlpha) : color.new(#ff4976, htfAlpha)
-        else
-            isBull ? supColorIn : resColorIn
-
-// ──────────────────────────────────────────────────────────────────────────────
-// PLOTS — 12 zone slots using plot() + fill()
-// ──────────────────────────────────────────────────────────────────────────────
-
-na_col = color.new(color.white, 100)
-t0  = plot(getTop(0),  color=na_col, editable=false)
-b0  = plot(getBot(0),  color=na_col, editable=false)
-t1  = plot(getTop(1),  color=na_col, editable=false)
-b1  = plot(getBot(1),  color=na_col, editable=false)
-t2  = plot(getTop(2),  color=na_col, editable=false)
-b2  = plot(getBot(2),  color=na_col, editable=false)
-t3  = plot(getTop(3),  color=na_col, editable=false)
-b3  = plot(getBot(3),  color=na_col, editable=false)
-t4  = plot(getTop(4),  color=na_col, editable=false)
-b4  = plot(getBot(4),  color=na_col, editable=false)
-t5  = plot(getTop(5),  color=na_col, editable=false)
-b5  = plot(getBot(5),  color=na_col, editable=false)
-t6  = plot(getTop(6),  color=na_col, editable=false)
-b6  = plot(getBot(6),  color=na_col, editable=false)
-t7  = plot(getTop(7),  color=na_col, editable=false)
-b7  = plot(getBot(7),  color=na_col, editable=false)
-t8  = plot(getTop(8),  color=na_col, editable=false)
-b8  = plot(getBot(8),  color=na_col, editable=false)
-t9  = plot(getTop(9),  color=na_col, editable=false)
-b9  = plot(getBot(9),  color=na_col, editable=false)
-t10 = plot(getTop(10), color=na_col, editable=false)
-b10 = plot(getBot(10), color=na_col, editable=false)
-t11 = plot(getTop(11), color=na_col, editable=false)
-b11 = plot(getBot(11), color=na_col, editable=false)
-
-fill(t0,  b0,  getColor(0))
-fill(t1,  b1,  getColor(1))
-fill(t2,  b2,  getColor(2))
-fill(t3,  b3,  getColor(3))
-fill(t4,  b4,  getColor(4))
-fill(t5,  b5,  getColor(5))
-fill(t6,  b6,  getColor(6))
-fill(t7,  b7,  getColor(7))
-fill(t8,  b8,  getColor(8))
-fill(t9,  b9,  getColor(9))
-fill(t10, b10, getColor(10))
-fill(t11, b11, getColor(11))
+if aliveCount > maxZones
+    for _kill = 0 to aliveCount - maxZones - 1
+        worstIdx = -1
+        worstScore = -1.0
+        for i = 0 to MAX_ZONES - 1
+            if array.get(zAlive, i)
+                age = bar_index - array.get(zBirth, i)
+                score = array.get(zTouches, i) * 1000.0 + age
+                if score > worstScore
+                    worstScore := score
+                    worstIdx   := i
+        if worstIdx >= 0
+            array.set(zAlive, worstIdx, false)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// LABELS (on last bar only)
+// DRAWING — clean boxes, drawn on last bar
 // ──────────────────────────────────────────────────────────────────────────────
 
-if barstate.islast and showLabels
-    aLb = label.all
-    if array.size(aLb) > 0
-        for i = 0 to array.size(aLb) - 1
-            label.delete(array.get(aLb, i))
+if barstate.islast
+    // Wipe previous
+    allBx = box.all
+    if array.size(allBx) > 0
+        for i = 0 to array.size(allBx) - 1
+            box.delete(array.get(allBx, i))
+    allLb = label.all
+    if array.size(allLb) > 0
+        for i = 0 to array.size(allLb) - 1
+            label.delete(array.get(allLb, i))
 
     for i = 0 to MAX_ZONES - 1
-        if array.get(zAlive, i)
-            isBull  = array.get(zIsBull, i)
-            touches = array.get(zTouches, i)
-            isHTF   = array.get(zIsHTF, i)
-            flipped = array.get(zFlipped, i)
+        if not array.get(zAlive, i)
+            continue
 
-            typeTxt = isBull ? "S" : "R"
+        zt      = array.get(zTop, i)
+        zb      = array.get(zBot, i)
+        isBull  = array.get(zIsBull, i)
+        isHTF   = array.get(zIsHTF, i)
+        flipped = array.get(zFlipped, i)
+        touches = array.get(zTouches, i)
+        birth   = array.get(zBirth, i)
+        isFresh = touches == 0
+
+        // Fill color
+        fillCol = color(na)
+        if flipped
+            fillCol := color.new(#ffa500, 80)
+        else if isHTF
+            fillCol := isBull ? color.new(#00e5a0, htfAlpha) : color.new(#ff4976, htfAlpha)
+        else if isFresh
+            fillCol := isBull ? color.new(#00e5a0, supAlpha - 5) : color.new(#ff4976, resAlpha - 5)
+        else
+            fillCol := isBull ? color.new(#00e5a0, supAlpha) : color.new(#ff4976, resAlpha)
+
+        // Border — gets more visible with fewer touches (stronger zone)
+        borderAlpha = 40 + touches * 10
+        borderCol = flipped ? color.new(#ffa500, borderAlpha) : isBull ? color.new(#00e5a0, borderAlpha) : color.new(#ff4976, borderAlpha)
+
+        bWidth = isHTF ? 2 : 1
+        bStyle = flipped ? line.style_dashed : line.style_solid
+
+        box.new(birth, zt, bar_index + 15, zb,
+             border_color=borderCol, border_width=bWidth, border_style=bStyle,
+             bgcolor=fillCol, extend=extend.none)
+
+        // Label
+        if showLabels
+            typeTxt  = isBull ? "S" : "R"
             touchTxt = str.tostring(touches) + "/" + str.tostring(maxTouches)
-            htfTxt  = isHTF ? " HTF" : ""
-            flipTxt = flipped ? " ⟲" : ""
-            fullTxt = typeTxt + " " + touchTxt + htfTxt + flipTxt
+            htfTxt   = isHTF ? " HTF" : ""
+            flipTxt  = flipped ? " ⟲" : ""
+            fullTxt  = typeTxt + " " + touchTxt + htfTxt + flipTxt
 
-            lblColor = flipped ? color.new(#ffa500, 20) : isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
-            yPos     = isBull ? array.get(zBot, i) : array.get(zTop, i)
-            lblStyle = isBull ? label.style_label_up : label.style_label_down
+            lblCol = flipped ? color.new(#ffa500, 20) : isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
+            yPos   = isBull ? zb : zt
+            lblSty = isBull ? label.style_label_up : label.style_label_down
 
-            label.new(bar_index + 5, yPos, fullTxt,
-                 style=lblStyle, color=color.new(color.black, 80),
-                 textcolor=lblColor, size=size.tiny)
+            label.new(bar_index + 17, yPos, fullTxt,
+                 style=lblSty, color=color.new(color.black, 85),
+                 textcolor=lblCol, size=size.tiny)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// PROXIMITY ALERTS
+// PROXIMITY ALERTS + BAR COLOR
 // ──────────────────────────────────────────────────────────────────────────────
 
 nearSup = false
 nearRes = false
 alertDist = atrVal * 1.5
-
 for i = 0 to MAX_ZONES - 1
     if array.get(zAlive, i)
         zt = array.get(zTop, i)
@@ -303,8 +279,8 @@ for i = 0 to MAX_ZONES - 1
         if not array.get(zIsBull, i) and high > zb - alertDist and high < zt
             nearRes := true
 
-alertcondition(nearSup, "Near Strong Support",    "Price approaching support zone")
-alertcondition(nearRes, "Near Strong Resistance", "Price approaching resistance zone")
+alertcondition(nearSup, "Near Support",    "Price approaching support zone")
+alertcondition(nearRes, "Near Resistance", "Price approaching resistance zone")
 barcolor(nearSup ? color.new(#00e5a0, 70) : nearRes ? color.new(#ff4976, 70) : na)
 
 // ──────────────────────────────────────────────────────────────────────────────
