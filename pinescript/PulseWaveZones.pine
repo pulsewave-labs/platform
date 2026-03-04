@@ -1,12 +1,11 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © PulseWave Labs
-// Built on V1.1 S/R engine architecture — proven to scale correctly
 
 //@version=6
-indicator('PulseWave Zones', 'PW Zones', overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=0)
+indicator('PulseWave Zones', 'PW Zones', overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
 
 // ──────────────────────────────────────────────────────────────
-// SETUP
+// SETUP — same params as V1.1
 // ──────────────────────────────────────────────────────────────
 prd        = input.int(defval=10, title='Pivot Period', minval=4, maxval=30, group='Setup')
 ppsrc      = input.string(defval='High/Low', title='Source', options=['High/Low', 'Close/Open'], group='Setup')
@@ -23,31 +22,25 @@ useTF1      = input.bool(defval=true, title='Enable', group='Timeframe 1')
 tf1         = input.timeframe(defval='30', title='Timeframe', group='Timeframe 1')
 tf1ResColor = input.color(defval=color.rgb(255, 73, 118), title='Resistance Color', group='Timeframe 1')
 tf1SupColor = input.color(defval=color.rgb(0, 229, 160), title='Support Color', group='Timeframe 1')
-tf1Style    = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 1')
-tf1Width    = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 1')
 
 useTF2      = input.bool(defval=false, title='Enable', group='Timeframe 2')
 tf2         = input.timeframe(defval='240', title='Timeframe', group='Timeframe 2')
 tf2ResColor = input.color(defval=color.rgb(255, 140, 0), title='Resistance Color', group='Timeframe 2')
 tf2SupColor = input.color(defval=color.rgb(0, 180, 220), title='Support Color', group='Timeframe 2')
-tf2Style    = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 2')
-tf2Width    = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 2')
 
 useTF3      = input.bool(defval=false, title='Enable', group='Timeframe 3')
 tf3         = input.timeframe(defval='D', title='Timeframe', group='Timeframe 3')
 tf3ResColor = input.color(defval=color.rgb(180, 0, 255), title='Resistance Color', group='Timeframe 3')
 tf3SupColor = input.color(defval=color.rgb(0, 200, 150), title='Support Color', group='Timeframe 3')
-tf3Style    = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 3')
-tf3Width    = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 3')
 
 // ──────────────────────────────────────────────────────────────
 // DISPLAY
 // ──────────────────────────────────────────────────────────────
 showLabels   = input.bool(defval=true, title='Show Labels', group='Display')
 showStrength = input.bool(defval=true, title='Show Strength', group='Display')
-showZones    = input.bool(defval=false, title='Show Zone Fills', group='Display', tooltip='Fill between high and low of each S/R zone')
 labelloc     = input.int(defval=20, title='Label Offset', group='Display')
 dynColor     = input.bool(defval=true, title='Dynamic Color by Strength', group='Display')
+boxTransp    = input.int(defval=88, title='Zone Fill Transparency', minval=50, maxval=98, group='Display')
 
 // ──────────────────────────────────────────────────────────────
 // ALERTS
@@ -58,14 +51,11 @@ proximityPct   = input.float(defval=0.5, title='Proximity %', minval=0.1, maxval
 // ──────────────────────────────────────────────────────────────
 // UTILITIES
 // ──────────────────────────────────────────────────────────────
-getLineStyle(s) =>
-    s == 'Dashed' ? line.style_dashed : s == 'Solid' ? line.style_solid : line.style_dotted
-
 tfLabel(tf) =>
     tf == '1' ? '1m' : tf == '3' ? '3m' : tf == '5' ? '5m' : tf == '15' ? '15m' : tf == '30' ? '30m' : tf == '60' ? '1H' : tf == '120' ? '2H' : tf == '240' ? '4H' : tf == '480' ? '8H' : tf == 'D' ? '1D' : tf == 'W' ? '1W' : tf == 'M' ? '1M' : tf
 
 // ──────────────────────────────────────────────────────────────
-// S/R ENGINE — exact copy from V1.1
+// S/R ENGINE — V1.1 exact algorithm
 // ──────────────────────────────────────────────────────────────
 calcSR() =>
     float _src1 = ppsrc == 'High/Low' ? high : math.max(close, open)
@@ -129,7 +119,6 @@ calcSR() =>
                         array.pop(_sr_hi)
                         array.pop(_sr_lo)
 
-    // Pack 5 levels
     float _m0 = array.size(_sr_hi) > 0 ? math.round_to_mintick((array.get(_sr_hi, 0) + array.get(_sr_lo, 0)) / 2) : na
     float _m1 = array.size(_sr_hi) > 1 ? math.round_to_mintick((array.get(_sr_hi, 1) + array.get(_sr_lo, 1)) / 2) : na
     float _m2 = array.size(_sr_hi) > 2 ? math.round_to_mintick((array.get(_sr_hi, 2) + array.get(_sr_lo, 2)) / 2) : na
@@ -159,7 +148,6 @@ calcSR() =>
 [tf2_m0,tf2_m1,tf2_m2,tf2_m3,tf2_m4,tf2_h0,tf2_h1,tf2_h2,tf2_h3,tf2_h4,tf2_l0,tf2_l1,tf2_l2,tf2_l3,tf2_l4,tf2_s0,tf2_s1,tf2_s2,tf2_s3,tf2_s4] = request.security(syminfo.tickerid, tf2, calcSR())
 [tf3_m0,tf3_m1,tf3_m2,tf3_m3,tf3_m4,tf3_h0,tf3_h1,tf3_h2,tf3_h3,tf3_h4,tf3_l0,tf3_l1,tf3_l2,tf3_l3,tf3_l4,tf3_s0,tf3_s1,tf3_s2,tf3_s3,tf3_s4] = request.security(syminfo.tickerid, tf3, calcSR())
 
-// Pack into arrays
 tf1_mids = array.from(tf1_m0, tf1_m1, tf1_m2, tf1_m3, tf1_m4)
 tf1_his  = array.from(tf1_h0, tf1_h1, tf1_h2, tf1_h3, tf1_h4)
 tf1_los  = array.from(tf1_l0, tf1_l1, tf1_l2, tf1_l3, tf1_l4)
@@ -174,28 +162,19 @@ tf3_los  = array.from(tf3_l0, tf3_l1, tf3_l2, tf3_l3, tf3_l4)
 tf3_strs = array.from(tf3_s0, tf3_s1, tf3_s2, tf3_s3, tf3_s4)
 
 // ──────────────────────────────────────────────────────────────
-// DRAWING — V1.1 pattern with zone fills added
+// DRAWING — boxes for zones, lines for mid, labels for info
 // ──────────────────────────────────────────────────────────────
+var tf1_boxes  = array.new_box(5, na)
+var tf1_lines  = array.new_line(5, na)
+var tf1_labels = array.new_label(5, na)
+var tf2_boxes  = array.new_box(5, na)
+var tf2_lines  = array.new_line(5, na)
+var tf2_labels = array.new_label(5, na)
+var tf3_boxes  = array.new_box(5, na)
+var tf3_lines  = array.new_line(5, na)
+var tf3_labels = array.new_label(5, na)
 
-var tf1_lines   = array.new_line(5, na)
-var tf1_labels  = array.new_label(5, na)
-var tf1_hilines = array.new_line(5, na)
-var tf1_lolines = array.new_line(5, na)
-var tf1_fills   = array.new_linefill(5, na)
-
-var tf2_lines   = array.new_line(5, na)
-var tf2_labels  = array.new_label(5, na)
-var tf2_hilines = array.new_line(5, na)
-var tf2_lolines = array.new_line(5, na)
-var tf2_fills   = array.new_linefill(5, na)
-
-var tf3_lines   = array.new_line(5, na)
-var tf3_labels  = array.new_label(5, na)
-var tf3_hilines = array.new_line(5, na)
-var tf3_lolines = array.new_line(5, na)
-var tf3_fills   = array.new_linefill(5, na)
-
-// Find max strength for dynamic color
+// Max strength for dynamic color
 float globalMaxStr = 2.0
 if useTF1
     for i = 0 to 4
@@ -210,16 +189,12 @@ if useTF3
         if not na(array.get(tf3_strs, i))
             globalMaxStr := math.max(globalMaxStr, array.get(tf3_strs, i))
 
-// Draw function — same as V1.1 but with zone hi/lo lines + linefill
-drawZones(bool use, array<float> mids, array<float> his, array<float> los, array<float> strs, array<line> midLines, array<label> labels, array<line> hiLines, array<line> loLines, array<linefill> fills, color resCol, color supCol, string style, int width, string tfStr) =>
+drawZones(bool use, array<float> mids, array<float> his, array<float> los, array<float> strs, array<box> boxes, array<line> lines, array<label> labels, color resCol, color supCol, string tfStr) =>
     if use and barstate.islast
         for i = 0 to 4
-            // Delete old drawings
-            line.delete(array.get(midLines, i))
+            box.delete(array.get(boxes, i))
+            line.delete(array.get(lines, i))
             label.delete(array.get(labels, i))
-            line.delete(array.get(hiLines, i))
-            line.delete(array.get(loLines, i))
-            linefill.delete(array.get(fills, i))
 
             float mid = array.get(mids, i)
             float hi2 = array.get(his, i)
@@ -231,32 +206,28 @@ drawZones(bool use, array<float> mids, array<float> his, array<float> los, array
                 color baseCol  = isRes ? resCol : supCol
                 float strRatio = dynColor ? math.min(str2 / globalMaxStr, 1.0) : 0.5
                 color lineCol  = color.new(baseCol, math.round(60 - strRatio * 40))
-                color fillCol  = color.new(baseCol, math.round(90 - strRatio * 10))
+                color fillCol  = color.new(baseCol, boxTransp)
+                color borderCol = color.new(baseCol, math.round(70 - strRatio * 30))
                 float rate     = 100 * (mid - close) / close
                 string strTxt  = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
 
                 int leftX  = math.max(bar_index - 5000, 0)
                 int rightX = bar_index + labelloc
 
-                // Mid line
-                array.set(midLines, i, line.new(leftX, mid, rightX, mid, color=lineCol, style=getLineStyle(style), width=width))
+                // Zone box
+                array.set(boxes, i, box.new(leftX, hi2, rightX, lo2, border_color=borderCol, border_width=1, bgcolor=fillCol))
 
-                // Zone hi/lo lines + fill
-                if showZones and hi2 != lo2
-                    hiLine = line.new(leftX, hi2, rightX, hi2, color=color.new(baseCol, 90), width=1, style=line.style_dotted)
-                    loLine = line.new(leftX, lo2, rightX, lo2, color=color.new(baseCol, 90), width=1, style=line.style_dotted)
-                    array.set(hiLines, i, hiLine)
-                    array.set(loLines, i, loLine)
-                    array.set(fills, i, linefill.new(hiLine, loLine, fillCol))
+                // Mid line
+                array.set(lines, i, line.new(leftX, mid, rightX, mid, color=lineCol, style=line.style_solid, width=1))
 
                 // Label
                 if showLabels
                     string txt = tfLabel(tfStr) + ' ' + str.tostring(mid) + ' ' + str.tostring(rate, '#.##') + '%' + strTxt
                     array.set(labels, i, label.new(rightX, mid, txt, color=lineCol, textcolor=color.white, style=isRes ? label.style_label_down : label.style_label_up, size=size.small))
 
-drawZones(useTF1, tf1_mids, tf1_his, tf1_los, tf1_strs, tf1_lines, tf1_labels, tf1_hilines, tf1_lolines, tf1_fills, tf1ResColor, tf1SupColor, tf1Style, tf1Width, tf1)
-drawZones(useTF2, tf2_mids, tf2_his, tf2_los, tf2_strs, tf2_lines, tf2_labels, tf2_hilines, tf2_lolines, tf2_fills, tf2ResColor, tf2SupColor, tf2Style, tf2Width, tf2)
-drawZones(useTF3, tf3_mids, tf3_his, tf3_los, tf3_strs, tf3_lines, tf3_labels, tf3_hilines, tf3_lolines, tf3_fills, tf3ResColor, tf3SupColor, tf3Style, tf3Width, tf3)
+drawZones(useTF1, tf1_mids, tf1_his, tf1_los, tf1_strs, tf1_boxes, tf1_lines, tf1_labels, tf1ResColor, tf1SupColor, tf1)
+drawZones(useTF2, tf2_mids, tf2_his, tf2_los, tf2_strs, tf2_boxes, tf2_lines, tf2_labels, tf2ResColor, tf2SupColor, tf2)
+drawZones(useTF3, tf3_mids, tf3_his, tf3_los, tf3_strs, tf3_boxes, tf3_lines, tf3_labels, tf3ResColor, tf3SupColor, tf3)
 
 // ──────────────────────────────────────────────────────────────
 // SIGNAL DETECTION
@@ -297,3 +268,42 @@ alertcondition(crossed_over, title='Resistance Broken', message='🔴 Resistance
 alertcondition(crossed_under, title='Support Broken', message='🟢 Support Broken on {{ticker}} at {{close}} ({{interval}})')
 alertcondition(crossed_over or crossed_under, title='S/R Level Broken', message='⚡️ S/R Level Broken on {{ticker}} at {{close}} ({{interval}})')
 alertcondition(near_level, title='Approaching S/R', message='⚠️ {{ticker}} approaching S/R at {{close}} ({{interval}})')
+
+// ──────────────────────────────────────────────────────────────
+// DASHBOARD
+// ──────────────────────────────────────────────────────────────
+var table dash = table.new(position.top_right, 2, 3, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
+if barstate.islast
+    int aC = 0
+    int sC = 0
+    int rC = 0
+    if useTF1
+        for i = 0 to 4
+            if not na(array.get(tf1_mids, i))
+                aC += 1
+                if array.get(tf1_mids, i) < close
+                    sC += 1
+                else
+                    rC += 1
+    if useTF2
+        for i = 0 to 4
+            if not na(array.get(tf2_mids, i))
+                aC += 1
+                if array.get(tf2_mids, i) < close
+                    sC += 1
+                else
+                    rC += 1
+    if useTF3
+        for i = 0 to 4
+            if not na(array.get(tf3_mids, i))
+                aC += 1
+                if array.get(tf3_mids, i) < close
+                    sC += 1
+                else
+                    rC += 1
+    table.cell(dash, 0, 0, 'PW ZONES', text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
+    table.cell(dash, 1, 0, str.tostring(aC), text_color=color.white, text_size=size.small)
+    table.cell(dash, 0, 1, 'S', text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 1, str.tostring(sC), text_color=color.new(#00e5a0, 30), text_size=size.tiny)
+    table.cell(dash, 0, 2, 'R', text_color=color.new(#ff4976, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 2, str.tostring(rC), text_color=color.new(#ff4976, 30), text_size=size.tiny)
