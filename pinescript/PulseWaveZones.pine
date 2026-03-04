@@ -2,7 +2,7 @@
 // © PulseWave Labs
 
 //@version=6
-indicator("PulseWave Zones", "PW Zones", overlay=true, max_boxes_count=200, max_labels_count=200)
+indicator("PulseWave Zones", "PW Zones", overlay=true, max_labels_count=500)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INPUTS
@@ -11,17 +11,15 @@ indicator("PulseWave Zones", "PW Zones", overlay=true, max_boxes_count=200, max_
 g_detect    = "Zone Detection"
 pivotLeft   = input.int(10,    "Pivot Lookback",        group=g_detect, minval=2, maxval=50)
 pivotRight  = input.int(3,     "Pivot Confirm",         group=g_detect, minval=1, maxval=10)
-mergeDist   = input.float(0.3, "Merge Distance %",      group=g_detect, minval=0.05, maxval=2.0, step=0.05, tooltip="Zones within this % get merged into one stronger zone")
-useATRwidth = input.bool(true, "ATR-Based Zone Width",   group=g_detect, tooltip="Zone width adapts to volatility. If off, uses fixed %")
+mergeDist   = input.float(0.3, "Merge Distance %",      group=g_detect, minval=0.05, maxval=2.0, step=0.05)
+useATRwidth = input.bool(true, "ATR-Based Zone Width",   group=g_detect)
 fixedWidth  = input.float(0.15,"Fixed Zone Width %",     group=g_detect, minval=0.05, maxval=1.0, step=0.05)
 atrLen      = input.int(14,    "ATR Length",             group=g_detect, minval=5, maxval=50)
 atrMult     = input.float(0.4, "ATR Width Multiplier",   group=g_detect, minval=0.1, maxval=2.0, step=0.1)
 
 g_rules     = "Zone Rules"
-maxTouches  = input.int(5,     "Max Touches (Depletion)", group=g_rules, minval=2, maxval=10, tooltip="Rule of Fives — zones weaken with each test")
-maxZones    = input.int(12,    "Max Zones Shown",        group=g_rules, minval=4, maxval=30)
+maxTouches  = input.int(5,     "Max Touches (Depletion)", group=g_rules, minval=2, maxval=10)
 hideOld     = input.int(300,   "Hide Zones Older Than (bars)", group=g_rules, minval=50, maxval=2000)
-showBroken  = input.bool(false,"Show Broken Zones",      group=g_rules, tooltip="Keep depleted/broken zones visible (dimmed)")
 
 g_mtf       = "Multi-Timeframe"
 useMTF      = input.bool(true, "Enable HTF Zones",       group=g_mtf)
@@ -30,30 +28,32 @@ htfPivotL   = input.int(10,    "HTF Pivot Lookback",     group=g_mtf, minval=2, 
 htfPivotR   = input.int(3,     "HTF Pivot Confirm",      group=g_mtf, minval=1, maxval=10)
 
 g_style     = "Style"
-supColor    = input.color(color.new(#00e5a0, 70), "Support Color",    group=g_style)
-resColor    = input.color(color.new(#ff4976, 70), "Resistance Color",  group=g_style)
-htfSupColor = input.color(color.new(#00e5a0, 50), "HTF Support",      group=g_style)
-htfResColor = input.color(color.new(#ff4976, 50), "HTF Resistance",    group=g_style)
-freshColor  = input.color(color.new(#ffd700, 60), "Fresh Zone Glow",   group=g_style)
+supColorIn  = input.color(color.new(#00e5a0, 75), "Support Fill",    group=g_style)
+resColorIn  = input.color(color.new(#ff4976, 75), "Resistance Fill",  group=g_style)
+htfAlpha    = input.int(60, "HTF Fill Transparency", group=g_style, minval=0, maxval=95)
+freshColorIn = input.color(color.new(#ffd700, 70), "Fresh Zone Fill",  group=g_style)
 showLabels  = input.bool(true, "Show Zone Labels",       group=g_style)
-showStrength = input.bool(true,"Show Strength Meter",    group=g_style)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// ZONE TYPE (no drawing refs — drawings handled separately)
+// CONSTANTS — max 12 zone slots (12 top + 12 bot plot lines = 24 plots)
 // ──────────────────────────────────────────────────────────────────────────────
 
-type Zone
-    float   top
-    float   bot
-    float   mid
-    int     touches
-    bool    isBull
-    bool    alive
-    bool    flipped
-    int     birthBar
-    int     lastTouchBar
-    float   strength
-    bool    isHTF
+MAX_ZONES = 12
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ZONE DATA (flat parallel arrays)
+// ──────────────────────────────────────────────────────────────────────────────
+
+var float[] zTop       = array.new_float(MAX_ZONES, na)
+var float[] zBot       = array.new_float(MAX_ZONES, na)
+var float[] zMid       = array.new_float(MAX_ZONES, na)
+var int[]   zTouches   = array.new_int(MAX_ZONES, 0)
+var bool[]  zIsBull    = array.new_bool(MAX_ZONES, true)
+var bool[]  zAlive     = array.new_bool(MAX_ZONES, false)
+var bool[]  zFlipped   = array.new_bool(MAX_ZONES, false)
+var int[]   zBirth     = array.new_int(MAX_ZONES, 0)
+var int[]   zLastTouch = array.new_int(MAX_ZONES, 0)
+var bool[]  zIsHTF     = array.new_bool(MAX_ZONES, false)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -64,66 +64,65 @@ atrVal = ta.atr(atrLen)
 getHalfWidth(price) =>
     useATRwidth ? atrVal * atrMult : price * fixedWidth / 100.0
 
-calcStrength(touches, birthBar2, mid2, isFlipped, isHTF2) =>
-    touchScore    = math.max(0.0, 100.0 - touches * (100.0 / maxTouches))
-    ageBars       = bar_index - birthBar2
-    ageScore      = math.max(0.0, 100.0 - ageBars * 0.15)
-    dist          = math.abs(close - mid2) / close * 100.0
-    proxScore     = math.max(0.0, 100.0 - dist * 8.0)
-    flipBonus     = isFlipped ? 15.0 : 0.0
-    htfBonus      = isHTF2 ? 20.0 : 0.0
-    freshBonus    = touches == 0 ? 10.0 : 0.0
-    raw = touchScore * 0.35 + ageScore * 0.15 + proxScore * 0.25 + flipBonus + htfBonus + freshBonus
-    math.min(100.0, math.max(0.0, raw))
+findEmptySlot() =>
+    result = -1
+    for i = 0 to MAX_ZONES - 1
+        if not array.get(zAlive, i)
+            result := i
+            break
+    result
 
-// ──────────────────────────────────────────────────────────────────────────────
-// ZONE STORAGE
-// ──────────────────────────────────────────────────────────────────────────────
-
-var float[] zTop       = array.new_float()
-var float[] zBot       = array.new_float()
-var float[] zMid       = array.new_float()
-var int[]   zTouches   = array.new_int()
-var bool[]  zIsBull    = array.new_bool()
-var bool[]  zAlive     = array.new_bool()
-var bool[]  zFlipped   = array.new_bool()
-var int[]   zBirth     = array.new_int()
-var int[]   zLastTouch = array.new_int()
-var bool[]  zIsHTF     = array.new_bool()
-
-zoneCount() => array.size(zMid)
+findWeakestSlot() =>
+    // Find alive zone with most touches (weakest) and oldest
+    worstIdx = -1
+    worstScore = -1.0
+    for i = 0 to MAX_ZONES - 1
+        if array.get(zAlive, i)
+            age = bar_index - array.get(zBirth, i)
+            score = array.get(zTouches, i) * 1000.0 + age
+            if score > worstScore
+                worstScore := score
+                worstIdx   := i
+    worstIdx
 
 addZone(price, isBull, isHTF) =>
     hw   = getHalfWidth(price)
     _top = price + hw
     _bot = price - hw
-    mDist  = price * mergeDist / 100.0
+    mDist = price * mergeDist / 100.0
+
+    // Try merge
     merged = false
-    for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
+    for i = 0 to MAX_ZONES - 1
         if array.get(zAlive, i) and array.get(zIsBull, i) == isBull and array.get(zIsHTF, i) == isHTF
             if math.abs(array.get(zMid, i) - price) < mDist
                 oldMid = array.get(zMid, i)
-                oldTouches = array.get(zTouches, i)
-                newMid = (oldMid * (oldTouches + 1) + price) / (oldTouches + 2)
+                oldT   = array.get(zTouches, i)
+                newMid = (oldMid * (oldT + 1) + price) / (oldT + 2)
                 array.set(zMid, i, newMid)
                 array.set(zTop, i, newMid + getHalfWidth(newMid))
                 array.set(zBot, i, newMid - getHalfWidth(newMid))
                 merged := true
                 break
+
     if not merged
-        array.push(zTop, _top)
-        array.push(zBot, _bot)
-        array.push(zMid, price)
-        array.push(zTouches, 0)
-        array.push(zIsBull, isBull)
-        array.push(zAlive, true)
-        array.push(zFlipped, false)
-        array.push(zBirth, bar_index)
-        array.push(zLastTouch, bar_index)
-        array.push(zIsHTF, isHTF)
+        slot = findEmptySlot()
+        if slot == -1
+            slot := findWeakestSlot()
+        if slot >= 0
+            array.set(zTop, slot, _top)
+            array.set(zBot, slot, _bot)
+            array.set(zMid, slot, price)
+            array.set(zTouches, slot, 0)
+            array.set(zIsBull, slot, isBull)
+            array.set(zAlive, slot, true)
+            array.set(zFlipped, slot, false)
+            array.set(zBirth, slot, bar_index)
+            array.set(zLastTouch, slot, bar_index)
+            array.set(zIsHTF, slot, isHTF)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// CURRENT TIMEFRAME PIVOTS
+// PIVOT DETECTION
 // ──────────────────────────────────────────────────────────────────────────────
 
 pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
@@ -131,18 +130,13 @@ pivLo = ta.pivotlow(low, pivotLeft, pivotRight)
 
 if not na(pivHi)
     addZone(pivHi, false, false)
-
 if not na(pivLo)
     addZone(pivLo, true, false)
 
-// ──────────────────────────────────────────────────────────────────────────────
-// HIGHER TIMEFRAME PIVOTS
-// ──────────────────────────────────────────────────────────────────────────────
-
-[htfHigh, htfLow, htfClose] = request.security(syminfo.tickerid, htfTF, [high, low, close])
-
-htfPivHi = ta.pivothigh(htfHigh, htfPivotL, htfPivotR)
-htfPivLo = ta.pivotlow(htfLow, htfPivotL, htfPivotR)
+// HTF
+[htfH, htfL, htfC] = request.security(syminfo.tickerid, htfTF, [high, low, close])
+htfPivHi = ta.pivothigh(htfH, htfPivotL, htfPivotR)
+htfPivLo = ta.pivotlow(htfL, htfPivotL, htfPivotR)
 
 if useMTF
     if not na(htfPivHi)
@@ -154,7 +148,7 @@ if useMTF
 // TOUCH COUNTING, S/R FLIP, DEPLETION
 // ──────────────────────────────────────────────────────────────────────────────
 
-for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
+for i = 0 to MAX_ZONES - 1
     if not array.get(zAlive, i)
         continue
 
@@ -164,10 +158,8 @@ for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
     touches = array.get(zTouches, i)
 
     inZone = low <= zt and high >= zb
-    prevInZone = low[1] <= zt and high[1] >= zb
-    wasOut = not prevInZone
-
-    if inZone and wasOut
+    prevIn = low[1] <= zt and high[1] >= zb
+    if inZone and not prevIn
         array.set(zTouches, i, touches + 1)
         array.set(zLastTouch, i, bar_index)
         touches := touches + 1
@@ -176,7 +168,6 @@ for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
         array.set(zAlive, i, false)
         continue
 
-    // S/R flip: support broken → becomes resistance (and vice versa)
     flipped = array.get(zFlipped, i)
     if isBull and close < zb and close[1] < zb
         if not flipped
@@ -194,113 +185,103 @@ for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
         else
             array.set(zAlive, i, false)
 
-    // Too old
     if bar_index - array.get(zBirth, i) > hideOld
         array.set(zAlive, i, false)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// PRUNE TO MAX ZONES (keep highest strength)
+// OUTPUT VALUES — each slot gets a top/bot value (na when inactive)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Rebuild strength array to match zone count each bar
-var float[] zStrength = array.new_float()
-while array.size(zStrength) < zoneCount()
-    array.push(zStrength, 0.0)
-for i = 0 to (array.size(zStrength) > 0 ? array.size(zStrength) - 1 : na)
-    array.set(zStrength, i, 0.0)
+getTop(idx) => array.get(zAlive, idx) ? array.get(zTop, idx) : na
+getBot(idx) => array.get(zAlive, idx) ? array.get(zBot, idx) : na
 
-aliveCount = 0
-for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
-    if array.get(zAlive, i)
-        s = calcStrength(array.get(zTouches, i), array.get(zBirth, i), array.get(zMid, i), array.get(zFlipped, i), array.get(zIsHTF, i))
-        array.set(zStrength, i, s)
-        aliveCount += 1
-
-// Kill weakest if over limit
-if aliveCount > maxZones
-    for _kill = 0 to aliveCount - maxZones - 1
-        minStr = 999.0
-        minIdx = -1
-        for i = 0 to zoneCount() - 1
-            if array.get(zAlive, i) and array.get(zStrength, i) < minStr
-                minStr := array.get(zStrength, i)
-                minIdx := i
-        if minIdx >= 0
-            array.set(zAlive, minIdx, false)
+getColor(idx) =>
+    if not array.get(zAlive, idx)
+        color(na)
+    else
+        isBull  = array.get(zIsBull, idx)
+        isHTF   = array.get(zIsHTF, idx)
+        isFresh = array.get(zTouches, idx) == 0
+        flipped = array.get(zFlipped, idx)
+        if flipped
+            color.new(#ffa500, 70)
+        else if isFresh
+            freshColorIn
+        else if isHTF
+            isBull ? color.new(#00e5a0, htfAlpha) : color.new(#ff4976, htfAlpha)
+        else
+            isBull ? supColorIn : resColorIn
 
 // ──────────────────────────────────────────────────────────────────────────────
-// DRAWING (only on last bar — boxes extend left to birth, right into future)
+// PLOTS — 12 zone slots using plot() + fill()
 // ──────────────────────────────────────────────────────────────────────────────
 
-if barstate.islast
-    // Clean all previous drawings
-    aBx = box.all
-    if array.size(aBx) > 0
-        for i = 0 to array.size(aBx) - 1
-            box.delete(array.get(aBx, i))
+t0  = plot(getTop(0),  display=display.none, editable=false)
+b0  = plot(getBot(0),  display=display.none, editable=false)
+t1  = plot(getTop(1),  display=display.none, editable=false)
+b1  = plot(getBot(1),  display=display.none, editable=false)
+t2  = plot(getTop(2),  display=display.none, editable=false)
+b2  = plot(getBot(2),  display=display.none, editable=false)
+t3  = plot(getTop(3),  display=display.none, editable=false)
+b3  = plot(getBot(3),  display=display.none, editable=false)
+t4  = plot(getTop(4),  display=display.none, editable=false)
+b4  = plot(getBot(4),  display=display.none, editable=false)
+t5  = plot(getTop(5),  display=display.none, editable=false)
+b5  = plot(getBot(5),  display=display.none, editable=false)
+t6  = plot(getTop(6),  display=display.none, editable=false)
+b6  = plot(getBot(6),  display=display.none, editable=false)
+t7  = plot(getTop(7),  display=display.none, editable=false)
+b7  = plot(getBot(7),  display=display.none, editable=false)
+t8  = plot(getTop(8),  display=display.none, editable=false)
+b8  = plot(getBot(8),  display=display.none, editable=false)
+t9  = plot(getTop(9),  display=display.none, editable=false)
+b9  = plot(getBot(9),  display=display.none, editable=false)
+t10 = plot(getTop(10), display=display.none, editable=false)
+b10 = plot(getBot(10), display=display.none, editable=false)
+t11 = plot(getTop(11), display=display.none, editable=false)
+b11 = plot(getBot(11), display=display.none, editable=false)
+
+fill(t0,  b0,  getColor(0))
+fill(t1,  b1,  getColor(1))
+fill(t2,  b2,  getColor(2))
+fill(t3,  b3,  getColor(3))
+fill(t4,  b4,  getColor(4))
+fill(t5,  b5,  getColor(5))
+fill(t6,  b6,  getColor(6))
+fill(t7,  b7,  getColor(7))
+fill(t8,  b8,  getColor(8))
+fill(t9,  b9,  getColor(9))
+fill(t10, b10, getColor(10))
+fill(t11, b11, getColor(11))
+
+// ──────────────────────────────────────────────────────────────────────────────
+// LABELS (on last bar only)
+// ──────────────────────────────────────────────────────────────────────────────
+
+if barstate.islast and showLabels
     aLb = label.all
     if array.size(aLb) > 0
         for i = 0 to array.size(aLb) - 1
             label.delete(array.get(aLb, i))
 
-    for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
-        isAlive = array.get(zAlive, i)
-        shouldDraw = isAlive or (showBroken and bar_index - array.get(zBirth, i) < hideOld)
-        if not shouldDraw
-            continue
+    for i = 0 to MAX_ZONES - 1
+        if array.get(zAlive, i)
+            isBull  = array.get(zIsBull, i)
+            touches = array.get(zTouches, i)
+            isHTF   = array.get(zIsHTF, i)
+            flipped = array.get(zFlipped, i)
 
-        zt       = array.get(zTop, i)
-        zb       = array.get(zBot, i)
-        zm       = array.get(zMid, i)
-        isBull   = array.get(zIsBull, i)
-        touches  = array.get(zTouches, i)
-        isHTF    = array.get(zIsHTF, i)
-        flipped  = array.get(zFlipped, i)
-        birth    = array.get(zBirth, i)
-        strength = array.get(zStrength, i)
-        isFresh  = touches == 0 and isAlive
-
-        // Colors
-        baseColor = color(na)
-        if isHTF
-            baseColor := isBull ? htfSupColor : htfResColor
-        else if isFresh
-            baseColor := freshColor
-        else
-            baseColor := isBull ? supColor : resColor
-
-        drawColor = isAlive ? baseColor : color.new(baseColor, 90)
-
-        borderAlpha = isAlive ? math.round(90 - strength * 0.5) : 95
-        borderCol   = isBull ? color.new(#00e5a0, borderAlpha) : color.new(#ff4976, borderAlpha)
-        if isHTF
-            borderCol := isBull ? color.new(#00e5a0, math.max(0, borderAlpha - 20)) : color.new(#ff4976, math.max(0, borderAlpha - 20))
-        if flipped
-            borderCol := color.new(#ffa500, borderAlpha)
-
-        bWidth = isHTF ? 2 : 1
-        bStyle = flipped ? line.style_dashed : line.style_solid
-
-        box.new(birth, zt, bar_index + 20, zb,
-             border_color=borderCol, border_width=bWidth, border_style=bStyle,
-             bgcolor=drawColor)
-
-        if showLabels and isAlive
+            typeTxt = isBull ? "S" : "R"
             touchTxt = str.tostring(touches) + "/" + str.tostring(maxTouches)
-            typeTxt  = isBull ? "S" : "R"
-            htfTxt   = isHTF ? " [HTF]" : ""
-            flipTxt  = flipped ? " ⟲" : ""
-            strengthTxt = showStrength ? " · " + str.tostring(math.round(strength)) + "%" : ""
-            fullTxt = typeTxt + " " + touchTxt + htfTxt + flipTxt + strengthTxt
+            htfTxt  = isHTF ? " HTF" : ""
+            flipTxt = flipped ? " ⟲" : ""
+            fullTxt = typeTxt + " " + touchTxt + htfTxt + flipTxt
 
-            lblColor = isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
-            if flipped
-                lblColor := color.new(#ffa500, 20)
-
-            yPos     = isBull ? zb : zt
+            lblColor = flipped ? color.new(#ffa500, 20) : isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
+            yPos     = isBull ? array.get(zBot, i) : array.get(zTop, i)
             lblStyle = isBull ? label.style_label_up : label.style_label_down
 
-            label.new(bar_index + 22, yPos, fullTxt,
+            label.new(bar_index + 5, yPos, fullTxt,
                  style=lblStyle, color=color.new(color.black, 80),
                  textcolor=lblColor, size=size.tiny)
 
@@ -308,59 +289,54 @@ if barstate.islast
 // PROXIMITY ALERTS
 // ──────────────────────────────────────────────────────────────────────────────
 
-var bool nearStrongSupport    = false
-var bool nearStrongResistance = false
-nearStrongSupport    := false
-nearStrongResistance := false
-
+nearSup = false
+nearRes = false
 alertDist = atrVal * 1.5
 
-for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
-    if array.get(zAlive, i) and array.get(zStrength, i) > 50
+for i = 0 to MAX_ZONES - 1
+    if array.get(zAlive, i)
         zt = array.get(zTop, i)
         zb = array.get(zBot, i)
         if array.get(zIsBull, i) and low < zt + alertDist and low > zb
-            nearStrongSupport := true
+            nearSup := true
         if not array.get(zIsBull, i) and high > zb - alertDist and high < zt
-            nearStrongResistance := true
+            nearRes := true
 
-alertcondition(nearStrongSupport,    "Near Strong Support",    "Price approaching strong support zone")
-alertcondition(nearStrongResistance, "Near Strong Resistance", "Price approaching strong resistance zone")
-barcolor(nearStrongSupport ? color.new(#00e5a0, 60) : nearStrongResistance ? color.new(#ff4976, 60) : na)
+alertcondition(nearSup, "Near Strong Support",    "Price approaching support zone")
+alertcondition(nearRes, "Near Strong Resistance", "Price approaching resistance zone")
+barcolor(nearSup ? color.new(#00e5a0, 70) : nearRes ? color.new(#ff4976, 70) : na)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DASHBOARD
 // ──────────────────────────────────────────────────────────────────────────────
 
-var table dash = table.new(position.top_right, 2, 6, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
+var table dash = table.new(position.top_right, 2, 5, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
 
 if barstate.islast
-    aCount = 0
-    sCount = 0
-    rCount = 0
-    hCount = 0
-    fCount = 0
-    for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
+    aC = 0
+    sC = 0
+    rC = 0
+    hC = 0
+    fC = 0
+    for i = 0 to MAX_ZONES - 1
         if array.get(zAlive, i)
-            aCount += 1
+            aC += 1
             if array.get(zIsBull, i)
-                sCount += 1
+                sC += 1
             else
-                rCount += 1
+                rC += 1
             if array.get(zIsHTF, i)
-                hCount += 1
+                hC += 1
             if array.get(zFlipped, i)
-                fCount += 1
+                fC += 1
 
-    table.cell(dash, 0, 0, "PW ZONES",  text_color=color.new(#00e5a0, 0), text_size=size.small, text_halign=text.align_left)
-    table.cell(dash, 1, 0, "",           text_size=size.small)
-    table.cell(dash, 0, 1, "Active",     text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
-    table.cell(dash, 1, 1, str.tostring(aCount), text_color=color.white, text_size=size.tiny)
-    table.cell(dash, 0, 2, "Support",    text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
-    table.cell(dash, 1, 2, str.tostring(sCount), text_color=color.new(#00e5a0, 30), text_size=size.tiny)
-    table.cell(dash, 0, 3, "Resistance", text_color=color.new(#ff4976, 30), text_size=size.tiny, text_halign=text.align_left)
-    table.cell(dash, 1, 3, str.tostring(rCount), text_color=color.new(#ff4976, 30), text_size=size.tiny)
-    table.cell(dash, 0, 4, "HTF",        text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
-    table.cell(dash, 1, 4, str.tostring(hCount), text_color=color.yellow, text_size=size.tiny)
-    table.cell(dash, 0, 5, "Flipped",    text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
-    table.cell(dash, 1, 5, str.tostring(fCount), text_color=color.new(#ffa500, 30), text_size=size.tiny)
+    table.cell(dash, 0, 0, "PW ZONES", text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
+    table.cell(dash, 1, 0, str.tostring(aC), text_color=color.white, text_size=size.small)
+    table.cell(dash, 0, 1, "Support",  text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 1, str.tostring(sC), text_color=color.new(#00e5a0, 30), text_size=size.tiny)
+    table.cell(dash, 0, 2, "Resist",   text_color=color.new(#ff4976, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 2, str.tostring(rC), text_color=color.new(#ff4976, 30), text_size=size.tiny)
+    table.cell(dash, 0, 3, "HTF",      text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 3, str.tostring(hC), text_color=color.yellow, text_size=size.tiny)
+    table.cell(dash, 0, 4, "Flipped",  text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 4, str.tostring(fC), text_color=color.new(#ffa500, 30), text_size=size.tiny)
