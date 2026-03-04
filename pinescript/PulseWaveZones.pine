@@ -202,13 +202,12 @@ for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
 // PRUNE TO MAX ZONES (keep highest strength)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Count alive + calc strength
+// Rebuild strength array to match zone count each bar
 var float[] zStrength = array.new_float()
-if array.size(zStrength) != zoneCount()
-    zStrength := array.new_float(zoneCount(), 0.0)
-else
-    for i = 0 to zoneCount() - 1
-        array.set(zStrength, i, 0.0)
+while array.size(zStrength) < zoneCount()
+    array.push(zStrength, 0.0)
+for i = 0 to (array.size(zStrength) > 0 ? array.size(zStrength) - 1 : na)
+    array.set(zStrength, i, 0.0)
 
 aliveCount = 0
 for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
