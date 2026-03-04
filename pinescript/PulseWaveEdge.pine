@@ -231,46 +231,44 @@ plot(isRanging and rangeBars > rangeMin ? rangeMid : na, "Range Mid", color.new(
 // LTE TRIGGER DETECTION (Candle Patterns at Levels)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Body helpers
-bodyTop    = math.max(open, close)
-bodyBot    = math.min(open, close)
-bodySize   = bodyTop - bodyBot
-bodyTop1   = math.max(open[1], close[1])
-bodyBot1   = math.min(open[1], close[1])
-bodySize1  = bodyTop1 - bodyBot1
-bodyTop2   = math.max(open[2], close[2])
-bodyBot2   = math.min(open[2], close[2])
-bodySize2  = bodyTop2 - bodyBot2
-isGreen    = close > open
-isRed      = close < open
-isGreen1   = close[1] > open[1]
-isRed1     = close[1] < open[1]
-isGreen2   = close[2] > open[2]
-isRed2     = close[2] < open[2]
+// ── All pattern detection uses [1] (previous closed bar) to prevent repainting ──
 
-// Bullish Engulfing
+// Body helpers — shifted by 1 (confirmed candle)
+bodyTop    = math.max(open[1], close[1])
+bodyBot    = math.min(open[1], close[1])
+bodySize   = bodyTop - bodyBot
+bodyTop1   = math.max(open[2], close[2])
+bodyBot1   = math.min(open[2], close[2])
+bodySize1  = bodyTop1 - bodyBot1
+bodyTop2   = math.max(open[3], close[3])
+bodyBot2   = math.min(open[3], close[3])
+bodySize2  = bodyTop2 - bodyBot2
+isGreen    = close[1] > open[1]
+isRed      = close[1] < open[1]
+isGreen1   = close[2] > open[2]
+isRed1     = close[2] < open[2]
+isGreen2   = close[3] > open[3]
+isRed2     = close[3] < open[3]
+
+// Bullish Engulfing (confirmed)
 bullEngulf = isRed1 and isGreen and bodyBot < bodyBot1 and bodyTop > bodyTop1 and bodySize > bodySize1
 
-// Bearish Engulfing
+// Bearish Engulfing (confirmed)
 bearEngulf = isGreen1 and isRed and bodyTop > bodyTop1 and bodyBot < bodyBot1 and bodySize > bodySize1
 
-// Three Inside Up (bullish)
-threeInsUp = isRed2 and isGreen1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isGreen and close > bodyTop2
+// Three Inside Up (confirmed)
+threeInsUp = isRed2 and isGreen1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isGreen and close[1] > bodyTop2
 
-// Three Inside Down (bearish)
-threeInsDn = isGreen2 and isRed1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isRed and close < bodyBot2
+// Three Inside Down (confirmed)
+threeInsDn = isGreen2 and isRed1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isRed and close[1] < bodyBot2
 
-// SFP (Swing Failure Pattern) — wick through level, close back inside
-// Bullish SFP: low pierces below zone bot, close above zone bot
-// Bearish SFP: high pierces above zone top, close below zone top
-
-// Hammer / Shooting Star (simple)
-lowerWick = bodyBot - low
-upperWick = high - bodyTop
+// Hammer / Shooting Star (confirmed)
+lowerWick = bodyBot - low[1]
+upperWick = high[1] - bodyTop
 isHammer  = lowerWick > bodySize * 2.0 and upperWick < bodySize * 0.5 and bodySize > 0
 isStar    = upperWick > bodySize * 2.0 and lowerWick < bodySize * 0.5 and bodySize > 0
 
-// Combined trigger flags
+// Combined trigger flags — all based on closed bars, no repaint
 bullTrigger = bullEngulf or threeInsUp or isHammer
 bearTrigger = bearEngulf or threeInsDn or isStar
 
@@ -295,16 +293,16 @@ nearKijun = math.abs(close - kijun) / kijun * 100.0 < 0.8
 for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
     z = array.get(zones, i)
     if z.alive and z.touches < maxTouches
-        inZone = low <= z.top and high >= z.bot
+        // Check if confirmed bar [1] was in this zone
+        inZone = low[1] <= z.top and high[1] >= z.bot
 
         // LONG: bullish trigger at support zone
         if inZone and z.isBull and bullTrigger
-            // Filter: trending bull OR ranging near range low OR kijun confluence
-            validLong = trendBull or (isRanging and not na(rangeLow) and low < rangeMid) or nearKijun
+            validLong = trendBull or (isRanging and not na(rangeLow) and low[1] < rangeMid) or nearKijun
             if validLong
                 longSignal := true
-                buf         = close * slBuffer / 100.0
-                sigEntry   := close
+                buf         = close[1] * slBuffer / 100.0
+                sigEntry   := close[1]
                 sigSL      := z.bot - buf
                 riskAmt     = sigEntry - sigSL
                 sigTP      := sigEntry + riskAmt * riskReward
@@ -312,11 +310,11 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
 
         // SHORT: bearish trigger at resistance zone
         if inZone and not z.isBull and bearTrigger
-            validShort = trendBear or (isRanging and not na(rangeHigh) and high > rangeMid) or nearKijun
+            validShort = trendBear or (isRanging and not na(rangeHigh) and high[1] > rangeMid) or nearKijun
             if validShort
                 shortSignal := true
-                buf          = close * slBuffer / 100.0
-                sigEntry    := close
+                buf          = close[1] * slBuffer / 100.0
+                sigEntry    := close[1]
                 sigSL       := z.top + buf
                 riskAmt      = sigSL - sigEntry
                 sigTP       := sigEntry - riskAmt * riskReward
@@ -326,19 +324,19 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
 // KIJUN BOUNCE / REJECTION (Trending Markets Only)
 // ──────────────────────────────────────────────────────────────────────────────
 
-// Kijun touch after extended time away
-kijunTouch   = (low <= kijun and high >= kijun) and not (low[1] <= kijun[1] and high[1] >= kijun[1])
-barsFromKijun = ta.barssince(low <= kijun[1] and high >= kijun[1])
+// Kijun touch detection — using confirmed bar [1] to prevent repaint
+kijunTouch   = (low[1] <= kijun[1] and high[1] >= kijun[1]) and not (low[2] <= kijun[2] and high[2] >= kijun[2])
+barsFromKijun = ta.barssince(low[2] <= kijun[2] and high[2] >= kijun[2])
 
-// Bullish kijun bounce: trending up, price touches kijun from above, bullish candle
-kijunLong  = trendBull and kijunTouch and isGreen and close > kijun and barsFromKijun > 5
-// Bearish kijun rejection: trending down, price touches kijun from below, bearish candle  
-kijunShort = trendBear and kijunTouch and isRed and close < kijun and barsFromKijun > 5
+// Bullish kijun bounce: trending up, confirmed bar touched kijun, closed green above it
+kijunLong  = trendBull and kijunTouch and close[1] > open[1] and close[1] > kijun[1] and barsFromKijun > 5
+// Bearish kijun rejection: trending down, confirmed bar touched kijun, closed red below it
+kijunShort = trendBear and kijunTouch and close[1] < open[1] and close[1] < kijun[1] and barsFromKijun > 5
 
 if kijunLong and not longSignal
     longSignal := true
-    buf         = close * slBuffer / 100.0
-    sigEntry   := close
+    buf         = close[1] * slBuffer / 100.0
+    sigEntry   := close[1]
     sigSL      := kijunLow - buf
     riskAmt     = sigEntry - sigSL
     sigTP      := sigEntry + riskAmt * riskReward
@@ -346,8 +344,8 @@ if kijunLong and not longSignal
 
 if kijunShort and not shortSignal
     shortSignal := true
-    buf          = close * slBuffer / 100.0
-    sigEntry    := close
+    buf          = close[1] * slBuffer / 100.0
+    sigEntry    := close[1]
     sigSL       := kijunHigh + buf
     riskAmt      = sigSL - sigEntry
     sigTP       := sigEntry - riskAmt * riskReward
