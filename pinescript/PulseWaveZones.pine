@@ -142,7 +142,8 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
     z = array.get(zones, i)
     if z.alive
         inZone = low <= z.top and high >= z.bot
-        wasOut = not (low[1] <= z.top[1] and high[1] >= z.bot[1])
+        prevInZone = low[1] <= z.top and high[1] >= z.bot
+        wasOut = not prevInZone
 
         // New touch
         if inZone and wasOut
@@ -199,7 +200,8 @@ if aliveZones > maxZones
                 minStr := z.strength
                 minIdx := i
         if minIdx >= 0
-            array.get(zones, minIdx).alive := false
+            zKill = array.get(zones, minIdx)
+            zKill.alive := false
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DRAWING
