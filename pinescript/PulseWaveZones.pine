@@ -235,11 +235,13 @@ if aliveCount > maxZones
 if barstate.islast
     // Clean all previous drawings
     aBx = box.all
-    for i = 0 to array.size(aBx) - 1
-        box.delete(array.get(aBx, i))
+    if array.size(aBx) > 0
+        for i = 0 to array.size(aBx) - 1
+            box.delete(array.get(aBx, i))
     aLb = label.all
-    for i = 0 to array.size(aLb) - 1
-        label.delete(array.get(aLb, i))
+    if array.size(aLb) > 0
+        for i = 0 to array.size(aLb) - 1
+            label.delete(array.get(aLb, i))
 
     for i = 0 to (zoneCount() > 0 ? zoneCount() - 1 : na)
         isAlive = array.get(zAlive, i)
