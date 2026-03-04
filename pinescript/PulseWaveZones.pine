@@ -19,7 +19,7 @@ atrMult     = input.float(0.4, "ATR Width Multiplier",   group=g_detect, minval=
 
 g_rules     = "Zone Rules"
 maxTouches  = input.int(5,     "Max Touches (Depletion)", group=g_rules, minval=2, maxval=10)
-maxZones    = input.int(12,    "Max Zones Shown",        group=g_rules, minval=4, maxval=30)
+maxZones    = input.int(12,    "Max Zones Shown",        group=g_rules, minval=4, maxval=20)
 hideOld     = input.int(300,   "Hide Zones Older Than (bars)", group=g_rules, minval=50, maxval=2000)
 
 g_mtf       = "Multi-Timeframe"
@@ -35,7 +35,7 @@ htfAlpha    = input.int(75, "HTF Fill Alpha",         group=g_style, minval=50, 
 showLabels  = input.bool(true, "Show Zone Labels",    group=g_style)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// ZONE DATA (fixed-size parallel arrays)
+// ZONE DATA — fixed slots, persistent boxes
 // ──────────────────────────────────────────────────────────────────────────────
 
 MAX_ZONES = 20
@@ -49,6 +49,8 @@ var bool[]  zAlive     = array.new_bool(MAX_ZONES, false)
 var bool[]  zFlipped   = array.new_bool(MAX_ZONES, false)
 var int[]   zBirth     = array.new_int(MAX_ZONES, 0)
 var bool[]  zIsHTF     = array.new_bool(MAX_ZONES, false)
+var box[]   zBox       = array.new_box(MAX_ZONES, na)
+var label[] zLbl       = array.new_label(MAX_ZONES, na)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -58,6 +60,17 @@ atrVal = ta.atr(atrLen)
 
 getHalfWidth(price) =>
     useATRwidth ? atrVal * atrMult : price * fixedWidth / 100.0
+
+killZone(idx) =>
+    array.set(zAlive, idx, false)
+    b = array.get(zBox, idx)
+    if not na(b)
+        box.delete(b)
+        array.set(zBox, idx, na)
+    l = array.get(zLbl, idx)
+    if not na(l)
+        label.delete(l)
+        array.set(zLbl, idx, na)
 
 findEmptySlot() =>
     result = -1
@@ -79,6 +92,32 @@ findWeakestSlot() =>
                 worstIdx   := i
     worstIdx
 
+createBox(slot) =>
+    zt      = array.get(zTop, slot)
+    zb      = array.get(zBot, slot)
+    isBull  = array.get(zIsBull, slot)
+    isHTF   = array.get(zIsHTF, slot)
+    flipped = array.get(zFlipped, slot)
+    touches = array.get(zTouches, slot)
+    birth   = array.get(zBirth, slot)
+
+    fillCol = flipped ? color.new(#ffa500, 80) : isHTF ? (isBull ? color.new(#00e5a0, htfAlpha) : color.new(#ff4976, htfAlpha)) : (isBull ? color.new(#00e5a0, supAlpha) : color.new(#ff4976, resAlpha))
+    borderA = 40 + touches * 10
+    borderCol = flipped ? color.new(#ffa500, borderA) : isBull ? color.new(#00e5a0, borderA) : color.new(#ff4976, borderA)
+    bWidth = isHTF ? 2 : 1
+    bStyle = flipped ? line.style_dashed : line.style_solid
+
+    // Delete old box/label if exists
+    oldB = array.get(zBox, slot)
+    if not na(oldB)
+        box.delete(oldB)
+    oldL = array.get(zLbl, slot)
+    if not na(oldL)
+        label.delete(oldL)
+
+    newBox = box.new(birth, zt, bar_index + 15, zb, border_color=borderCol, border_width=bWidth, border_style=bStyle, bgcolor=fillCol)
+    array.set(zBox, slot, newBox)
+
 addZone(price, isBull, isHTF) =>
     hw   = getHalfWidth(price)
     _top = price + hw
@@ -94,12 +133,14 @@ addZone(price, isBull, isHTF) =>
                 array.set(zMid, i, newMid)
                 array.set(zTop, i, newMid + getHalfWidth(newMid))
                 array.set(zBot, i, newMid - getHalfWidth(newMid))
+                createBox(i)
                 merged := true
                 break
     if not merged
         slot = findEmptySlot()
         if slot == -1
             slot := findWeakestSlot()
+            killZone(slot)
         if slot >= 0
             array.set(zTop, slot, _top)
             array.set(zBot, slot, _bot)
@@ -110,6 +151,7 @@ addZone(price, isBull, isHTF) =>
             array.set(zFlipped, slot, false)
             array.set(zBirth, slot, bar_index)
             array.set(zIsHTF, slot, isHTF)
+            createBox(slot)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PIVOT DETECTION
@@ -134,7 +176,7 @@ if useMTF
         addZone(htfPivLo, true, true)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// TOUCH COUNTING, S/R FLIP, DEPLETION
+// TOUCH COUNTING, S/R FLIP, DEPLETION + EXTEND BOXES
 // ──────────────────────────────────────────────────────────────────────────────
 
 for i = 0 to MAX_ZONES - 1
@@ -145,14 +187,20 @@ for i = 0 to MAX_ZONES - 1
     isBull  = array.get(zIsBull, i)
     touches = array.get(zTouches, i)
 
+    // Extend box right edge every bar
+    b = array.get(zBox, i)
+    if not na(b)
+        box.set_right(b, bar_index + 15)
+
     inZone = low <= zt and high >= zb
     prevIn = low[1] <= zt and high[1] >= zb
     if inZone and not prevIn
         array.set(zTouches, i, touches + 1)
         touches := touches + 1
+        createBox(i)  // refresh colors for new touch count
 
     if touches >= maxTouches
-        array.set(zAlive, i, false)
+        killZone(i)
         continue
 
     flipped = array.get(zFlipped, i)
@@ -161,18 +209,20 @@ for i = 0 to MAX_ZONES - 1
             array.set(zFlipped, i, true)
             array.set(zIsBull, i, false)
             array.set(zTouches, i, math.max(0, touches - 2))
+            createBox(i)
         else
-            array.set(zAlive, i, false)
+            killZone(i)
     if not isBull and close > zt and close[1] > zt
         if not flipped
             array.set(zFlipped, i, true)
             array.set(zIsBull, i, true)
             array.set(zTouches, i, math.max(0, touches - 2))
+            createBox(i)
         else
-            array.set(zAlive, i, false)
+            killZone(i)
 
     if bar_index - array.get(zBirth, i) > hideOld
-        array.set(zAlive, i, false)
+        killZone(i)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // PRUNE
@@ -195,76 +245,43 @@ if aliveCount > maxZones
                     worstScore := score
                     worstIdx   := i
         if worstIdx >= 0
-            array.set(zAlive, worstIdx, false)
+            killZone(worstIdx)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// DRAWING — clean boxes, drawn on last bar
+// LABELS — refresh on last bar
 // ──────────────────────────────────────────────────────────────────────────────
 
-if barstate.islast
-    // Wipe previous
-    allBx = box.all
-    if array.size(allBx) > 0
-        for i = 0 to array.size(allBx) - 1
-            box.delete(array.get(allBx, i))
-    allLb = label.all
-    if array.size(allLb) > 0
-        for i = 0 to array.size(allLb) - 1
-            label.delete(array.get(allLb, i))
-
+if barstate.islast and showLabels
     for i = 0 to MAX_ZONES - 1
+        // Clear old label
+        oldL = array.get(zLbl, i)
+        if not na(oldL)
+            label.delete(oldL)
+            array.set(zLbl, i, na)
+
         if not array.get(zAlive, i)
             continue
 
-        zt      = array.get(zTop, i)
-        zb      = array.get(zBot, i)
         isBull  = array.get(zIsBull, i)
+        touches = array.get(zTouches, i)
         isHTF   = array.get(zIsHTF, i)
         flipped = array.get(zFlipped, i)
-        touches = array.get(zTouches, i)
-        birth   = array.get(zBirth, i)
-        isFresh = touches == 0
 
-        // Fill color
-        fillCol = color(na)
-        if flipped
-            fillCol := color.new(#ffa500, 80)
-        else if isHTF
-            fillCol := isBull ? color.new(#00e5a0, htfAlpha) : color.new(#ff4976, htfAlpha)
-        else if isFresh
-            fillCol := isBull ? color.new(#00e5a0, supAlpha - 5) : color.new(#ff4976, resAlpha - 5)
-        else
-            fillCol := isBull ? color.new(#00e5a0, supAlpha) : color.new(#ff4976, resAlpha)
+        typeTxt  = isBull ? "S" : "R"
+        touchTxt = str.tostring(touches) + "/" + str.tostring(maxTouches)
+        htfTxt   = isHTF ? " HTF" : ""
+        flipTxt  = flipped ? " ⟲" : ""
+        fullTxt  = typeTxt + " " + touchTxt + htfTxt + flipTxt
 
-        // Border — gets more visible with fewer touches (stronger zone)
-        borderAlpha = 40 + touches * 10
-        borderCol = flipped ? color.new(#ffa500, borderAlpha) : isBull ? color.new(#00e5a0, borderAlpha) : color.new(#ff4976, borderAlpha)
+        lblCol = flipped ? color.new(#ffa500, 20) : isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
+        yPos   = isBull ? array.get(zBot, i) : array.get(zTop, i)
+        lblSty = isBull ? label.style_label_up : label.style_label_down
 
-        bWidth = isHTF ? 2 : 1
-        bStyle = flipped ? line.style_dashed : line.style_solid
-
-        box.new(birth, zt, bar_index + 15, zb,
-             border_color=borderCol, border_width=bWidth, border_style=bStyle,
-             bgcolor=fillCol, extend=extend.none)
-
-        // Label
-        if showLabels
-            typeTxt  = isBull ? "S" : "R"
-            touchTxt = str.tostring(touches) + "/" + str.tostring(maxTouches)
-            htfTxt   = isHTF ? " HTF" : ""
-            flipTxt  = flipped ? " ⟲" : ""
-            fullTxt  = typeTxt + " " + touchTxt + htfTxt + flipTxt
-
-            lblCol = flipped ? color.new(#ffa500, 20) : isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
-            yPos   = isBull ? zb : zt
-            lblSty = isBull ? label.style_label_up : label.style_label_down
-
-            label.new(bar_index + 17, yPos, fullTxt,
-                 style=lblSty, color=color.new(color.black, 85),
-                 textcolor=lblCol, size=size.tiny)
+        newLbl = label.new(bar_index + 17, yPos, fullTxt, style=lblSty, color=color.new(color.black, 85), textcolor=lblCol, size=size.tiny)
+        array.set(zLbl, i, newLbl)
 
 // ──────────────────────────────────────────────────────────────────────────────
-// PROXIMITY ALERTS + BAR COLOR
+// PROXIMITY ALERTS
 // ──────────────────────────────────────────────────────────────────────────────
 
 nearSup = false
@@ -279,7 +296,7 @@ for i = 0 to MAX_ZONES - 1
         if not array.get(zIsBull, i) and high > zb - alertDist and high < zt
             nearRes := true
 
-alertcondition(nearSup, "Near Support",    "Price approaching support zone")
+alertcondition(nearSup, "Near Support", "Price approaching support zone")
 alertcondition(nearRes, "Near Resistance", "Price approaching resistance zone")
 barcolor(nearSup ? color.new(#00e5a0, 70) : nearRes ? color.new(#ff4976, 70) : na)
 
@@ -288,7 +305,6 @@ barcolor(nearSup ? color.new(#00e5a0, 70) : nearRes ? color.new(#ff4976, 70) : n
 // ──────────────────────────────────────────────────────────────────────────────
 
 var table dash = table.new(position.top_right, 2, 5, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
-
 if barstate.islast
     aC = 0
     sC = 0
@@ -306,7 +322,6 @@ if barstate.islast
                 hC += 1
             if array.get(zFlipped, i)
                 fC += 1
-
     table.cell(dash, 0, 0, "PW ZONES", text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
     table.cell(dash, 1, 0, str.tostring(aC), text_color=color.white, text_size=size.small)
     table.cell(dash, 0, 1, "Support",  text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
