@@ -1,0 +1,432 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PulseWave Labs
+
+//@version=6
+strategy("PulseWave Edge V2 [Backtest]", "PW Edge V2 BT", overlay=true,
+     default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+     initial_capital=10000, commission_type=strategy.commission.percent,
+     commission_value=0.06, slippage=2, pyramiding=0, calc_on_every_tick=false,
+     process_orders_on_close=false)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+g_regime    = "Market Regime"
+kijunLen    = input.int(26,   "Kijun Length",          group=g_regime, minval=5)
+adxLen      = input.int(14,   "ADX Length",            group=g_regime, minval=5)
+adxThresh   = input.int(20,   "ADX Trend Threshold",   group=g_regime, minval=10, maxval=40)
+adxMinEntry = input.int(15,   "ADX Min for Entry",     group=g_regime, minval=5, maxval=30, tooltip="Reject signals when ADX is below this (no momentum)")
+rangeMin    = input.int(8,    "Min Bars for Range",    group=g_regime, minval=4)
+
+g_levels    = "Smart Levels"
+pivotLeft   = input.int(8,    "Pivot Lookback",        group=g_levels, minval=2, maxval=20)
+pivotRight  = input.int(3,    "Pivot Confirm",         group=g_levels, minval=1, maxval=10)
+zoneWidth   = input.float(0.2,"Zone Width %",          group=g_levels, minval=0.05, maxval=2.0, step=0.05)
+maxTouches  = input.int(5,    "Max Touches (Rule of 5)", group=g_levels, minval=2, maxval=10)
+maxZones    = input.int(6,    "Max Visible Zones",     group=g_levels, minval=2, maxval=20)
+
+g_risk      = "Risk Management"
+riskPct     = input.float(1.5, "Risk Per Trade %",     group=g_risk, minval=0.25, maxval=5.0, step=0.25, tooltip="% of equity risked per trade")
+riskReward  = input.float(2.5, "R:R Target",           group=g_risk, minval=1.5, maxval=6.0, step=0.5)
+slBuffer    = input.float(0.2, "SL Buffer %",          group=g_risk, minval=0.05, maxval=1.0, step=0.05)
+maxBarsHeld = input.int(30,   "Max Bars in Trade",     group=g_risk, minval=10, maxval=100)
+dailyLossPct = input.float(3.0,"Daily Loss Limit %",   group=g_risk, minval=1.0, maxval=10.0, step=0.5)
+cooldownBars = input.int(5,   "Cooldown After Trade",  group=g_risk, minval=1, maxval=20, tooltip="Min bars between trades")
+maxSLpct    = input.float(1.5, "Max SL Distance %",    group=g_risk, minval=0.3, maxval=5.0, step=0.1, tooltip="Reject trades with SL > this % from entry")
+minSLpct    = input.float(0.15,"Min SL Distance %",    group=g_risk, minval=0.05, maxval=1.0, step=0.05, tooltip="Reject trades with SL < this % (noise)")
+
+g_filters   = "Signal Filters"
+useVolFilter = input.bool(true, "Volume Filter",       group=g_filters)
+volMaLen    = input.int(20,   "Volume MA Length",       group=g_filters, minval=5, maxval=50)
+volMult     = input.float(0.8, "Min Volume vs MA",     group=g_filters, minval=0.3, maxval=2.0, step=0.1, tooltip="Volume must be > this × average")
+useAtrFilter = input.bool(true,"ATR Volatility Filter", group=g_filters)
+atrLen      = input.int(14,   "ATR Length",             group=g_filters, minval=5, maxval=50)
+atrMinMult  = input.float(0.5,"Min ATR vs MA",         group=g_filters, minval=0.1, maxval=2.0, step=0.1, tooltip="Reject signals when ATR is too low (dead market)")
+
+g_scalp     = "Scalp Preset (5m BTC)"
+useScalpMode = input.bool(false, "Enable Scalp Mode",  group=g_scalp, tooltip="Overrides settings for 5m BTC scalping")
+
+// Scalp overrides
+_kijunLen   = useScalpMode ? 18 : kijunLen
+_pivotLeft  = useScalpMode ? 5  : pivotLeft
+_pivotRight = useScalpMode ? 2  : pivotRight
+_zoneWidth  = useScalpMode ? 0.15 : zoneWidth
+_slBuffer   = useScalpMode ? 0.1  : slBuffer
+_riskReward = useScalpMode ? 2.0  : riskReward
+_cooldown   = useScalpMode ? 3    : cooldownBars
+
+// ──────────────────────────────────────────────────────────────────────────────
+// KIJUN-SEN
+// ──────────────────────────────────────────────────────────────────────────────
+
+kijunHigh = ta.highest(high, _kijunLen)
+kijunLow  = ta.lowest(low, _kijunLen)
+kijun     = (kijunHigh + kijunLow) / 2.0
+
+plot(kijun, "Kijun", color.new(#f0b90b, 0), 2)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// MARKET REGIME
+// ──────────────────────────────────────────────────────────────────────────────
+
+_dirmov(len) =>
+    _up   = ta.change(high)
+    _down = -ta.change(low)
+    plusDM  = na(_up)   ? na : (_up > _down and _up > 0   ? _up   : 0.0)
+    minusDM = na(_down) ? na : (_down > _up and _down > 0 ? _down : 0.0)
+    trSmooth = ta.rma(ta.tr, len)
+    plus  = 100.0 * ta.rma(plusDM, len) / trSmooth
+    minus = 100.0 * ta.rma(minusDM, len) / trSmooth
+    [plus, minus]
+
+[diPlus, diMinus] = _dirmov(adxLen)
+adxVal = 100.0 * ta.rma(math.abs(diPlus - diMinus) / (diPlus + diMinus == 0 ? 1.0 : diPlus + diMinus), adxLen)
+
+kijunSlope = kijun - kijun[3]
+isTrending = adxVal > adxThresh
+trendBull  = isTrending and kijunSlope > 0
+trendBear  = isTrending and kijunSlope < 0
+isRanging  = not isTrending
+
+// ──────────────────────────────────────────────────────────────────────────────
+// FILTERS
+// ──────────────────────────────────────────────────────────────────────────────
+
+volMA       = ta.sma(volume, volMaLen)
+volOk       = not useVolFilter or (volume[1] > volMA[1] * volMult)
+
+atrVal      = ta.atr(atrLen)
+atrMA       = ta.sma(atrVal, atrLen)
+atrOk       = not useAtrFilter or (atrVal > atrMA * atrMinMult)
+
+adxOk       = adxVal >= adxMinEntry
+
+filtersPass = volOk and atrOk and adxOk
+
+// ──────────────────────────────────────────────────────────────────────────────
+// DAILY LOSS LIMIT
+// ──────────────────────────────────────────────────────────────────────────────
+
+var float dayStartEquity = strategy.equity
+var int   lastDay        = dayofmonth
+
+if dayofmonth != lastDay
+    dayStartEquity := strategy.equity
+    lastDay        := dayofmonth
+
+dailyPnL    = strategy.equity - dayStartEquity
+dailyLossOk = dailyPnL > -(dayStartEquity * dailyLossPct / 100.0)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// COOLDOWN
+// ──────────────────────────────────────────────────────────────────────────────
+
+var int lastExitBar = 0
+if strategy.position_size == 0 and strategy.position_size[1] != 0
+    lastExitBar := bar_index
+
+cooldownOk = (bar_index - lastExitBar) >= _cooldown
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SMART LEVELS
+// ──────────────────────────────────────────────────────────────────────────────
+
+type Zone
+    float   top
+    float   bot
+    float   mid
+    int     touches
+    bool    isBull
+    bool    alive
+    int     birthBar
+
+var Zone[] zones = array.new<Zone>()
+
+pivHi = ta.pivothigh(high, _pivotLeft, _pivotRight)
+pivLo = ta.pivotlow(low, _pivotLeft, _pivotRight)
+
+halfZone(price) =>
+    price * _zoneWidth / 100.0
+
+if not na(pivHi)
+    hw   = halfZone(pivHi)
+    _top = pivHi + hw
+    _bot = pivHi - hw
+    merged = false
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive and not z.isBull
+            if math.abs(z.mid - pivHi) / pivHi < _zoneWidth * 2.0 / 100.0
+                z.mid := (z.mid + pivHi) / 2.0
+                z.top := z.mid + halfZone(z.mid)
+                z.bot := z.mid - halfZone(z.mid)
+                merged := true
+                break
+    if not merged
+        array.push(zones, Zone.new(_top, _bot, pivHi, 0, false, true, bar_index - _pivotRight))
+
+if not na(pivLo)
+    hw   = halfZone(pivLo)
+    _top = pivLo + hw
+    _bot = pivLo - hw
+    merged = false
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive and z.isBull
+            if math.abs(z.mid - pivLo) / pivLo < _zoneWidth * 2.0 / 100.0
+                z.mid := (z.mid + pivLo) / 2.0
+                z.top := z.mid + halfZone(z.mid)
+                z.bot := z.mid - halfZone(z.mid)
+                merged := true
+                break
+    if not merged
+        array.push(zones, Zone.new(_top, _bot, pivLo, 0, true, true, bar_index - _pivotRight))
+
+// Touch counting + depletion
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive
+        inZone = (low <= z.top and high >= z.bot)
+        wasOut = not (low[1] <= z.top and high[1] >= z.bot)
+        if inZone and wasOut
+            z.touches += 1
+        if z.touches >= maxTouches
+            z.alive := false
+
+// Prune old zones
+if array.size(zones) > maxZones
+    aliveCount = 0
+    for i = 0 to array.size(zones) - 1
+        z = array.get(zones, i)
+        if z.alive
+            aliveCount += 1
+    if aliveCount > maxZones
+        killed = 0
+        for i = 0 to array.size(zones) - 1
+            if killed >= aliveCount - maxZones
+                break
+            z = array.get(zones, i)
+            if z.alive
+                z.alive := false
+                killed += 1
+
+// ──────────────────────────────────────────────────────────────────────────────
+// RANGE DETECTION
+// ──────────────────────────────────────────────────────────────────────────────
+
+var float rangeHigh = na
+var float rangeLow  = na
+var float rangeMid  = na
+var int   rangeBars = 0
+
+if isRanging
+    if rangeBars == 0
+        rangeHigh := ta.highest(high, rangeMin)
+        rangeLow  := ta.lowest(low, rangeMin)
+    else
+        rangeHigh := math.max(rangeHigh, high)
+        rangeLow  := math.min(rangeLow, low)
+    rangeMid  := (rangeHigh + rangeLow) / 2.0
+    rangeBars += 1
+else
+    rangeBars := 0
+    rangeHigh := na
+    rangeLow  := na
+    rangeMid  := na
+
+// ──────────────────────────────────────────────────────────────────────────────
+// TRIGGERS (confirmed bar [1] only — no repaint)
+// ──────────────────────────────────────────────────────────────────────────────
+
+bodyTop    = math.max(open[1], close[1])
+bodyBot    = math.min(open[1], close[1])
+bodySize   = bodyTop - bodyBot
+bodyTop1   = math.max(open[2], close[2])
+bodyBot1   = math.min(open[2], close[2])
+bodySize1  = bodyTop1 - bodyBot1
+bodyTop2   = math.max(open[3], close[3])
+bodyBot2   = math.min(open[3], close[3])
+bodySize2  = bodyTop2 - bodyBot2
+isGreen    = close[1] > open[1]
+isRed      = close[1] < open[1]
+isGreen1   = close[2] > open[2]
+isRed1     = close[2] < open[2]
+isGreen2   = close[3] > open[3]
+isRed2     = close[3] < open[3]
+
+// Stronger pattern requirements — body must be meaningful
+minBodyPct  = atrVal * 0.3  // Minimum body size = 30% of ATR
+goodBody    = bodySize > minBodyPct
+
+bullEngulf = isRed1 and isGreen and bodyBot < bodyBot1 and bodyTop > bodyTop1 and bodySize > bodySize1 * 1.2 and goodBody
+bearEngulf = isGreen1 and isRed and bodyTop > bodyTop1 and bodyBot < bodyBot1 and bodySize > bodySize1 * 1.2 and goodBody
+threeInsUp = isRed2 and isGreen1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isGreen and close[1] > bodyTop2 and goodBody
+threeInsDn = isGreen2 and isRed1 and bodyBot1 > bodyBot2 and bodyTop1 < bodyTop2 and isRed and close[1] < bodyBot2 and goodBody
+lowerWick  = bodyBot - low[1]
+upperWick  = high[1] - bodyTop
+isHammer   = lowerWick > bodySize * 2.0 and upperWick < bodySize * 0.5 and bodySize > minBodyPct
+isStar     = upperWick > bodySize * 2.0 and lowerWick < bodySize * 0.5 and bodySize > minBodyPct
+
+bullTrigger = bullEngulf or threeInsUp or isHammer
+bearTrigger = bearEngulf or threeInsDn or isStar
+
+// ──────────────────────────────────────────────────────────────────────────────
+// SIGNAL GENERATION
+// ──────────────────────────────────────────────────────────────────────────────
+
+var bool longSignal  = false
+var bool shortSignal = false
+var float sigEntry   = na
+var float sigSL      = na
+var float sigTP      = na
+
+longSignal  := false
+shortSignal := false
+
+nearKijun = math.abs(close[1] - kijun[1]) / kijun[1] * 100.0 < 0.5
+
+// Zone-based LTE signals
+bestLongRisk  = 999999.0
+bestShortRisk = 999999.0
+
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive and z.touches < maxTouches and z.touches >= 1  // Zone must have been tested at least once
+        inZone = low[1] <= z.top and high[1] >= z.bot
+
+        if inZone and z.isBull and bullTrigger
+            validLong = trendBull or (isRanging and not na(rangeLow) and low[1] < rangeMid)
+            if validLong
+                buf      = close[1] * _slBuffer / 100.0
+                _entry   = close[1]
+                _sl      = z.bot - buf
+                _risk    = _entry - _sl
+                _slPct   = _risk / _entry * 100.0
+                
+                // SL distance sanity check
+                if _slPct >= minSLpct and _slPct <= maxSLpct and _risk < bestLongRisk
+                    bestLongRisk := _risk
+                    longSignal   := true
+                    sigEntry     := _entry
+                    sigSL        := _sl
+                    sigTP        := _entry + _risk * _riskReward
+
+        if inZone and not z.isBull and bearTrigger
+            validShort = trendBear or (isRanging and not na(rangeHigh) and high[1] > rangeMid)
+            if validShort
+                buf      = close[1] * _slBuffer / 100.0
+                _entry   = close[1]
+                _sl      = z.top + buf
+                _risk    = _sl - _entry
+                _slPct   = _risk / _entry * 100.0
+                
+                if _slPct >= minSLpct and _slPct <= maxSLpct and _risk < bestShortRisk
+                    bestShortRisk := _risk
+                    shortSignal   := true
+                    sigEntry      := _entry
+                    sigSL         := _sl
+                    sigTP         := _entry - _risk * _riskReward
+
+// Kijun bounce/rejection signals — tighter criteria
+kijunTouch   = (low[1] <= kijun[1] and high[1] >= kijun[1]) and not (low[2] <= kijun[2] and high[2] >= kijun[2])
+barsFromKijun = ta.barssince(low[2] <= kijun[2] and high[2] >= kijun[2])
+
+// Require strong candle close + distance from last Kijun touch
+kijunLong  = trendBull and kijunTouch and isGreen and close[1] > kijun[1] and barsFromKijun > 8 and bodySize > minBodyPct
+kijunShort = trendBear and kijunTouch and isRed and close[1] < kijun[1] and barsFromKijun > 8 and bodySize > minBodyPct
+
+if kijunLong and not longSignal
+    buf      = close[1] * _slBuffer / 100.0
+    _entry   = close[1]
+    // SL below Kijun (not kijunLow — that's too far)
+    _sl      = kijun[1] - atrVal * 0.5 - buf
+    _risk    = _entry - _sl
+    _slPct   = _risk / _entry * 100.0
+    if _slPct >= minSLpct and _slPct <= maxSLpct
+        longSignal := true
+        sigEntry   := _entry
+        sigSL      := _sl
+        sigTP      := _entry + _risk * _riskReward
+
+if kijunShort and not shortSignal
+    buf      = close[1] * _slBuffer / 100.0
+    _entry   = close[1]
+    _sl      = kijun[1] + atrVal * 0.5 + buf
+    _risk    = _sl - _entry
+    _slPct   = _risk / _entry * 100.0
+    if _slPct >= minSLpct and _slPct <= maxSLpct
+        shortSignal := true
+        sigEntry    := _entry
+        sigSL       := _sl
+        sigTP       := _entry - _risk * _riskReward
+
+// ──────────────────────────────────────────────────────────────────────────────
+// POSITION SIZING (risk-based)
+// ──────────────────────────────────────────────────────────────────────────────
+
+calcQty(entry, sl) =>
+    riskAmt  = strategy.equity * riskPct / 100.0
+    slDist   = math.abs(entry - sl)
+    qty      = slDist > 0 ? riskAmt / slDist : 0.0
+    // Cap at max equity usage (no leverage beyond 1x unless you want it)
+    maxQty   = strategy.equity / entry
+    math.min(qty, maxQty)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// STRATEGY EXECUTION
+// ──────────────────────────────────────────────────────────────────────────────
+
+isFlat      = strategy.position_size == 0
+canTrade    = isFlat and filtersPass and dailyLossOk and cooldownOk
+
+if longSignal and canTrade and not shortSignal
+    qty = calcQty(sigEntry, sigSL)
+    if qty > 0
+        strategy.entry("Long", strategy.long, qty=qty)
+        strategy.exit("Long TP/SL", "Long", limit=sigTP, stop=sigSL)
+
+if shortSignal and canTrade and not longSignal
+    qty = calcQty(sigEntry, sigSL)
+    if qty > 0
+        strategy.entry("Short", strategy.short, qty=qty)
+        strategy.exit("Short TP/SL", "Short", limit=sigTP, stop=sigSL)
+
+// Time stop — close if held too long
+if strategy.position_size != 0
+    barsInTrade = bar_index - strategy.opentrades.entry_bar_index(0)
+    if barsInTrade >= maxBarsHeld
+        strategy.close_all("Time Stop")
+
+// Daily loss limit — force close
+if not dailyLossOk and strategy.position_size != 0
+    strategy.close_all("Daily Limit")
+
+// ──────────────────────────────────────────────────────────────────────────────
+// VISUALS
+// ──────────────────────────────────────────────────────────────────────────────
+
+plotshape(longSignal and canTrade,  "Long",  shape.triangleup,   location.belowbar, color.new(#00e5a0, 0), size=size.small)
+plotshape(shortSignal and canTrade, "Short", shape.triangledown,  location.abovebar, color.new(#ff4976, 0), size=size.small)
+
+// Regime background tint
+bgcolor(trendBull ? color.new(#00e5a0, 95) : trendBear ? color.new(#ff4976, 95) : na)
+
+// Info table
+var table infoTable = table.new(position.top_right, 2, 5, bgcolor=color.new(#1a1a2e, 20))
+if barstate.islast
+    table.cell(infoTable, 0, 0, "ADX",        text_color=color.gray, text_size=size.small)
+    table.cell(infoTable, 1, 0, str.tostring(adxVal, "#.0"), text_color=adxOk ? color.green : color.red, text_size=size.small)
+    table.cell(infoTable, 0, 1, "Regime",     text_color=color.gray, text_size=size.small)
+    table.cell(infoTable, 1, 1, trendBull ? "BULL" : trendBear ? "BEAR" : "RANGE", text_color=trendBull ? color.green : trendBear ? color.red : color.yellow, text_size=size.small)
+    table.cell(infoTable, 0, 2, "Vol OK",     text_color=color.gray, text_size=size.small)
+    table.cell(infoTable, 1, 2, volOk ? "✓" : "✗", text_color=volOk ? color.green : color.red, text_size=size.small)
+    table.cell(infoTable, 0, 3, "Day P&L",    text_color=color.gray, text_size=size.small)
+    table.cell(infoTable, 1, 3, str.tostring(dailyPnL, "#.00"), text_color=dailyPnL >= 0 ? color.green : color.red, text_size=size.small)
+    table.cell(infoTable, 0, 4, "Zones",      text_color=color.gray, text_size=size.small)
+    aliveCnt = 0
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive
+            aliveCnt += 1
+    table.cell(infoTable, 1, 4, str.tostring(aliveCnt), text_color=color.white, text_size=size.small)
