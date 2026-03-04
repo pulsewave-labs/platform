@@ -1,0 +1,339 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PulseWave Labs
+
+//@version=6
+indicator("PulseWave Zones", "PW Zones", overlay=true, max_boxes_count=500, max_labels_count=500)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// INPUTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+g_detect    = "Zone Detection"
+pivotLeft   = input.int(10,    "Pivot Lookback",        group=g_detect, minval=2, maxval=50)
+pivotRight  = input.int(3,     "Pivot Confirm",         group=g_detect, minval=1, maxval=10)
+mergeDist   = input.float(0.3, "Merge Distance %",      group=g_detect, minval=0.05, maxval=2.0, step=0.05, tooltip="Zones within this % get merged into one stronger zone")
+useATRwidth = input.bool(true, "ATR-Based Zone Width",   group=g_detect, tooltip="Zone width adapts to volatility. If off, uses fixed %")
+fixedWidth  = input.float(0.15,"Fixed Zone Width %",     group=g_detect, minval=0.05, maxval=1.0, step=0.05)
+atrLen      = input.int(14,    "ATR Length",             group=g_detect, minval=5, maxval=50)
+atrMult     = input.float(0.4, "ATR Width Multiplier",   group=g_detect, minval=0.1, maxval=2.0, step=0.1)
+
+g_rules     = "Zone Rules"
+maxTouches  = input.int(5,     "Max Touches (Depletion)", group=g_rules, minval=2, maxval=10, tooltip="Rule of Fives — zones weaken with each test")
+maxZones    = input.int(12,    "Max Zones Shown",        group=g_rules, minval=4, maxval=30)
+hideOld     = input.int(300,   "Hide Zones Older Than (bars)", group=g_rules, minval=50, maxval=2000)
+showBroken  = input.bool(false,"Show Broken Zones",      group=g_rules, tooltip="Keep depleted/broken zones visible (dimmed)")
+
+g_mtf       = "Multi-Timeframe"
+useMTF      = input.bool(true, "Enable HTF Zones",       group=g_mtf)
+htfTF       = input.timeframe("60", "Higher Timeframe",   group=g_mtf)
+htfPivotL   = input.int(10,    "HTF Pivot Lookback",     group=g_mtf, minval=2, maxval=50)
+htfPivotR   = input.int(3,     "HTF Pivot Confirm",      group=g_mtf, minval=1, maxval=10)
+
+g_style     = "Style"
+supColor    = input.color(color.new(#00e5a0, 70), "Support Color",    group=g_style)
+resColor    = input.color(color.new(#ff4976, 70), "Resistance Color",  group=g_style)
+htfSupColor = input.color(color.new(#00e5a0, 50), "HTF Support",      group=g_style)
+htfResColor = input.color(color.new(#ff4976, 50), "HTF Resistance",    group=g_style)
+freshColor  = input.color(color.new(#ffd700, 60), "Fresh Zone Glow",   group=g_style)
+showLabels  = input.bool(true, "Show Zone Labels",       group=g_style)
+showStrength = input.bool(true,"Show Strength Meter",    group=g_style)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ZONE TYPE
+// ──────────────────────────────────────────────────────────────────────────────
+
+type Zone
+    float   top
+    float   bot
+    float   mid
+    int     touches
+    bool    isBull        // true = support, false = resistance
+    bool    alive
+    bool    flipped       // S/R flip detected
+    int     birthBar
+    int     lastTouchBar
+    float   strength      // 0-100 score
+    bool    isHTF
+    box     bx
+    label   lb
+
+// ──────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ──────────────────────────────────────────────────────────────────────────────
+
+atrVal = ta.atr(atrLen)
+
+getHalfWidth(price) =>
+    useATRwidth ? atrVal * atrMult : price * fixedWidth / 100.0
+
+calcStrength(z) =>
+    // Strength decays with touches, age, and distance from price
+    touchScore    = math.max(0.0, 100.0 - z.touches * (100.0 / maxTouches))
+    ageBars       = bar_index - z.birthBar
+    ageScore      = math.max(0.0, 100.0 - ageBars * 0.15)
+    dist          = math.abs(close - z.mid) / close * 100.0
+    proxScore     = math.max(0.0, 100.0 - dist * 8.0)
+    flipBonus     = z.flipped ? 15.0 : 0.0
+    htfBonus      = z.isHTF ? 20.0 : 0.0
+    freshBonus    = z.touches == 0 ? 10.0 : 0.0
+    raw = touchScore * 0.35 + ageScore * 0.15 + proxScore * 0.25 + flipBonus + htfBonus + freshBonus
+    math.min(100.0, math.max(0.0, raw))
+
+// ──────────────────────────────────────────────────────────────────────────────
+// ZONE MANAGEMENT
+// ──────────────────────────────────────────────────────────────────────────────
+
+var Zone[] zones = array.new<Zone>()
+
+addZone(price, isBull, isHTF) =>
+    hw   = getHalfWidth(price)
+    _top = price + hw
+    _bot = price - hw
+    // Try merge with existing
+    merged = false
+    mDist  = price * mergeDist / 100.0
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive and z.isBull == isBull and z.isHTF == isHTF
+            if math.abs(z.mid - price) < mDist
+                // Merge: average the levels, keep older birth
+                z.mid := (z.mid * (z.touches + 1) + price) / (z.touches + 2)
+                z.top := z.mid + getHalfWidth(z.mid)
+                z.bot := z.mid - getHalfWidth(z.mid)
+                merged := true
+                break
+    if not merged
+        newZ = Zone.new(_top, _bot, price, 0, isBull, true, false, bar_index, bar_index, 100.0, isHTF, na, na)
+        array.push(zones, newZ)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// CURRENT TIMEFRAME PIVOTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
+pivLo = ta.pivotlow(low, pivotLeft, pivotRight)
+
+if not na(pivHi)
+    addZone(pivHi, false, false)
+
+if not na(pivLo)
+    addZone(pivLo, true, false)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// HIGHER TIMEFRAME PIVOTS
+// ──────────────────────────────────────────────────────────────────────────────
+
+[htfHigh, htfLow, htfClose] = request.security(syminfo.tickerid, htfTF, [high, low, close])
+
+htfPivHi = ta.pivothigh(htfHigh, htfPivotL, htfPivotR)
+htfPivLo = ta.pivotlow(htfLow, htfPivotL, htfPivotR)
+
+if useMTF
+    if not na(htfPivHi)
+        addZone(htfPivHi, false, true)
+    if not na(htfPivLo)
+        addZone(htfPivLo, true, true)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// TOUCH COUNTING, S/R FLIP, DEPLETION
+// ──────────────────────────────────────────────────────────────────────────────
+
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive
+        inZone = low <= z.top and high >= z.bot
+        wasOut = not (low[1] <= z.top[1] and high[1] >= z.bot[1])
+
+        // New touch
+        if inZone and wasOut
+            z.touches    += 1
+            z.lastTouchBar := bar_index
+
+        // Depletion — zone used up
+        if z.touches >= maxTouches
+            z.alive := false
+
+        // Broken zone — price closed through it decisively
+        if z.isBull and close < z.bot and close[1] < z.bot
+            // Support broken — check for S/R flip
+            if not z.flipped
+                z.flipped := true
+                z.isBull  := false  // becomes resistance
+                z.touches := math.max(0, z.touches - 2)  // partial reset
+            else
+                z.alive := false
+
+        if not z.isBull and close > z.top and close[1] > z.top
+            if not z.flipped
+                z.flipped := true
+                z.isBull  := true   // becomes support
+                z.touches := math.max(0, z.touches - 2)
+            else
+                z.alive := false
+
+        // Too old
+        if bar_index - z.birthBar > hideOld
+            z.alive := false
+
+        // Update strength
+        z.strength := calcStrength(z)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PRUNE TO MAX ZONES (keep highest strength)
+// ──────────────────────────────────────────────────────────────────────────────
+
+aliveZones = 0
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive
+        aliveZones += 1
+
+if aliveZones > maxZones
+    // Find min-strength alive zone and kill it (repeat)
+    for _kill = 0 to aliveZones - maxZones - 1
+        minStr = 999.0
+        minIdx = -1
+        for i = 0 to array.size(zones) - 1
+            z = array.get(zones, i)
+            if z.alive and z.strength < minStr
+                minStr := z.strength
+                minIdx := i
+        if minIdx >= 0
+            array.get(zones, minIdx).alive := false
+
+// ──────────────────────────────────────────────────────────────────────────────
+// DRAWING
+// ──────────────────────────────────────────────────────────────────────────────
+
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+
+    // Clean old drawings
+    if not na(z.bx)
+        box.delete(z.bx)
+        z.bx := na
+    if not na(z.lb)
+        label.delete(z.lb)
+        z.lb := na
+
+    shouldDraw = z.alive or (showBroken and bar_index - z.birthBar < hideOld)
+    if not shouldDraw
+        continue
+
+    // Color selection
+    isFresh    = z.touches == 0 and z.alive
+    baseColor  = color(na)
+    if z.isHTF
+        baseColor := z.isBull ? htfSupColor : htfResColor
+    else if isFresh
+        baseColor := freshColor
+    else
+        baseColor := z.isBull ? supColor : resColor
+
+    // Dim dead zones
+    drawColor = z.alive ? baseColor : color.new(baseColor, 90)
+
+    // Border color — stronger = more opaque
+    borderAlpha = z.alive ? math.round(90 - z.strength * 0.5) : 95
+    borderCol   = z.isBull ? color.new(#00e5a0, borderAlpha) : color.new(#ff4976, borderAlpha)
+    if z.isHTF
+        borderCol := z.isBull ? color.new(#00e5a0, math.max(0, borderAlpha - 20)) : color.new(#ff4976, math.max(0, borderAlpha - 20))
+    if z.flipped
+        borderCol := color.new(#ffa500, borderAlpha)
+
+    // Box width — extend from birth or last 50 bars
+    leftBar = math.max(z.birthBar, bar_index - 50)
+
+    z.bx := box.new(leftBar, z.top, bar_index + 20, z.bot, 
+         border_color=borderCol, 
+         border_width=z.isHTF ? 2 : 1, 
+         border_style=z.flipped ? line.style_dashed : line.style_solid,
+         bgcolor=drawColor)
+
+    // Labels
+    if showLabels and z.alive
+        touchTxt = str.tostring(z.touches) + "/" + str.tostring(maxTouches)
+        typeTxt  = z.isBull ? "S" : "R"
+        htfTxt   = z.isHTF ? " [HTF]" : ""
+        flipTxt  = z.flipped ? " ⟲" : ""
+        
+        strengthTxt = ""
+        if showStrength
+            strengthTxt := " · " + str.tostring(math.round(z.strength)) + "%"
+        
+        fullTxt = typeTxt + " " + touchTxt + htfTxt + flipTxt + strengthTxt
+
+        lblColor = z.isBull ? color.new(#00e5a0, 20) : color.new(#ff4976, 20)
+        if z.flipped
+            lblColor := color.new(#ffa500, 20)
+
+        yPos  = z.isBull ? z.bot : z.top
+        lblStyle = z.isBull ? label.style_label_up : label.style_label_down
+
+        z.lb := label.new(bar_index + 22, yPos, fullTxt,
+             style=lblStyle, color=color.new(color.black, 80),
+             textcolor=lblColor, size=size.tiny)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// PROXIMITY ALERTS — highlight when price approaches a strong zone
+// ──────────────────────────────────────────────────────────────────────────────
+
+var bool nearStrongSupport    = false
+var bool nearStrongResistance = false
+nearStrongSupport    := false
+nearStrongResistance := false
+
+alertDist = atrVal * 1.5
+
+for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+    z = array.get(zones, i)
+    if z.alive and z.strength > 50
+        if z.isBull and low < z.top + alertDist and low > z.bot
+            nearStrongSupport := true
+        if not z.isBull and high > z.bot - alertDist and high < z.top
+            nearStrongResistance := true
+
+// Alert conditions
+alertcondition(nearStrongSupport,    "Near Strong Support",    "Price approaching strong support zone")
+alertcondition(nearStrongResistance, "Near Strong Resistance", "Price approaching strong resistance zone")
+
+// Subtle bar coloring when near strong zone
+barcolor(nearStrongSupport ? color.new(#00e5a0, 60) : nearStrongResistance ? color.new(#ff4976, 60) : na)
+
+// ──────────────────────────────────────────────────────────────────────────────
+// DASHBOARD
+// ──────────────────────────────────────────────────────────────────────────────
+
+var table dash = table.new(position.top_right, 2, 6, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
+
+if barstate.islast
+    aCount = 0
+    sCount = 0
+    rCount = 0
+    hCount = 0
+    fCount = 0
+    for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
+        z = array.get(zones, i)
+        if z.alive
+            aCount += 1
+            if z.isBull
+                sCount += 1
+            else
+                rCount += 1
+            if z.isHTF
+                hCount += 1
+            if z.flipped
+                fCount += 1
+
+    table.cell(dash, 0, 0, "PW ZONES",  text_color=color.new(#00e5a0, 0), text_size=size.small, text_halign=text.align_left)
+    table.cell(dash, 1, 0, "",           text_size=size.small)
+    table.cell(dash, 0, 1, "Active",     text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 1, str.tostring(aCount), text_color=color.white, text_size=size.tiny)
+    table.cell(dash, 0, 2, "Support",    text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 2, str.tostring(sCount), text_color=color.new(#00e5a0, 30), text_size=size.tiny)
+    table.cell(dash, 0, 3, "Resistance", text_color=color.new(#ff4976, 30), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 3, str.tostring(rCount), text_color=color.new(#ff4976, 30), text_size=size.tiny)
+    table.cell(dash, 0, 4, "HTF",        text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 4, str.tostring(hCount), text_color=color.yellow, text_size=size.tiny)
+    table.cell(dash, 0, 5, "Flipped",    text_color=color.gray, text_size=size.tiny, text_halign=text.align_left)
+    table.cell(dash, 1, 5, str.tostring(fCount), text_color=color.new(#ffa500, 30), text_size=size.tiny)
