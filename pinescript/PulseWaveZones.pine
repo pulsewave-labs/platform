@@ -46,7 +46,7 @@ type Zone
     bool    isBull
     bool    alive
     bool    flipped
-    int     birthBar
+    int     birthTime
     bool    isHTF
     box     bx
 
@@ -61,13 +61,14 @@ atrVal = ta.atr(atrLen)
 halfZone(price) =>
     useATRwidth ? atrVal * atrMult : price * fixedWidth / 100.0
 
-makeBox(birthBar, _top, _bot, isBull, isHTF, flipped) =>
+makeBox(birthTime, _top, _bot, isBull, isHTF, flipped) =>
     col = flipped ? flipColor : isBull ? bullColor : bearColor
     alpha = isHTF ? 82 : 90
     bAlpha = isHTF ? 70 : 80
     bW = isHTF ? 2 : 1
     bS = flipped ? line.style_dashed : line.style_solid
-    box.new(birthBar, _top, bar_index + 10, _bot, border_color=color.new(col, bAlpha), border_width=bW, border_style=bS, bgcolor=color.new(col, alpha))
+    futureTime = time + timeframe.in_seconds() * 1000 * 10
+    box.new(birthTime, _top, futureTime, _bot, xloc=xloc.bar_time, border_color=color.new(col, bAlpha), border_width=bW, border_style=bS, bgcolor=color.new(col, alpha))
 
 // ──────────────────────────────────────────────────────────────────────────────
 // ADD ZONES FROM PIVOTS
@@ -94,8 +95,8 @@ if not na(pivHi)
                 merged := true
                 break
     if not merged
-        newZone = Zone.new(_top, _bot, pivHi, 0, false, true, false, bar_index - pivotRight, false, na)
-        newZone.bx := makeBox(bar_index - pivotRight, _top, _bot, false, false, false)
+        newZone = Zone.new(_top, _bot, pivHi, 0, false, true, false, time[pivotRight], false, na)
+        newZone.bx := makeBox(time[pivotRight], _top, _bot, false, false, false)
         array.push(zones, newZone)
 
 if not na(pivLo)
@@ -116,8 +117,8 @@ if not na(pivLo)
                 merged := true
                 break
     if not merged
-        newZone = Zone.new(_top, _bot, pivLo, 0, true, true, false, bar_index - pivotRight, false, na)
-        newZone.bx := makeBox(bar_index - pivotRight, _top, _bot, true, false, false)
+        newZone = Zone.new(_top, _bot, pivLo, 0, true, true, false, time[pivotRight], false, na)
+        newZone.bx := makeBox(time[pivotRight], _top, _bot, true, false, false)
         array.push(zones, newZone)
 
 // HTF pivots
@@ -143,8 +144,8 @@ if useMTF and not na(htfPivHi)
                 merged := true
                 break
     if not merged
-        newZone = Zone.new(_top, _bot, htfPivHi, 0, false, true, false, bar_index, true, na)
-        newZone.bx := makeBox(bar_index, _top, _bot, false, true, false)
+        newZone = Zone.new(_top, _bot, htfPivHi, 0, false, true, false, time, true, na)
+        newZone.bx := makeBox(time, _top, _bot, false, true, false)
         array.push(zones, newZone)
 
 if useMTF and not na(htfPivLo)
@@ -165,8 +166,8 @@ if useMTF and not na(htfPivLo)
                 merged := true
                 break
     if not merged
-        newZone = Zone.new(_top, _bot, htfPivLo, 0, true, true, false, bar_index, true, na)
-        newZone.bx := makeBox(bar_index, _top, _bot, true, true, false)
+        newZone = Zone.new(_top, _bot, htfPivLo, 0, true, true, false, time, true, na)
+        newZone.bx := makeBox(time, _top, _bot, true, true, false)
         array.push(zones, newZone)
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -189,7 +190,7 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
         if z.touches >= maxTouches
             z.alive := false
             if not na(z.bx)
-                box.set_right(z.bx, bar_index)
+                box.set_right(z.bx, time)
                 box.set_bgcolor(z.bx, color.new(color.gray, 95))
                 box.set_border_color(z.bx, color.new(color.gray, 90))
 
@@ -223,14 +224,14 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
                     box.delete(z.bx)
 
         // Too old
-        if z.alive and bar_index - z.birthBar > hideOld
+        if z.alive and (time - z.birthTime) > hideOld * timeframe.in_seconds() * 1000
             z.alive := false
             if not na(z.bx)
                 box.delete(z.bx)
 
         // Extend alive zones + fade with touches
         if z.alive and not na(z.bx)
-            box.set_right(z.bx, bar_index + 10)
+            box.set_right(z.bx, time + timeframe.in_seconds() * 1000 * 10)
             opac = 88 + z.touches * 2
             col = z.flipped ? flipColor : z.isBull ? bullColor : bearColor
             box.set_bgcolor(z.bx, color.new(col, math.min(opac, 96)))
@@ -252,7 +253,7 @@ if aliveCount > maxZones
         for i = 0 to array.size(zones) - 1
             z = array.get(zones, i)
             if z.alive
-                score = z.touches * 1000.0 + (bar_index - z.birthBar)
+                score = z.touches * 1000.0 + (time - z.birthTime) / 1000.0
                 if score > worstScore
                     worstScore := score
                     worstIdx   := i
