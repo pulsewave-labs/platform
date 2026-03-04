@@ -1,11 +1,12 @@
 // This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
 // © PulseWave Labs
+// Zone rendering via plot() + fill() — scales with chart by definition
 
 //@version=6
-indicator('PulseWave Zones', 'PW Zones', overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=500)
+indicator('PulseWave Zones', 'PW Zones', overlay=true, max_labels_count=500, max_boxes_count=0, max_lines_count=0)
 
 // ──────────────────────────────────────────────────────────────
-// SETUP — same params as V1.1
+// SETUP
 // ──────────────────────────────────────────────────────────────
 prd        = input.int(defval=10, title='Pivot Period', minval=4, maxval=30, group='Setup')
 ppsrc      = input.string(defval='High/Low', title='Source', options=['High/Low', 'Close/Open'], group='Setup')
@@ -39,8 +40,7 @@ tf3SupColor = input.color(defval=color.rgb(0, 200, 150), title='Support Color', 
 showLabels   = input.bool(defval=true, title='Show Labels', group='Display')
 showStrength = input.bool(defval=true, title='Show Strength', group='Display')
 labelloc     = input.int(defval=20, title='Label Offset', group='Display')
-dynColor     = input.bool(defval=true, title='Dynamic Color by Strength', group='Display')
-boxTransp    = input.int(defval=88, title='Zone Fill Transparency', minval=50, maxval=98, group='Display')
+zoneTransp   = input.int(defval=88, title='Zone Fill Transparency', minval=50, maxval=98, group='Display')
 
 // ──────────────────────────────────────────────────────────────
 // ALERTS
@@ -148,86 +148,177 @@ calcSR() =>
 [tf2_m0,tf2_m1,tf2_m2,tf2_m3,tf2_m4,tf2_h0,tf2_h1,tf2_h2,tf2_h3,tf2_h4,tf2_l0,tf2_l1,tf2_l2,tf2_l3,tf2_l4,tf2_s0,tf2_s1,tf2_s2,tf2_s3,tf2_s4] = request.security(syminfo.tickerid, tf2, calcSR())
 [tf3_m0,tf3_m1,tf3_m2,tf3_m3,tf3_m4,tf3_h0,tf3_h1,tf3_h2,tf3_h3,tf3_h4,tf3_l0,tf3_l1,tf3_l2,tf3_l3,tf3_l4,tf3_s0,tf3_s1,tf3_s2,tf3_s3,tf3_s4] = request.security(syminfo.tickerid, tf3, calcSR())
 
+// ──────────────────────────────────────────────────────────────
+// ZONE COLORING — dynamic S/R color per level
+// ──────────────────────────────────────────────────────────────
+color1(mid, resC, supC) => not na(mid) ? (mid >= close ? color.new(resC, zoneTransp) : color.new(supC, zoneTransp)) : na
+colorM(mid, resC, supC) => not na(mid) ? (mid >= close ? color.new(resC, 40) : color.new(supC, 40)) : na
+
+// ──────────────────────────────────────────────────────────────
+// PLOTS — TF1 (5 zones: hi, lo, mid)
+// These are real chart series — they MUST scale with the Y axis
+// ──────────────────────────────────────────────────────────────
+float t1h0 = useTF1 ? tf1_h0 : na
+float t1h1 = useTF1 ? tf1_h1 : na
+float t1h2 = useTF1 ? tf1_h2 : na
+float t1h3 = useTF1 ? tf1_h3 : na
+float t1h4 = useTF1 ? tf1_h4 : na
+float t1l0 = useTF1 ? tf1_l0 : na
+float t1l1 = useTF1 ? tf1_l1 : na
+float t1l2 = useTF1 ? tf1_l2 : na
+float t1l3 = useTF1 ? tf1_l3 : na
+float t1l4 = useTF1 ? tf1_l4 : na
+float t1m0 = useTF1 ? tf1_m0 : na
+float t1m1 = useTF1 ? tf1_m1 : na
+float t1m2 = useTF1 ? tf1_m2 : na
+float t1m3 = useTF1 ? tf1_m3 : na
+float t1m4 = useTF1 ? tf1_m4 : na
+
+p_t1h0 = plot(t1h0, 'TF1 Z0 Hi', color=color.new(color.white, 100), display=display.none)
+p_t1l0 = plot(t1l0, 'TF1 Z0 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t1m0, 'TF1 Z0 Mid', color=colorM(t1m0, tf1ResColor, tf1SupColor), linewidth=1)
+fill(p_t1h0, p_t1l0, color=color1(t1m0, tf1ResColor, tf1SupColor), title='TF1 Zone 0')
+
+p_t1h1 = plot(t1h1, 'TF1 Z1 Hi', color=color.new(color.white, 100), display=display.none)
+p_t1l1 = plot(t1l1, 'TF1 Z1 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t1m1, 'TF1 Z1 Mid', color=colorM(t1m1, tf1ResColor, tf1SupColor), linewidth=1)
+fill(p_t1h1, p_t1l1, color=color1(t1m1, tf1ResColor, tf1SupColor), title='TF1 Zone 1')
+
+p_t1h2 = plot(t1h2, 'TF1 Z2 Hi', color=color.new(color.white, 100), display=display.none)
+p_t1l2 = plot(t1l2, 'TF1 Z2 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t1m2, 'TF1 Z2 Mid', color=colorM(t1m2, tf1ResColor, tf1SupColor), linewidth=1)
+fill(p_t1h2, p_t1l2, color=color1(t1m2, tf1ResColor, tf1SupColor), title='TF1 Zone 2')
+
+p_t1h3 = plot(t1h3, 'TF1 Z3 Hi', color=color.new(color.white, 100), display=display.none)
+p_t1l3 = plot(t1l3, 'TF1 Z3 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t1m3, 'TF1 Z3 Mid', color=colorM(t1m3, tf1ResColor, tf1SupColor), linewidth=1)
+fill(p_t1h3, p_t1l3, color=color1(t1m3, tf1ResColor, tf1SupColor), title='TF1 Zone 3')
+
+p_t1h4 = plot(t1h4, 'TF1 Z4 Hi', color=color.new(color.white, 100), display=display.none)
+p_t1l4 = plot(t1l4, 'TF1 Z4 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t1m4, 'TF1 Z4 Mid', color=colorM(t1m4, tf1ResColor, tf1SupColor), linewidth=1)
+fill(p_t1h4, p_t1l4, color=color1(t1m4, tf1ResColor, tf1SupColor), title='TF1 Zone 4')
+
+// ──────────────────────────────────────────────────────────────
+// PLOTS — TF2
+// ──────────────────────────────────────────────────────────────
+float t2h0 = useTF2 ? tf2_h0 : na
+float t2h1 = useTF2 ? tf2_h1 : na
+float t2h2 = useTF2 ? tf2_h2 : na
+float t2h3 = useTF2 ? tf2_h3 : na
+float t2h4 = useTF2 ? tf2_h4 : na
+float t2l0 = useTF2 ? tf2_l0 : na
+float t2l1 = useTF2 ? tf2_l1 : na
+float t2l2 = useTF2 ? tf2_l2 : na
+float t2l3 = useTF2 ? tf2_l3 : na
+float t2l4 = useTF2 ? tf2_l4 : na
+float t2m0 = useTF2 ? tf2_m0 : na
+float t2m1 = useTF2 ? tf2_m1 : na
+float t2m2 = useTF2 ? tf2_m2 : na
+float t2m3 = useTF2 ? tf2_m3 : na
+float t2m4 = useTF2 ? tf2_m4 : na
+
+p_t2h0 = plot(t2h0, 'TF2 Z0 Hi', color=color.new(color.white, 100), display=display.none)
+p_t2l0 = plot(t2l0, 'TF2 Z0 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t2m0, 'TF2 Z0 Mid', color=colorM(t2m0, tf2ResColor, tf2SupColor), linewidth=1)
+fill(p_t2h0, p_t2l0, color=color1(t2m0, tf2ResColor, tf2SupColor), title='TF2 Zone 0')
+
+p_t2h1 = plot(t2h1, 'TF2 Z1 Hi', color=color.new(color.white, 100), display=display.none)
+p_t2l1 = plot(t2l1, 'TF2 Z1 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t2m1, 'TF2 Z1 Mid', color=colorM(t2m1, tf2ResColor, tf2SupColor), linewidth=1)
+fill(p_t2h1, p_t2l1, color=color1(t2m1, tf2ResColor, tf2SupColor), title='TF2 Zone 1')
+
+p_t2h2 = plot(t2h2, 'TF2 Z2 Hi', color=color.new(color.white, 100), display=display.none)
+p_t2l2 = plot(t2l2, 'TF2 Z2 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t2m2, 'TF2 Z2 Mid', color=colorM(t2m2, tf2ResColor, tf2SupColor), linewidth=1)
+fill(p_t2h2, p_t2l2, color=color1(t2m2, tf2ResColor, tf2SupColor), title='TF2 Zone 2')
+
+p_t2h3 = plot(t2h3, 'TF2 Z3 Hi', color=color.new(color.white, 100), display=display.none)
+p_t2l3 = plot(t2l3, 'TF2 Z3 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t2m3, 'TF2 Z3 Mid', color=colorM(t2m3, tf2ResColor, tf2SupColor), linewidth=1)
+fill(p_t2h3, p_t2l3, color=color1(t2m3, tf2ResColor, tf2SupColor), title='TF2 Zone 3')
+
+p_t2h4 = plot(t2h4, 'TF2 Z4 Hi', color=color.new(color.white, 100), display=display.none)
+p_t2l4 = plot(t2l4, 'TF2 Z4 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t2m4, 'TF2 Z4 Mid', color=colorM(t2m4, tf2ResColor, tf2SupColor), linewidth=1)
+fill(p_t2h4, p_t2l4, color=color1(t2m4, tf2ResColor, tf2SupColor), title='TF2 Zone 4')
+
+// ──────────────────────────────────────────────────────────────
+// PLOTS — TF3
+// ──────────────────────────────────────────────────────────────
+float t3h0 = useTF3 ? tf3_h0 : na
+float t3h1 = useTF3 ? tf3_h1 : na
+float t3h2 = useTF3 ? tf3_h2 : na
+float t3h3 = useTF3 ? tf3_h3 : na
+float t3h4 = useTF3 ? tf3_h4 : na
+float t3l0 = useTF3 ? tf3_l0 : na
+float t3l1 = useTF3 ? tf3_l1 : na
+float t3l2 = useTF3 ? tf3_l2 : na
+float t3l3 = useTF3 ? tf3_l3 : na
+float t3l4 = useTF3 ? tf3_l4 : na
+float t3m0 = useTF3 ? tf3_m0 : na
+float t3m1 = useTF3 ? tf3_m1 : na
+float t3m2 = useTF3 ? tf3_m2 : na
+float t3m3 = useTF3 ? tf3_m3 : na
+float t3m4 = useTF3 ? tf3_m4 : na
+
+p_t3h0 = plot(t3h0, 'TF3 Z0 Hi', color=color.new(color.white, 100), display=display.none)
+p_t3l0 = plot(t3l0, 'TF3 Z0 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t3m0, 'TF3 Z0 Mid', color=colorM(t3m0, tf3ResColor, tf3SupColor), linewidth=1)
+fill(p_t3h0, p_t3l0, color=color1(t3m0, tf3ResColor, tf3SupColor), title='TF3 Zone 0')
+
+p_t3h1 = plot(t3h1, 'TF3 Z1 Hi', color=color.new(color.white, 100), display=display.none)
+p_t3l1 = plot(t3l1, 'TF3 Z1 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t3m1, 'TF3 Z1 Mid', color=colorM(t3m1, tf3ResColor, tf3SupColor), linewidth=1)
+fill(p_t3h1, p_t3l1, color=color1(t3m1, tf3ResColor, tf3SupColor), title='TF3 Zone 1')
+
+p_t3h2 = plot(t3h2, 'TF3 Z2 Hi', color=color.new(color.white, 100), display=display.none)
+p_t3l2 = plot(t3l2, 'TF3 Z2 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t3m2, 'TF3 Z2 Mid', color=colorM(t3m2, tf3ResColor, tf3SupColor), linewidth=1)
+fill(p_t3h2, p_t3l2, color=color1(t3m2, tf3ResColor, tf3SupColor), title='TF3 Zone 2')
+
+p_t3h3 = plot(t3h3, 'TF3 Z3 Hi', color=color.new(color.white, 100), display=display.none)
+p_t3l3 = plot(t3l3, 'TF3 Z3 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t3m3, 'TF3 Z3 Mid', color=colorM(t3m3, tf3ResColor, tf3SupColor), linewidth=1)
+fill(p_t3h3, p_t3l3, color=color1(t3m3, tf3ResColor, tf3SupColor), title='TF3 Zone 3')
+
+p_t3h4 = plot(t3h4, 'TF3 Z4 Hi', color=color.new(color.white, 100), display=display.none)
+p_t3l4 = plot(t3l4, 'TF3 Z4 Lo', color=color.new(color.white, 100), display=display.none)
+plot(t3m4, 'TF3 Z4 Mid', color=colorM(t3m4, tf3ResColor, tf3SupColor), linewidth=1)
+fill(p_t3h4, p_t3l4, color=color1(t3m4, tf3ResColor, tf3SupColor), title='TF3 Zone 4')
+
+// ──────────────────────────────────────────────────────────────
+// LABELS — still use label.new on barstate.islast for info text
+// ──────────────────────────────────────────────────────────────
 tf1_mids = array.from(tf1_m0, tf1_m1, tf1_m2, tf1_m3, tf1_m4)
-tf1_his  = array.from(tf1_h0, tf1_h1, tf1_h2, tf1_h3, tf1_h4)
-tf1_los  = array.from(tf1_l0, tf1_l1, tf1_l2, tf1_l3, tf1_l4)
 tf1_strs = array.from(tf1_s0, tf1_s1, tf1_s2, tf1_s3, tf1_s4)
 tf2_mids = array.from(tf2_m0, tf2_m1, tf2_m2, tf2_m3, tf2_m4)
-tf2_his  = array.from(tf2_h0, tf2_h1, tf2_h2, tf2_h3, tf2_h4)
-tf2_los  = array.from(tf2_l0, tf2_l1, tf2_l2, tf2_l3, tf2_l4)
 tf2_strs = array.from(tf2_s0, tf2_s1, tf2_s2, tf2_s3, tf2_s4)
 tf3_mids = array.from(tf3_m0, tf3_m1, tf3_m2, tf3_m3, tf3_m4)
-tf3_his  = array.from(tf3_h0, tf3_h1, tf3_h2, tf3_h3, tf3_h4)
-tf3_los  = array.from(tf3_l0, tf3_l1, tf3_l2, tf3_l3, tf3_l4)
 tf3_strs = array.from(tf3_s0, tf3_s1, tf3_s2, tf3_s3, tf3_s4)
 
-// ──────────────────────────────────────────────────────────────
-// DRAWING — boxes for zones, lines for mid, labels for info
-// ──────────────────────────────────────────────────────────────
-var tf1_boxes  = array.new_box(5, na)
-var tf1_lines  = array.new_line(5, na)
 var tf1_labels = array.new_label(5, na)
-var tf2_boxes  = array.new_box(5, na)
-var tf2_lines  = array.new_line(5, na)
 var tf2_labels = array.new_label(5, na)
-var tf3_boxes  = array.new_box(5, na)
-var tf3_lines  = array.new_line(5, na)
 var tf3_labels = array.new_label(5, na)
 
-// Max strength for dynamic color
-float globalMaxStr = 2.0
-if useTF1
-    for i = 0 to 4
-        if not na(array.get(tf1_strs, i))
-            globalMaxStr := math.max(globalMaxStr, array.get(tf1_strs, i))
-if useTF2
-    for i = 0 to 4
-        if not na(array.get(tf2_strs, i))
-            globalMaxStr := math.max(globalMaxStr, array.get(tf2_strs, i))
-if useTF3
-    for i = 0 to 4
-        if not na(array.get(tf3_strs, i))
-            globalMaxStr := math.max(globalMaxStr, array.get(tf3_strs, i))
-
-drawZones(bool use, array<float> mids, array<float> his, array<float> los, array<float> strs, array<box> boxes, array<line> lines, array<label> labels, color resCol, color supCol, string tfStr) =>
-    if use and barstate.islast
+drawLabels(bool use, array<float> mids, array<float> strs, array<label> labels, color resCol, color supCol, string tfStr) =>
+    if use and barstate.islast and showLabels
         for i = 0 to 4
-            box.delete(array.get(boxes, i))
-            line.delete(array.get(lines, i))
             label.delete(array.get(labels, i))
-
             float mid = array.get(mids, i)
-            float hi2 = array.get(his, i)
-            float lo2 = array.get(los, i)
             float str2 = array.get(strs, i)
-
             if not na(mid)
-                bool isRes     = mid >= close
-                color baseCol  = isRes ? resCol : supCol
-                float strRatio = dynColor ? math.min(str2 / globalMaxStr, 1.0) : 0.5
-                color lineCol  = color.new(baseCol, math.round(60 - strRatio * 40))
-                color fillCol  = color.new(baseCol, boxTransp)
-                color borderCol = color.new(baseCol, math.round(70 - strRatio * 30))
-                float rate     = 100 * (mid - close) / close
-                string strTxt  = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
+                bool isRes    = mid >= close
+                color baseCol = isRes ? resCol : supCol
+                float rate    = 100 * (mid - close) / close
+                string strTxt = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
+                string txt    = tfLabel(tfStr) + ' ' + str.tostring(mid) + ' ' + str.tostring(rate, '#.##') + '%' + strTxt
+                color lblCol  = color.new(baseCol, 20)
+                array.set(labels, i, label.new(bar_index + labelloc, mid, txt, color=lblCol, textcolor=color.white, style=isRes ? label.style_label_down : label.style_label_up, size=size.small))
 
-                int leftX  = math.max(bar_index - 5000, 0)
-                int rightX = bar_index + labelloc
-
-                // Zone box
-                array.set(boxes, i, box.new(leftX, hi2, rightX, lo2, border_color=borderCol, border_width=1, bgcolor=fillCol))
-
-                // Mid line
-                array.set(lines, i, line.new(leftX, mid, rightX, mid, color=lineCol, style=line.style_solid, width=1))
-
-                // Label
-                if showLabels
-                    string txt = tfLabel(tfStr) + ' ' + str.tostring(mid) + ' ' + str.tostring(rate, '#.##') + '%' + strTxt
-                    array.set(labels, i, label.new(rightX, mid, txt, color=lineCol, textcolor=color.white, style=isRes ? label.style_label_down : label.style_label_up, size=size.small))
-
-drawZones(useTF1, tf1_mids, tf1_his, tf1_los, tf1_strs, tf1_boxes, tf1_lines, tf1_labels, tf1ResColor, tf1SupColor, tf1)
-drawZones(useTF2, tf2_mids, tf2_his, tf2_los, tf2_strs, tf2_boxes, tf2_lines, tf2_labels, tf2ResColor, tf2SupColor, tf2)
-drawZones(useTF3, tf3_mids, tf3_his, tf3_los, tf3_strs, tf3_boxes, tf3_lines, tf3_labels, tf3ResColor, tf3SupColor, tf3)
+drawLabels(useTF1, tf1_mids, tf1_strs, tf1_labels, tf1ResColor, tf1SupColor, tf1)
+drawLabels(useTF2, tf2_mids, tf2_strs, tf2_labels, tf2ResColor, tf2SupColor, tf2)
+drawLabels(useTF3, tf3_mids, tf3_strs, tf3_labels, tf3ResColor, tf3SupColor, tf3)
 
 // ──────────────────────────────────────────────────────────────
 // SIGNAL DETECTION
@@ -277,30 +368,12 @@ if barstate.islast
     int aC = 0
     int sC = 0
     int rC = 0
-    if useTF1
-        for i = 0 to 4
-            if not na(array.get(tf1_mids, i))
-                aC += 1
-                if array.get(tf1_mids, i) < close
-                    sC += 1
-                else
-                    rC += 1
-    if useTF2
-        for i = 0 to 4
-            if not na(array.get(tf2_mids, i))
-                aC += 1
-                if array.get(tf2_mids, i) < close
-                    sC += 1
-                else
-                    rC += 1
-    if useTF3
-        for i = 0 to 4
-            if not na(array.get(tf3_mids, i))
-                aC += 1
-                if array.get(tf3_mids, i) < close
-                    sC += 1
-                else
-                    rC += 1
+    for i = 0 to array.size(allMids) - 1
+        aC += 1
+        if array.get(allMids, i) < close
+            sC += 1
+        else
+            rC += 1
     table.cell(dash, 0, 0, 'PW ZONES', text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
     table.cell(dash, 1, 0, str.tostring(aC), text_color=color.white, text_size=size.small)
     table.cell(dash, 0, 1, 'S', text_color=color.new(#00e5a0, 30), text_size=size.tiny, text_halign=text.align_left)
