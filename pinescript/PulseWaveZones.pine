@@ -115,7 +115,7 @@ createBox(slot) =>
     if not na(oldL)
         label.delete(oldL)
 
-    newBox = box.new(birth, zt, bar_index + 15, zb, border_color=borderCol, border_width=bWidth, border_style=bStyle, bgcolor=fillCol)
+    newBox = box.new(birth, zt, bar_index, zb, border_color=borderCol, border_width=bWidth, border_style=bStyle, bgcolor=fillCol, extend=extend.right)
     array.set(zBox, slot, newBox)
 
 addZone(price, isBull, isHTF) =>
@@ -149,7 +149,7 @@ addZone(price, isBull, isHTF) =>
             array.set(zIsBull, slot, isBull)
             array.set(zAlive, slot, true)
             array.set(zFlipped, slot, false)
-            array.set(zBirth, slot, bar_index)
+            array.set(zBirth, slot, bar_index - pivotRight)
             array.set(zIsHTF, slot, isHTF)
             createBox(slot)
 
@@ -161,7 +161,7 @@ pivHi = ta.pivothigh(high, pivotLeft, pivotRight)
 pivLo = ta.pivotlow(low, pivotLeft, pivotRight)
 
 if not na(pivHi)
-    addZone(pivHi, false, false)
+    addZone(pivHi, false, false)  // birth will be bar_index, pivot was at bar_index - pivotRight
 if not na(pivLo)
     addZone(pivLo, true, false)
 
@@ -186,11 +186,6 @@ for i = 0 to MAX_ZONES - 1
     zb      = array.get(zBot, i)
     isBull  = array.get(zIsBull, i)
     touches = array.get(zTouches, i)
-
-    // Extend box right edge every bar
-    b = array.get(zBox, i)
-    if not na(b)
-        box.set_right(b, bar_index + 15)
 
     inZone = low <= zt and high >= zb
     prevIn = low[1] <= zt and high[1] >= zb
