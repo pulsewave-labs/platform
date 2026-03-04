@@ -185,9 +185,8 @@ if barstate.islast
         leftX  = math.max(z.birthBar, bar_index - 5000)
         rightX = bar_index + 15
 
-        topLine = line.new(leftX, z.top, rightX, z.top, color=lnCol, width=lnW, style=lnS)
-        botLine = line.new(leftX, z.bot, rightX, z.bot, color=lnCol, width=lnW, style=lnS)
-        linefill.new(topLine, botLine, fillCol)
+        line.new(leftX, z.top, rightX, z.top, color=lnCol, width=lnW, style=lnS)
+        line.new(leftX, z.bot, rightX, z.bot, color=lnCol, width=lnW, style=lnS)
 
         if showLabels
             txt = (z.isBull ? "S " : "R ") + str.tostring(z.touches) + "/" + str.tostring(maxTouches) + (z.isHTF ? " HTF" : "") + (z.flipped ? " ⟲" : "")
