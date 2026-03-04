@@ -45,7 +45,7 @@ tf3Width    = input.int(defval=1, title='Line Width', minval=1, maxval=4, group=
 // ──────────────────────────────────────────────────────────────
 showLabels   = input.bool(defval=true, title='Show Labels', group='Display')
 showStrength = input.bool(defval=true, title='Show Strength', group='Display')
-showZones    = input.bool(defval=true, title='Show Zone Fills', group='Display', tooltip='Fill between high and low of each S/R zone')
+showZones    = input.bool(defval=false, title='Show Zone Fills', group='Display', tooltip='Fill between high and low of each S/R zone')
 labelloc     = input.int(defval=20, title='Label Offset', group='Display')
 dynColor     = input.bool(defval=true, title='Dynamic Color by Strength', group='Display')
 
