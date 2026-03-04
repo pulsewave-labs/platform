@@ -2,7 +2,7 @@
 // © PulseWave Labs
 
 //@version=6
-indicator("PulseWave Zones", "PW Zones", overlay=true, max_boxes_count=500, max_labels_count=500)
+indicator("PulseWave Zones", "PW Zones", overlay=true, scale=scale.none, max_boxes_count=500, max_labels_count=500)
 
 // ──────────────────────────────────────────────────────────────────────────────
 // INPUTS
