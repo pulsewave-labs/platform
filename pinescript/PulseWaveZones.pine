@@ -210,16 +210,16 @@ if aliveZones > maxZones
 for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
     z = array.get(zones, i)
 
-    // Clean old drawings
-    if not na(z.bx)
-        box.delete(z.bx)
-        z.bx := na
-    if not na(z.lb)
-        label.delete(z.lb)
-        z.lb := na
-
     shouldDraw = z.alive or (showBroken and bar_index - z.birthBar < hideOld)
+
+    // Remove drawings for dead zones
     if not shouldDraw
+        if not na(z.bx)
+            box.delete(z.bx)
+            z.bx := na
+        if not na(z.lb)
+            label.delete(z.lb)
+            z.lb := na
         continue
 
     // Color selection
@@ -243,16 +243,28 @@ for i = 0 to (array.size(zones) > 0 ? array.size(zones) - 1 : na)
     if z.flipped
         borderCol := color.new(#ffa500, borderAlpha)
 
-    // Box width — extend from birth or last 50 bars
-    leftBar = math.max(z.birthBar, bar_index - 50)
+    bWidth = z.isHTF ? 2 : 1
+    bStyle = z.flipped ? line.style_dashed : line.style_solid
 
-    z.bx := box.new(leftBar, z.top, bar_index + 20, z.bot, 
-         border_color=borderCol, 
-         border_width=z.isHTF ? 2 : 1, 
-         border_style=z.flipped ? line.style_dashed : line.style_solid,
-         bgcolor=drawColor)
+    // Create box once, then just extend the right edge each bar
+    if na(z.bx)
+        z.bx := box.new(z.birthBar, z.top, bar_index + 20, z.bot,
+             border_color=borderCol, border_width=bWidth, border_style=bStyle,
+             bgcolor=drawColor, extend=extend.none)
+    else
+        box.set_right(z.bx, bar_index + 20)
+        box.set_top(z.bx, z.top)
+        box.set_bottom(z.bx, z.bot)
+        box.set_bgcolor(z.bx, drawColor)
+        box.set_border_color(z.bx, borderCol)
+        box.set_border_width(z.bx, bWidth)
+        box.set_border_style(z.bx, bStyle)
 
-    // Labels
+    // Labels — recreate each bar (they move with price)
+    if not na(z.lb)
+        label.delete(z.lb)
+        z.lb := na
+
     if showLabels and z.alive
         touchTxt = str.tostring(z.touches) + "/" + str.tostring(maxTouches)
         typeTxt  = z.isBull ? "S" : "R"
