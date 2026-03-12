@@ -99,14 +99,18 @@ var label[] targetLabels = array.new_label(0)
 
 // Clean old drawings
 if barstate.islast
-    for i = 0 to array.size(waveLines) - 1
-        line.delete(array.get(waveLines, i))
-    for i = 0 to array.size(waveLabels) - 1
-        label.delete(array.get(waveLabels, i))
-    for i = 0 to array.size(targetLines) - 1
-        line.delete(array.get(targetLines, i))
-    for i = 0 to array.size(targetLabels) - 1
-        label.delete(array.get(targetLabels, i))
+    if array.size(waveLines) > 0
+        for i = 0 to array.size(waveLines) - 1
+            line.delete(array.get(waveLines, i))
+    if array.size(waveLabels) > 0
+        for i = 0 to array.size(waveLabels) - 1
+            label.delete(array.get(waveLabels, i))
+    if array.size(targetLines) > 0
+        for i = 0 to array.size(targetLines) - 1
+            line.delete(array.get(targetLines, i))
+    if array.size(targetLabels) > 0
+        for i = 0 to array.size(targetLabels) - 1
+            label.delete(array.get(targetLabels, i))
     array.clear(waveLines)
     array.clear(waveLabels)
     array.clear(targetLines)
