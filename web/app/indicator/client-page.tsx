@@ -464,7 +464,6 @@ export default function IndicatorClient() {
             {[
               {q:'Do I need a paid TradingView account?', a:'No. Works on free TradingView. No premium plan required.'},
               {q:'What markets does it work on?', a:'Everything on TradingView. Crypto, forex, NQ, ES, Gold, crude oil, stocks, indices. Any timeframe from 1-minute to monthly.'},
-              {q:'What if it doesn't work for my strategy?', a:'Full refund within 30 days. No questions, no forms. We only want happy traders.'},
               {q:'How is this different from other indicators?', a:'Most indicators react to what already happened. PulseWave identifies where price will react next — the institutional S/R zones where real money sits. Green zone = buy area. Red zone = sell area. No interpretation needed.'},
               {q:'What if it doesn\'t work for me?', a:'Full refund within 30 days. Email us, money back. No questions, no forms, no hassle.'},
               {q:'Do I need to configure anything?', a:'No. Zero settings. Install it, open your chart, zones appear. That\'s it.'},

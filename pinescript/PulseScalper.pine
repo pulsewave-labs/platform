@@ -1,0 +1,368 @@
+//@version=6
+strategy('PulseWave Scalper', 'PW-Scalp', overlay=true, 
+  default_qty_type=strategy.percent_of_equity, default_qty_value=100,
+  initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.04,
+  slippage=1, pyramiding=0, calc_on_every_tick=false,
+  max_bars_back=5000, process_orders_on_close=false)
+
+// ══════════════════════════════════════════════════════════════
+// ██  PULSEWAVE SCALPER — Risk-First BTC Scalping
+// ══════════════════════════════════════════════════════════════
+//
+// Edge comes from RISK CONTROL, not prediction.
+//
+// Core philosophy:
+//   1. Never risk more than X% per trade (default 1%)
+//   2. Stops are structure-based, not arbitrary
+//   3. Only trade when volatility is right (not too low, not insane)
+//   4. Session filter — only trade London/NY overlap
+//   5. Partial exits lock in profit, trail the rest
+//   6. Time stop — if trade doesn't move, get out
+//
+// Entry logic:
+//   VWAP + EMA trend filter → micro structure break → 
+//   volume confirmation → enter with ATR-adjusted stop
+//
+// Recommended: BTC/USDT 5m or 15m
+//
+// ══════════════════════════════════════════════════════════════
+
+
+// ── Risk Management (THE MOST IMPORTANT SECTION) ────────────
+riskPct      = input.float(1.0, 'Risk Per Trade %', minval=0.1, maxval=5.0, step=0.1, group='Risk Management', tooltip='% of equity risked per trade. This is the single most important setting.')
+maxDailyLoss = input.float(3.0, 'Max Daily Loss %', minval=0.5, maxval=10.0, step=0.5, group='Risk Management', tooltip='Stop trading for the day after this % loss.')
+maxTrades    = input.int(6, 'Max Trades Per Day', minval=1, maxval=20, group='Risk Management')
+atrSLMult    = input.float(1.5, 'SL ATR Multiplier', minval=0.5, maxval=4.0, step=0.1, group='Risk Management', tooltip='Stop loss = swing point ± ATR × this. Higher = wider stop, fewer whipsaws.')
+rr1          = input.float(1.5, 'TP1 Risk:Reward', minval=0.5, maxval=5.0, step=0.1, group='Risk Management')
+rr2          = input.float(3.0, 'TP2 Risk:Reward', minval=1.0, maxval=10.0, step=0.5, group='Risk Management')
+tp1Pct       = input.float(50, 'TP1 Close %', minval=10, maxval=90, step=10, group='Risk Management', tooltip='% of position to close at TP1. Rest trails to TP2.')
+useTrail     = input.bool(true, 'Trail After TP1', group='Risk Management')
+trailATR     = input.float(1.0, 'Trail ATR Mult', minval=0.3, maxval=3.0, step=0.1, group='Risk Management')
+timeStop     = input.int(20, 'Time Stop (bars)', minval=5, maxval=100, group='Risk Management', tooltip='Close trade if it hasnt hit TP1 within this many bars.')
+
+// ── Entry Logic ─────────────────────────────────────────────
+emaLen       = input.int(50, 'Trend EMA', minval=10, maxval=200, group='Entry')
+fastEmaLen   = input.int(9, 'Fast EMA', minval=3, maxval=30, group='Entry')
+atrLen       = input.int(14, 'ATR Length', minval=5, maxval=50, group='Entry')
+pivotLen     = input.int(3, 'Micro Pivot', minval=1, maxval=10, group='Entry', tooltip='Swing detection for micro structure. Lower = more trades.')
+volLen       = input.int(20, 'Volume MA', minval=5, maxval=50, group='Entry')
+volMult      = input.float(0.8, 'Min Volume Mult', minval=0.3, maxval=2.0, step=0.1, group='Entry', tooltip='Entry needs volume above this × average. Lower = more trades.')
+
+// ── Filters ─────────────────────────────────────────────────
+useSession   = input.bool(true, 'Session Filter', group='Filters', tooltip='Only trade during active sessions.')
+session1     = input.session('0700-1100', 'Session 1 (London Open)', group='Filters')
+session2     = input.session('1300-1700', 'Session 2 (NY Open)', group='Filters')
+session3     = input.session('1700-2000', 'Session 3 (NY Afternoon)', group='Filters')
+useVolFilter = input.bool(true, 'Volatility Filter', group='Filters')
+minATRPct    = input.float(0.1, 'Min ATR %', minval=0.01, maxval=1.0, step=0.01, group='Filters', tooltip='Skip trades when ATR is below this % of price (too quiet).')
+maxATRPct    = input.float(1.5, 'Max ATR %', minval=0.5, maxval=5.0, step=0.1, group='Filters', tooltip='Skip trades when ATR is above this % of price (too volatile).')
+useTrendFilter = input.bool(true, 'Trend Filter', group='Filters', tooltip='Only long above EMA, short below.')
+
+// ── VWAP ────────────────────────────────────────────────────
+useVWAP      = input.bool(true, 'VWAP Filter', group='VWAP', tooltip='Use VWAP as dynamic support/resistance.')
+vwapBias     = input.string('Filter', 'VWAP Mode', options=['Filter', 'Bounce', 'Both'], group='VWAP', tooltip='Filter = only trade with VWAP direction. Bounce = enter on VWAP bounce. Both = either.')
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  CALCULATIONS
+// ══════════════════════════════════════════════════════════════
+
+// ── Core indicators ──
+ema50     = ta.ema(close, emaLen)
+ema9      = ta.ema(close, fastEmaLen)
+atrVal    = ta.atr(atrLen)
+atrPct    = atrVal / close * 100
+volMA     = ta.sma(volume, volLen)
+volOK     = volume >= volMA * volMult
+
+// ── VWAP ──
+vwapVal   = ta.vwap(hlc3)
+
+// ── Micro structure ──
+microHigh = ta.pivothigh(high, pivotLen, pivotLen)
+microLow  = ta.pivotlow(low, pivotLen, pivotLen)
+
+var float lastMicroHigh = na
+var float lastMicroLow  = na
+var int   lastMHBar     = 0
+var int   lastMLBar     = 0
+
+if not na(microHigh)
+    lastMicroHigh := microHigh
+    lastMHBar     := bar_index - pivotLen
+if not na(microLow)
+    lastMicroLow  := microLow
+    lastMLBar     := bar_index - pivotLen
+
+// Break of micro structure
+bool microBullBreak = not na(lastMicroHigh) and close > lastMicroHigh and close[1] <= lastMicroHigh[1]
+bool microBearBreak = not na(lastMicroLow) and close < lastMicroLow and close[1] >= lastMicroLow[1]
+
+// ── Momentum ──
+bool bullMomentum = ema9 > ema50 and close > ema9
+bool bearMomentum = ema9 < ema50 and close < ema9
+
+// ── EMA cross for fast entries ──
+bool emaCrossUp = ta.crossover(ema9, ema50)
+bool emaCrossDn = ta.crossunder(ema9, ema50)
+
+// ── Session filter ──
+inSession1 = not na(time(timeframe.period, session1))
+inSession2 = not na(time(timeframe.period, session2))
+inSession3 = not na(time(timeframe.period, session3))
+sessionOK  = not useSession or inSession1 or inSession2 or inSession3
+
+// ── Volatility filter ──
+volFilterOK = not useVolFilter or (atrPct >= minATRPct and atrPct <= maxATRPct)
+
+// ── Trend filter ──
+trendLongOK  = not useTrendFilter or close > ema50
+trendShortOK = not useTrendFilter or close < ema50
+
+// ── VWAP conditions ──
+aboveVWAP = close > vwapVal
+belowVWAP = close < vwapVal
+
+// VWAP bounce detection (price touches VWAP and reverses)
+vwapDist     = math.abs(close - vwapVal) / atrVal
+nearVWAP     = vwapDist < 0.5
+vwapBounceUp = nearVWAP and close > open and low <= vwapVal * 1.001
+vwapBounceDn = nearVWAP and close < open and high >= vwapVal * 0.999
+
+// ── Daily P&L tracking ──
+var float dayStartEquity = strategy.equity
+var int   dayTrades      = 0
+var int   lastDay        = 0
+
+currentDay = dayofweek
+if currentDay != lastDay
+    dayStartEquity := strategy.equity
+    dayTrades      := 0
+    lastDay        := currentDay
+
+dailyPnL     = (strategy.equity - dayStartEquity) / dayStartEquity * 100
+dailyLossOK  = dailyPnL > -maxDailyLoss
+tradeCountOK = dayTrades < maxTrades
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  ENTRY CONDITIONS
+// ══════════════════════════════════════════════════════════════
+
+// Global filters
+bool canTrade = sessionOK and volFilterOK and dailyLossOK and tradeCountOK and strategy.position_size == 0
+
+// ── LONG ENTRIES ──
+// Type 1: Micro structure break + momentum + volume
+bool longType1 = microBullBreak and bullMomentum and volOK and trendLongOK
+
+// Type 2: VWAP bounce long
+bool longType2 = vwapBounceUp and bullMomentum and volOK and (vwapBias == 'Bounce' or vwapBias == 'Both')
+
+// Type 3: EMA cross with volume
+bool longType3 = emaCrossUp and volOK and aboveVWAP
+
+// VWAP directional filter
+bool vwapLongOK = not useVWAP or aboveVWAP or vwapBias == 'Bounce'
+
+// Combined
+bool goLong = canTrade and vwapLongOK and (longType1 or longType2 or longType3)
+
+// ── SHORT ENTRIES ──
+bool shortType1 = microBearBreak and bearMomentum and volOK and trendShortOK
+bool shortType2 = vwapBounceDn and bearMomentum and volOK and (vwapBias == 'Bounce' or vwapBias == 'Both')
+bool shortType3 = emaCrossDn and volOK and belowVWAP
+bool vwapShortOK = not useVWAP or belowVWAP or vwapBias == 'Bounce'
+bool goShort = canTrade and vwapShortOK and (shortType1 or shortType2 or shortType3)
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  POSITION SIZING (Risk-Based)
+// ══════════════════════════════════════════════════════════════
+
+// Stop loss placement: below/above last micro swing + ATR buffer
+float longSL  = lastMicroLow - atrVal * atrSLMult
+float shortSL = lastMicroHigh + atrVal * atrSLMult
+
+// Ensure minimum stop distance (avoid tiny stops in low vol)
+float minStopDist = atrVal * 0.5
+if close - longSL < minStopDist
+    longSL := close - minStopDist
+if shortSL - close < minStopDist
+    shortSL := close + minStopDist
+
+// Risk per trade in dollars
+float riskDollars = strategy.equity * riskPct / 100
+
+// Position size based on risk
+float longRisk   = close - longSL
+float shortRisk  = shortSL - close
+float longSize   = longRisk > 0 ? riskDollars / longRisk : 0
+float shortSize  = shortRisk > 0 ? riskDollars / shortRisk : 0
+
+// Take profit levels
+float longTP1  = close + longRisk * rr1
+float longTP2  = close + longRisk * rr2
+float shortTP1 = close - shortRisk * rr1
+float shortTP2 = close - shortRisk * rr2
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  EXECUTION
+// ══════════════════════════════════════════════════════════════
+
+var float entrySL   = na
+var float entryTP1  = na
+var float entryTP2  = na
+var int   entryBar  = 0
+var bool  tp1Hit    = false
+var float trailStop = na
+
+// ── LONG ──
+if goLong and longSize > 0
+    strategy.entry('Long', strategy.long, qty=longSize)
+    entrySL   := longSL
+    entryTP1  := longTP1
+    entryTP2  := longTP2
+    entryBar  := bar_index
+    tp1Hit    := false
+    trailStop := na
+    dayTrades += 1
+
+// ── SHORT ──
+if goShort and shortSize > 0
+    strategy.entry('Short', strategy.short, qty=shortSize)
+    entrySL   := shortSL
+    entryTP1  := shortTP1
+    entryTP2  := shortTP2
+    entryBar  := bar_index
+    tp1Hit    := false
+    trailStop := na
+    dayTrades += 1
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  EXIT MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+
+if strategy.position_size > 0  // Long position
+    // TP1 — partial close
+    if not tp1Hit and high >= entryTP1
+        strategy.close('Long', comment='TP1', qty_percent=tp1Pct)
+        tp1Hit    := true
+        trailStop := close - atrVal * trailATR
+
+    // Trailing stop after TP1
+    if tp1Hit and useTrail
+        trailStop := math.max(nz(trailStop), close - atrVal * trailATR)
+        if low <= trailStop
+            strategy.close('Long', comment='Trail')
+
+    // TP2 — close remainder
+    if high >= entryTP2
+        strategy.close('Long', comment='TP2')
+
+    // Stop loss
+    if low <= entrySL
+        strategy.close('Long', comment='SL')
+
+    // Time stop
+    if bar_index - entryBar >= timeStop and not tp1Hit
+        strategy.close('Long', comment='Time')
+
+if strategy.position_size < 0  // Short position
+    if not tp1Hit and low <= entryTP1
+        strategy.close('Short', comment='TP1', qty_percent=tp1Pct)
+        tp1Hit    := true
+        trailStop := close + atrVal * trailATR
+
+    if tp1Hit and useTrail
+        trailStop := math.min(nz(trailStop, 1e18), close + atrVal * trailATR)
+        if high >= trailStop
+            strategy.close('Short', comment='Trail')
+
+    if low <= entryTP2
+        strategy.close('Short', comment='TP2')
+
+    if high >= entrySL
+        strategy.close('Short', comment='SL')
+
+    if bar_index - entryBar >= timeStop and not tp1Hit
+        strategy.close('Short', comment='Time')
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  VISUALS
+// ══════════════════════════════════════════════════════════════
+
+// EMAs
+plot(ema50, 'Trend EMA', color=color.new(#888888, 30), linewidth=2)
+plot(ema9, 'Fast EMA', color=color.new(#00e5a0, 50), linewidth=1)
+
+// VWAP
+plot(useVWAP ? vwapVal : na, 'VWAP', color=color.new(#ffaa00, 30), linewidth=2, style=plot.style_circles)
+
+// Entry signals
+plotshape(goLong, 'Long Entry', shape.triangleup, location.belowbar, #00e5a0, size=size.small)
+plotshape(goShort, 'Short Entry', shape.triangledown, location.abovebar, #ff4757, size=size.small)
+
+// Active trade levels
+float plotSL  = strategy.position_size != 0 ? entrySL : na
+float plotTP1 = strategy.position_size != 0 and not tp1Hit ? entryTP1 : na
+float plotTP2 = strategy.position_size != 0 ? entryTP2 : na
+float plotTrail = strategy.position_size != 0 and tp1Hit and useTrail ? trailStop : na
+
+plot(plotSL, 'Stop Loss', color=#ff4757, linewidth=1, style=plot.style_linebr)
+plot(plotTP1, 'TP1', color=#00e5a0, linewidth=1, style=plot.style_linebr)
+plot(plotTP2, 'TP2', color=color.new(#00e5a0, 40), linewidth=1, style=plot.style_linebr)
+plot(plotTrail, 'Trail', color=#ffaa00, linewidth=1, style=plot.style_linebr)
+
+// Session background
+bgcolor(sessionOK and useSession ? color.new(#ffffff, 97) : na, title='Active Session')
+
+// Compression / low vol warning
+bgcolor(not volFilterOK ? color.new(#ff0000, 97) : na, title='Bad Volatility')
+
+// ── Dashboard ──
+if barstate.islast
+    var tbl = table.new(position.top_right, 2, 10, bgcolor=color.new(#0a0a0c, 5), border_color=color.new(color.white, 90), border_width=1, frame_color=color.new(color.white, 85), frame_width=1)
+
+    table.cell(tbl, 0, 0, '  PW SCALPER  ', text_color=#00e5a0, text_size=size.small, bgcolor=color.new(#0a0a0c, 0))
+    table.merge_cells(tbl, 0, 0, 1, 0)
+
+    // Stats
+    wins = strategy.wintrades
+    losses = strategy.losstrades
+    total = strategy.closedtrades
+    wr = total > 0 ? wins / total * 100 : 0
+    pf = strategy.grossloss != 0 ? strategy.grossprofit / math.abs(strategy.grossloss) : 0
+
+    table.cell(tbl, 0, 1, 'Win Rate', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 1, str.tostring(wr, '#.#') + '% (' + str.tostring(wins) + '/' + str.tostring(total) + ')', text_color=wr > 50 ? #00e5a0 : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 2, 'Profit Factor', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 2, str.tostring(pf, '#.##'), text_color=pf > 1.5 ? #00e5a0 : pf > 1 ? #ffaa00 : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 3, 'Net Profit', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 3, '$' + str.tostring(strategy.netprofit, '#.##'), text_color=strategy.netprofit > 0 ? #00e5a0 : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 4, 'Max DD', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 4, str.tostring(strategy.max_drawdown / strategy.initial_capital * 100, '#.#') + '%', text_color=strategy.max_drawdown / strategy.initial_capital < 0.1 ? #00e5a0 : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 5, 'Daily P&L', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 5, str.tostring(dailyPnL, '#.##') + '%', text_color=dailyPnL > 0 ? #00e5a0 : dailyPnL > -maxDailyLoss ? #ffaa00 : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 6, 'Trades Today', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 6, str.tostring(dayTrades) + '/' + str.tostring(maxTrades), text_color=dayTrades < maxTrades ? color.white : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    table.cell(tbl, 0, 7, 'ATR', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 7, str.tostring(atrPct, '#.##') + '%', text_color=volFilterOK ? color.white : #ff4757, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Status
+    status = not sessionOK ? '⏸ OFF SESSION' : not volFilterOK ? '⚠ BAD VOL' : not dailyLossOK ? '🛑 DAILY LIMIT' : not tradeCountOK ? '🛑 TRADE LIMIT' : strategy.position_size > 0 ? '🟢 LONG' : strategy.position_size < 0 ? '🔴 SHORT' : '👀 SCANNING'
+    table.cell(tbl, 0, 8, '', text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 8, status, text_color=color.white, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Risk per trade
+    table.cell(tbl, 0, 9, 'Risk/Trade', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 9, '$' + str.tostring(riskDollars, '#') + ' (' + str.tostring(riskPct, '#.#') + '%)', text_color=color.white, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))

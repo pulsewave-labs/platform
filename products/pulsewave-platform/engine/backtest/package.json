@@ -1,0 +1,18 @@
+{
+  "name": "pulsewave-backtester",
+  "version": "1.0.0",
+  "description": "Multi-market backtester for PulseWave BOS+OB strategy",
+  "main": "backtester.js",
+  "scripts": {
+    "sweep:futures": "node backtester.js --market futures",
+    "sweep:forex": "node backtester.js --market forex",
+    "sweep:crypto": "node backtester.js --market crypto",
+    "sweep:all": "node backtester.js",
+    "test:es": "node backtester.js --symbol ES",
+    "test:nq": "node backtester.js --symbol NQ",
+    "test:eurusd": "node backtester.js --symbol EURUSD"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  }
+}

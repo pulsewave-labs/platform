@@ -1,0 +1,325 @@
+//@version=6
+indicator('Trend Buddy V2', 'TrendBuddy', overlay=true, max_lines_count=500, max_labels_count=200, max_boxes_count=100)
+
+// ══════════════════════════════════════════════════════════════
+// ██  TREND BUDDY V2 — Adaptive Trend Detection
+// ══════════════════════════════════════════════════════════════
+//
+// Philosophy: Price leads. Indicators lag. We use PRICE STRUCTURE
+// as the primary trend engine and only use math to CONFIRM, not lead.
+//
+// Core Engine:
+//   1. Adaptive Supertrend (Nadaraya-Watson kernel-smoothed ATR)
+//   2. Directional Volume Impulse (who's in control — buyers or sellers)
+//   3. Compression → Expansion detection (range → trend transition)
+//   4. Multi-timeframe structure alignment (optional)
+//
+// The "Crayons" concept: color-coded zones painted directly on price
+// showing trend state transitions — not separate oscillator panels.
+//
+// Recommended Timeframes:
+//   Scalping: 5m with 1H confirmation
+//   Intraday: 15m with 4H confirmation  
+//   Swing:    1H with Daily confirmation
+//   Position: 4H with Weekly confirmation
+//
+// ══════════════════════════════════════════════════════════════
+
+
+// ── Inputs ──────────────────────────────────────────────────
+// Core
+atrLen      = input.int(10, 'ATR Length', minval=3, maxval=50, group='Core')
+factor      = input.float(3.0, 'Supertrend Factor', minval=1.0, maxval=10.0, step=0.1, group='Core')
+smoothLen   = input.int(5, 'Smoothing', minval=1, maxval=20, group='Core', tooltip='Smooths the ATR band. Higher = fewer whipsaws but slower reaction.')
+
+// Volatility Filter
+useVolFilter = input.bool(true, 'Volatility Filter', group='Volatility', tooltip='Detects compression zones before breakouts. Gray = compressed/ranging.')
+bbLen        = input.int(20, 'BB Length', minval=10, maxval=50, group='Volatility')
+bbSqueeze    = input.float(0.7, 'Squeeze Threshold', minval=0.1, maxval=2.0, step=0.1, group='Volatility', tooltip='BB width relative to average. Below = squeeze/compression.')
+
+// Volume Impulse
+useVol       = input.bool(true, 'Volume Confirmation', group='Volume', tooltip='Requires above-average volume to confirm trend changes.')
+volLen       = input.int(20, 'Volume MA Length', minval=5, maxval=50, group='Volume')
+volMult      = input.float(1.0, 'Volume Threshold', minval=0.5, maxval=3.0, step=0.1, group='Volume')
+
+// Visuals
+showBands    = input.bool(true, 'Show Trend Bands', group='Visuals')
+showFill     = input.bool(true, 'Fill Trend Zone', group='Visuals')
+showCandles  = input.bool(true, 'Color Candles', group='Visuals')
+showBG       = input.bool(false, 'Background Shading', group='Visuals')
+showSignals  = input.bool(true, 'Trend Change Signals', group='Visuals')
+showDash     = input.bool(true, 'Dashboard', group='Visuals')
+dashPos      = input.string('Top Right', 'Dashboard Position', options=['Top Right', 'Top Left', 'Bottom Right', 'Bottom Left'], group='Visuals')
+showCompress = input.bool(true, 'Show Compression Zones', group='Visuals')
+
+// Colors
+upCol        = input.color(#00e5a0, 'Uptrend', group='Colors', inline='c1')
+dnCol        = input.color(#ff4757, 'Downtrend', group='Colors', inline='c1')
+compCol      = input.color(#ffaa00, 'Compression', group='Colors', inline='c2')
+neutCol      = input.color(#555555, 'Neutral', group='Colors', inline='c2')
+
+// Multi-Timeframe
+useMTF       = input.bool(false, 'MTF Confluence', group='Multi-Timeframe')
+htf          = input.timeframe('', 'Higher Timeframe', group='Multi-Timeframe', tooltip='Leave blank for auto (4× current). Or set manually.')
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  1. ADAPTIVE SUPERTREND
+// ══════════════════════════════════════════════════════════════
+// Instead of raw ATR, we smooth it to reduce noise.
+// This creates a "breathing" band that adapts to volatility.
+
+atrRaw    = ta.atr(atrLen)
+atrSmooth = ta.ema(atrRaw, smoothLen)
+
+// Supertrend calculation
+float upperBand = na
+float lowerBand = na
+var float supertrend = na
+var int direction = 0  // 1 = up, -1 = down
+
+hl2Val     = hl2
+upperBand  := hl2Val + factor * atrSmooth
+lowerBand  := hl2Val - factor * atrSmooth
+
+// Maintain bands (classic supertrend logic)
+prevUpper  = nz(upperBand[1], upperBand)
+prevLower  = nz(lowerBand[1], lowerBand)
+
+upperBand  := close[1] < prevUpper ? math.min(upperBand, prevUpper) : upperBand
+lowerBand  := close[1] > prevLower ? math.max(lowerBand, prevLower) : lowerBand
+
+// Direction flip
+prevDir    = nz(direction[1], 1)
+if close > prevUpper
+    direction := 1
+else if close < prevLower
+    direction := -1
+else
+    direction := prevDir
+
+supertrend := direction == 1 ? lowerBand : upperBand
+
+bool stBullish = direction == 1
+bool stBearish = direction == -1
+bool stFlipUp  = stBullish and not stBullish[1]
+bool stFlipDn  = stBearish and not stBearish[1]
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  2. VOLATILITY COMPRESSION DETECTION
+// ══════════════════════════════════════════════════════════════
+// Bollinger Band width squeeze = market coiling for a move
+// This is the "ranging" detection — when bands compress,
+// we call it a squeeze/compression zone.
+
+bbBasis     = ta.sma(close, bbLen)
+bbDev       = ta.stdev(close, bbLen)
+bbWidth     = bbDev / bbBasis * 100  // normalized as % of price
+bbWidthAvg  = ta.sma(bbWidth, bbLen)
+isCompressed = useVolFilter and bbWidth < bbWidthAvg * bbSqueeze
+
+// Compression duration tracking
+var int compBars = 0
+if isCompressed
+    compBars += 1
+else
+    compBars := 0
+
+// Just exited compression (potential breakout)
+bool breakoutBar = compBars[1] >= 3 and not isCompressed
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  3. VOLUME IMPULSE
+// ══════════════════════════════════════════════════════════════
+// Volume confirms conviction. A trend change without volume is suspect.
+
+vol       = volume
+volMA     = ta.sma(vol, volLen)
+volStrong = vol > volMA * volMult
+volBull   = volStrong and close > open
+volBear   = volStrong and close < open
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  4. FINAL TREND STATE
+// ══════════════════════════════════════════════════════════════
+// Supertrend = primary. Compression = override to "ranging".
+// Volume = confidence modifier.
+
+var int trendState = 0  // 1=up, -1=down, 0=compressed/ranging
+
+if isCompressed
+    trendState := 0
+else if stBullish
+    trendState := 1
+else if stBearish
+    trendState := -1
+
+// Trend change detection (only on non-compressed transitions)
+bool newUptrend   = trendState == 1 and trendState[1] != 1
+bool newDowntrend = trendState == -1 and trendState[1] != -1
+bool newRange     = trendState == 0 and trendState[1] != 0
+
+// Volume-confirmed trend change
+bool confirmedUp  = newUptrend and (not useVol or volBull)
+bool confirmedDn  = newDowntrend and (not useVol or volBear)
+
+// Trend strength (based on distance from supertrend + volume)
+float trendDist  = math.abs(close - supertrend) / atrSmooth
+float strength   = math.min(trendDist * 25, 100)  // 0-100 scale
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  5. MULTI-TIMEFRAME CONFLUENCE
+// ══════════════════════════════════════════════════════════════
+
+f_htfTrend() =>
+    atrR = ta.atr(atrLen)
+    atrS = ta.ema(atrR, smoothLen)
+    uB   = hl2 + factor * atrS
+    lB   = hl2 - factor * atrS
+    var float st = na
+    var int dir  = 0
+    pU = nz(uB[1], uB)
+    pL = nz(lB[1], lB)
+    uB := close[1] < pU ? math.min(uB, pU) : uB
+    lB := close[1] > pL ? math.max(lB, pL) : lB
+    pD = nz(dir[1], 1)
+    if close > pU
+        dir := 1
+    else if close < pL
+        dir := -1
+    else
+        dir := pD
+    dir
+
+// Auto-detect HTF (4× current)
+autoHTF = timeframe.period == '1'  ? '5'   :
+          timeframe.period == '3'  ? '15'  :
+          timeframe.period == '5'  ? '30'  :
+          timeframe.period == '15' ? '60'  :
+          timeframe.period == '30' ? '120' :
+          timeframe.period == '60' ? '240' :
+          timeframe.period == '120' ? '480' :
+          timeframe.period == '240' ? 'D'  :
+          timeframe.period == 'D'  ? 'W'   :
+          timeframe.period == 'W'  ? 'M'   : 'M'
+
+useHTF = htf == '' ? autoHTF : htf
+htfTrend = useMTF ? request.security(syminfo.tickerid, useHTF, f_htfTrend()) : 0
+bool htfAligned = not useMTF or (htfTrend == trendState and trendState != 0)
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  VISUALS — THE "CRAYONS"
+// ══════════════════════════════════════════════════════════════
+
+// Trend color with compression awareness
+trendColor = trendState == 0 ? compCol : trendState == 1 ? upCol : dnCol
+
+// ── Supertrend Line + Band ──
+stPlot = plot(showBands ? supertrend : na, 'Supertrend', color=trendColor, linewidth=2, style=plot.style_line)
+pricePlot = plot(showFill ? close : na, 'Price', display=display.none)
+fill(stPlot, pricePlot, color=showFill ? color.new(trendColor, 88) : na, title='Trend Fill')
+
+// ── Compression Zone Boxes ──
+var box compBox = na
+if showCompress and isCompressed and not isCompressed[1]
+    compBox := box.new(bar_index, high, bar_index, low, bgcolor=color.new(compCol, 90), border_color=color.new(compCol, 70), border_width=1)
+if showCompress and isCompressed and not na(compBox)
+    box.set_right(compBox, bar_index)
+    box.set_top(compBox, math.max(box.get_top(compBox), high))
+    box.set_bottom(compBox, math.min(box.get_bottom(compBox), low))
+
+// ── Candle Coloring ──
+// Gradient based on trend strength
+upStrong   = color.new(upCol, math.round(math.max(60 - strength * 0.6, 0)))
+dnStrong   = color.new(dnCol, math.round(math.max(60 - strength * 0.6, 0)))
+candleCol  = trendState == 0 ? neutCol : trendState == 1 ? upStrong : dnStrong
+barcolor(showCandles ? candleCol : na)
+
+// ── Background ──
+bgcolor(showBG ? color.new(trendColor, 95) : na)
+
+// ── Trend Change Signals ──
+plotshape(showSignals and confirmedUp, 'Buy Signal', shape.triangleup, location.belowbar, upCol, size=size.small, text='▲')
+plotshape(showSignals and confirmedDn, 'Sell Signal', shape.triangledown, location.abovebar, dnCol, size=size.small, text='▼')
+
+// Breakout from compression (high probability move)
+plotshape(showSignals and breakoutBar and trendState == 1, 'Bullish Breakout', shape.diamond, location.belowbar, color.new(upCol, 0), size=size.tiny, text='💥')
+plotshape(showSignals and breakoutBar and trendState == -1, 'Bearish Breakout', shape.diamond, location.abovebar, color.new(dnCol, 0), size=size.tiny, text='💥')
+
+// Weak signal (no volume confirmation)
+plotshape(showSignals and newUptrend and not confirmedUp, 'Weak Buy', shape.triangleup, location.belowbar, color.new(upCol, 60), size=size.tiny)
+plotshape(showSignals and newDowntrend and not confirmedDn, 'Weak Sell', shape.triangledown, location.abovebar, color.new(dnCol, 60), size=size.tiny)
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+if showDash and barstate.islast
+    dPos = dashPos == 'Top Right' ? position.top_right : dashPos == 'Top Left' ? position.top_left : dashPos == 'Bottom Right' ? position.bottom_right : position.bottom_left
+
+    var tbl = table.new(dPos, 2, 8, bgcolor=color.new(#0a0a0c, 5), border_color=color.new(color.white, 90), border_width=1, frame_color=color.new(color.white, 85), frame_width=1)
+
+    // Title
+    table.cell(tbl, 0, 0, '  TREND BUDDY  ', text_color=#00e5a0, text_size=size.small, bgcolor=color.new(#0a0a0c, 0))
+    table.merge_cells(tbl, 0, 0, 1, 0)
+
+    // Trend State
+    stateText = trendState == 1 ? '▲ UPTREND' : trendState == -1 ? '▼ DOWNTREND' : '◆ RANGING'
+    table.cell(tbl, 0, 1, 'Trend', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 1, stateText, text_color=trendColor, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Strength
+    strText = strength > 75 ? 'STRONG' : strength > 40 ? 'MODERATE' : strength > 15 ? 'WEAK' : 'FLAT'
+    strCol  = strength > 75 ? upCol : strength > 40 ? color.new(upCol, 30) : strength > 15 ? compCol : neutCol
+    table.cell(tbl, 0, 2, 'Strength', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 2, strText + ' (' + str.tostring(strength, '#') + ')', text_color=strCol, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Volatility
+    volState = isCompressed ? '🟡 COMPRESSED' : bbWidth > bbWidthAvg * 1.5 ? '🔴 EXPANDING' : '⚪ NORMAL'
+    table.cell(tbl, 0, 3, 'Volatility', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 3, volState, text_color=isCompressed ? compCol : color.white, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Volume
+    volText = volStrong ? (volBull ? '🟢 STRONG BUY' : volBear ? '🔴 STRONG SELL' : '⚡ HIGH') : '⚪ NORMAL'
+    table.cell(tbl, 0, 4, 'Volume', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, 4, volText, text_color=volBull ? upCol : volBear ? dnCol : color.white, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Compression bars
+    if isCompressed
+        table.cell(tbl, 0, 5, 'Squeeze', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+        table.cell(tbl, 1, 5, str.tostring(compBars) + ' bars', text_color=compCol, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    else
+        table.cell(tbl, 0, 5, '', text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+        table.cell(tbl, 1, 5, '', text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // HTF
+    if useMTF
+        htfText = htfTrend == 1 ? '▲ UP' : htfTrend == -1 ? '▼ DOWN' : '◆ RANGE'
+        htfCol  = htfTrend == 1 ? upCol : htfTrend == -1 ? dnCol : neutCol
+        aligned = htfAligned ? ' ✓' : ' ✗'
+        table.cell(tbl, 0, 6, 'HTF (' + useHTF + ')', text_color=color.new(color.white, 40), text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+        table.cell(tbl, 1, 6, htfText + aligned, text_color=htfCol, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+    // Recommendation
+    recText = trendState == 0 ? 'WAIT — compressed, breakout pending' : htfAligned and strength > 40 ? (trendState == 1 ? 'LOOK FOR LONGS' : 'LOOK FOR SHORTS') : trendState != 0 and not htfAligned and useMTF ? 'CAUTION — HTF misaligned' : trendState != 0 and strength < 20 ? 'WEAK — wait for confirmation' : trendState == 1 ? 'BIAS: LONG' : 'BIAS: SHORT'
+    recCol = trendState == 0 ? compCol : htfAligned and strength > 40 ? trendColor : compCol
+    row = useMTF ? 7 : 6
+    table.cell(tbl, 0, row, '', text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+    table.cell(tbl, 1, row, recText, text_color=recCol, text_size=size.tiny, bgcolor=color.new(#0a0a0c, 0))
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  ALERTS
+// ══════════════════════════════════════════════════════════════
+
+alertcondition(confirmedUp, 'Confirmed Uptrend', '🟢 {{ticker}} confirmed uptrend on {{interval}} (volume + supertrend)')
+alertcondition(confirmedDn, 'Confirmed Downtrend', '🔴 {{ticker}} confirmed downtrend on {{interval}} (volume + supertrend)')
+alertcondition(newRange, 'Compression Started', '🟡 {{ticker}} entering compression on {{interval}} — breakout pending')
+alertcondition(breakoutBar and trendState != 0, 'Breakout', '💥 {{ticker}} breakout from compression on {{interval}} — trend: {{close}}')
+alertcondition(confirmedUp or confirmedDn, 'Any Trend Change', '⚡ {{ticker}} trend changed on {{interval}}')

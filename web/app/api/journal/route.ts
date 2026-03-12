@@ -152,7 +152,19 @@ export async function POST(request: NextRequest) {
       screenshots: body.screenshots || [],
       entry_date: body.entry_date || new Date().toISOString(),
       exit_date: body.exit_date || null,
-      signal_id: body.signal_id || null
+      signal_id: body.signal_id || null,
+      emotional_state: body.emotional_state || null,
+      pre_thesis: body.pre_thesis || null,
+      post_right: body.post_right || null,
+      post_wrong: body.post_wrong || null,
+      lesson: body.lesson || null,
+      grade: body.grade || null,
+      confluence: body.confluence || null,
+      screenshot_entry: body.screenshot_entry || null,
+      screenshot_exit: body.screenshot_exit || null,
+      session: body.session || null,
+      risk_amount: body.risk_amount ? parseFloat(body.risk_amount) : null,
+      auto_imported: body.auto_imported || false
     }
 
     const { data: trade, error } = await supabaseAdmin

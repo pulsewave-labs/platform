@@ -1,0 +1,618 @@
+//@version=6
+indicator('PulseWave Indicator', 'PulseWave-V1.2', overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=50)
+
+// ══════════════════════════════════════════════════════════════
+// ██  PART 1: S/R ENGINE (Multi-Timeframe Pivot-Based)
+// ══════════════════════════════════════════════════════════════
+
+// ──────────────────────────────────────────────────────────────
+// S/R SETUP
+// ──────────────────────────────────────────────────────────────
+prd       = input.int(defval=10, title='Pivot Period', minval=4, maxval=30, group='S/R Setup', tooltip='Bars left/right for pivot detection.')
+ppsrc     = input.string(defval='High/Low', title='Source', options=['High/Low', 'Close/Open'], group='S/R Setup')
+maxnumpp  = input.int(defval=60, title='Maximum Pivots', minval=5, maxval=200, group='S/R Setup')
+ChannelW  = input.int(defval=10, title='Max Channel Width %', minval=1, maxval=50, group='S/R Setup')
+maxnumsr  = input.int(defval=8, title='Max S/R Levels', minval=1, maxval=15, group='S/R Setup')
+min_strength = input.int(defval=3, title='Min Strength', minval=1, maxval=10, group='S/R Setup')
+cwLookback = input.int(defval=400, title='Lookback Period', minval=50, maxval=1000, group='S/R Setup')
+
+// ── S/R Timeframe 1 ──
+useTF1      = input.bool(defval=true, title='Enable', group='S/R Timeframe 1')
+tf1         = input.timeframe(defval='30', title='Timeframe', group='S/R Timeframe 1')
+tf1ResColor = input.color(defval=color.rgb(220, 50, 50), title='Resistance', group='S/R Timeframe 1', inline='tf1c')
+tf1SupColor = input.color(defval=color.rgb(0, 150, 50), title='Support', group='S/R Timeframe 1', inline='tf1c')
+tf1Style    = input.string(defval='Solid', title='Style', options=['Solid', 'Dotted', 'Dashed'], group='S/R Timeframe 1', inline='tf1s')
+tf1Width    = input.int(defval=1, title='Width', minval=1, maxval=4, group='S/R Timeframe 1', inline='tf1s')
+
+// ── S/R Timeframe 2 ──
+useTF2      = input.bool(defval=false, title='Enable', group='S/R Timeframe 2')
+tf2         = input.timeframe(defval='240', title='Timeframe', group='S/R Timeframe 2')
+tf2ResColor = input.color(defval=color.rgb(255, 140, 0), title='Resistance', group='S/R Timeframe 2', inline='tf2c')
+tf2SupColor = input.color(defval=color.rgb(0, 180, 220), title='Support', group='S/R Timeframe 2', inline='tf2c')
+tf2Style    = input.string(defval='Solid', title='Style', options=['Solid', 'Dotted', 'Dashed'], group='S/R Timeframe 2', inline='tf2s')
+tf2Width    = input.int(defval=1, title='Width', minval=1, maxval=4, group='S/R Timeframe 2', inline='tf2s')
+
+// ── S/R Timeframe 3 ──
+useTF3      = input.bool(defval=false, title='Enable', group='S/R Timeframe 3')
+tf3         = input.timeframe(defval='D', title='Timeframe', group='S/R Timeframe 3')
+tf3ResColor = input.color(defval=color.rgb(180, 0, 255), title='Resistance', group='S/R Timeframe 3', inline='tf3c')
+tf3SupColor = input.color(defval=color.rgb(0, 200, 150), title='Support', group='S/R Timeframe 3', inline='tf3c')
+tf3Style    = input.string(defval='Solid', title='Style', options=['Solid', 'Dotted', 'Dashed'], group='S/R Timeframe 3', inline='tf3s')
+tf3Width    = input.int(defval=1, title='Width', minval=1, maxval=4, group='S/R Timeframe 3', inline='tf3s')
+
+// ── S/R Timeframe 4 ──
+useTF4      = input.bool(defval=false, title='Enable', group='S/R Timeframe 4')
+tf4         = input.timeframe(defval='W', title='Timeframe', group='S/R Timeframe 4')
+tf4ResColor = input.color(defval=color.rgb(255, 215, 0), title='Resistance', group='S/R Timeframe 4', inline='tf4c')
+tf4SupColor = input.color(defval=color.rgb(100, 149, 237), title='Support', group='S/R Timeframe 4', inline='tf4c')
+tf4Style    = input.string(defval='Solid', title='Style', options=['Solid', 'Dotted', 'Dashed'], group='S/R Timeframe 4', inline='tf4s')
+tf4Width    = input.int(defval=1, title='Width', minval=1, maxval=4, group='S/R Timeframe 4', inline='tf4s')
+
+// ── S/R Display ──
+showLabels   = input.bool(defval=true, title='Show Labels', group='S/R Display')
+showStrength = input.bool(defval=true, title='Show Strength', group='S/R Display')
+labelloc     = input.int(defval=20, title='Label Offset', group='S/R Display')
+dynColor     = input.bool(defval=true, title='Dynamic Color by Strength', group='S/R Display')
+
+// ── S/R Alerts ──
+alertProximity = input.bool(defval=false, title='Proximity Alerts', group='S/R Alerts')
+proximityPct   = input.float(defval=0.5, title='Proximity %', minval=0.1, maxval=5.0, step=0.1, group='S/R Alerts')
+
+// ── S/R Utilities ──
+getLineStyle(s) =>
+    s == 'Dashed' ? line.style_dashed : s == 'Solid' ? line.style_solid : line.style_dotted
+
+tfLabel(tf) =>
+    tf == '1' ? '1m' : tf == '3' ? '3m' : tf == '5' ? '5m' : tf == '15' ? '15m' : tf == '30' ? '30m' : tf == '60' ? '1H' : tf == '120' ? '2H' : tf == '240' ? '4H' : tf == '480' ? '8H' : tf == 'D' ? '1D' : tf == 'W' ? '1W' : tf == 'M' ? '1M' : tf
+
+// ── S/R Engine ──
+calcSR() =>
+    float _src1 = ppsrc == 'High/Low' ? high : math.max(close, open)
+    float _src2 = ppsrc == 'High/Low' ? low  : math.min(close, open)
+    float _ph = ta.pivothigh(_src1, prd, prd)
+    float _pl = ta.pivotlow(_src2, prd, prd)
+    var _pvt = array.new_float(0)
+    if not na(_ph) or not na(_pl)
+        array.unshift(_pvt, not na(_ph) ? _ph : _pl)
+    if array.size(_pvt) > maxnumpp
+        array.pop(_pvt)
+    float _highest = ta.highest(cwLookback)
+    float _lowest  = ta.lowest(cwLookback)
+    float _cw = (_highest - _lowest) * ChannelW / 100
+    var _sr_hi = array.new_float(0)
+    var _sr_lo = array.new_float(0)
+    var _sr_st = array.new_float(0)
+    if not na(_ph) or not na(_pl)
+        array.clear(_sr_hi)
+        array.clear(_sr_lo)
+        array.clear(_sr_st)
+        for i = 0 to array.size(_pvt) - 1
+            float _ilo = array.get(_pvt, i)
+            float _ihi = _ilo
+            int _numpp = 0
+            for j = 0 to array.size(_pvt) - 1
+                float _cpp = array.get(_pvt, j)
+                float _wdth = _cpp <= _ilo ? _ihi - _cpp : _cpp - _ilo
+                if _wdth <= _cw
+                    if _cpp <= _ihi
+                        _ilo := math.min(_ilo, _cpp)
+                    else
+                        _ihi := math.max(_ihi, _cpp)
+                    _numpp += 1
+            bool _valid = true
+            for k = 0 to array.size(_sr_hi) > 0 ? array.size(_sr_hi) - 1 : na
+                if array.get(_sr_hi, k) >= _ilo and array.get(_sr_hi, k) <= _ihi or array.get(_sr_lo, k) >= _ilo and array.get(_sr_lo, k) <= _ihi
+                    if _numpp >= array.get(_sr_st, k)
+                        array.remove(_sr_hi, k)
+                        array.remove(_sr_lo, k)
+                        array.remove(_sr_st, k)
+                    else
+                        _valid := false
+                    break
+            if _valid and _numpp >= min_strength
+                int _loc = array.size(_sr_st)
+                for m = _loc > 0 ? array.size(_sr_st) - 1 : na to 0
+                    if _numpp <= array.get(_sr_st, m)
+                        break
+                    _loc := m
+                if _loc < maxnumsr
+                    array.insert(_sr_hi, _loc, _ihi)
+                    array.insert(_sr_lo, _loc, _ilo)
+                    array.insert(_sr_st, _loc, _numpp)
+                    if array.size(_sr_st) > maxnumsr
+                        array.pop(_sr_st)
+                        array.pop(_sr_hi)
+                        array.pop(_sr_lo)
+    float _m0 = array.size(_sr_hi) > 0 ? math.round_to_mintick((array.get(_sr_hi, 0) + array.get(_sr_lo, 0)) / 2) : na
+    float _m1 = array.size(_sr_hi) > 1 ? math.round_to_mintick((array.get(_sr_hi, 1) + array.get(_sr_lo, 1)) / 2) : na
+    float _m2 = array.size(_sr_hi) > 2 ? math.round_to_mintick((array.get(_sr_hi, 2) + array.get(_sr_lo, 2)) / 2) : na
+    float _m3 = array.size(_sr_hi) > 3 ? math.round_to_mintick((array.get(_sr_hi, 3) + array.get(_sr_lo, 3)) / 2) : na
+    float _m4 = array.size(_sr_hi) > 4 ? math.round_to_mintick((array.get(_sr_hi, 4) + array.get(_sr_lo, 4)) / 2) : na
+    float _h0 = array.size(_sr_hi) > 0 ? array.get(_sr_hi, 0) : na
+    float _h1 = array.size(_sr_hi) > 1 ? array.get(_sr_hi, 1) : na
+    float _h2 = array.size(_sr_hi) > 2 ? array.get(_sr_hi, 2) : na
+    float _h3 = array.size(_sr_hi) > 3 ? array.get(_sr_hi, 3) : na
+    float _h4 = array.size(_sr_hi) > 4 ? array.get(_sr_hi, 4) : na
+    float _l0 = array.size(_sr_lo) > 0 ? array.get(_sr_lo, 0) : na
+    float _l1 = array.size(_sr_lo) > 1 ? array.get(_sr_lo, 1) : na
+    float _l2 = array.size(_sr_lo) > 2 ? array.get(_sr_lo, 2) : na
+    float _l3 = array.size(_sr_lo) > 3 ? array.get(_sr_lo, 3) : na
+    float _l4 = array.size(_sr_lo) > 4 ? array.get(_sr_lo, 4) : na
+    float _s0 = array.size(_sr_st) > 0 ? array.get(_sr_st, 0) : na
+    float _s1 = array.size(_sr_st) > 1 ? array.get(_sr_st, 1) : na
+    float _s2 = array.size(_sr_st) > 2 ? array.get(_sr_st, 2) : na
+    float _s3 = array.size(_sr_st) > 3 ? array.get(_sr_st, 3) : na
+    float _s4 = array.size(_sr_st) > 4 ? array.get(_sr_st, 4) : na
+    [_m0, _m1, _m2, _m3, _m4, _h0, _h1, _h2, _h3, _h4, _l0, _l1, _l2, _l3, _l4, _s0, _s1, _s2, _s3, _s4]
+
+// ── Request S/R ──
+[tf1_m0,tf1_m1,tf1_m2,tf1_m3,tf1_m4,tf1_h0,tf1_h1,tf1_h2,tf1_h3,tf1_h4,tf1_l0,tf1_l1,tf1_l2,tf1_l3,tf1_l4,tf1_s0,tf1_s1,tf1_s2,tf1_s3,tf1_s4] = request.security(syminfo.tickerid, tf1, calcSR())
+[tf2_m0,tf2_m1,tf2_m2,tf2_m3,tf2_m4,tf2_h0,tf2_h1,tf2_h2,tf2_h3,tf2_h4,tf2_l0,tf2_l1,tf2_l2,tf2_l3,tf2_l4,tf2_s0,tf2_s1,tf2_s2,tf2_s3,tf2_s4] = request.security(syminfo.tickerid, tf2, calcSR())
+[tf3_m0,tf3_m1,tf3_m2,tf3_m3,tf3_m4,tf3_h0,tf3_h1,tf3_h2,tf3_h3,tf3_h4,tf3_l0,tf3_l1,tf3_l2,tf3_l3,tf3_l4,tf3_s0,tf3_s1,tf3_s2,tf3_s3,tf3_s4] = request.security(syminfo.tickerid, tf3, calcSR())
+[tf4_m0,tf4_m1,tf4_m2,tf4_m3,tf4_m4,tf4_h0,tf4_h1,tf4_h2,tf4_h3,tf4_h4,tf4_l0,tf4_l1,tf4_l2,tf4_l3,tf4_l4,tf4_s0,tf4_s1,tf4_s2,tf4_s3,tf4_s4] = request.security(syminfo.tickerid, tf4, calcSR())
+
+tf1_mids = array.from(tf1_m0, tf1_m1, tf1_m2, tf1_m3, tf1_m4)
+tf1_his  = array.from(tf1_h0, tf1_h1, tf1_h2, tf1_h3, tf1_h4)
+tf1_los  = array.from(tf1_l0, tf1_l1, tf1_l2, tf1_l3, tf1_l4)
+tf1_strs = array.from(tf1_s0, tf1_s1, tf1_s2, tf1_s3, tf1_s4)
+tf2_mids = array.from(tf2_m0, tf2_m1, tf2_m2, tf2_m3, tf2_m4)
+tf2_his  = array.from(tf2_h0, tf2_h1, tf2_h2, tf2_h3, tf2_h4)
+tf2_los  = array.from(tf2_l0, tf2_l1, tf2_l2, tf2_l3, tf2_l4)
+tf2_strs = array.from(tf2_s0, tf2_s1, tf2_s2, tf2_s3, tf2_s4)
+tf3_mids = array.from(tf3_m0, tf3_m1, tf3_m2, tf3_m3, tf3_m4)
+tf3_his  = array.from(tf3_h0, tf3_h1, tf3_h2, tf3_h3, tf3_h4)
+tf3_los  = array.from(tf3_l0, tf3_l1, tf3_l2, tf3_l3, tf3_l4)
+tf3_strs = array.from(tf3_s0, tf3_s1, tf3_s2, tf3_s3, tf3_s4)
+tf4_mids = array.from(tf4_m0, tf4_m1, tf4_m2, tf4_m3, tf4_m4)
+tf4_his  = array.from(tf4_h0, tf4_h1, tf4_h2, tf4_h3, tf4_h4)
+tf4_los  = array.from(tf4_l0, tf4_l1, tf4_l2, tf4_l3, tf4_l4)
+tf4_strs = array.from(tf4_s0, tf4_s1, tf4_s2, tf4_s3, tf4_s4)
+
+var tf1_lines  = array.new_line(5, na)
+var tf1_labels = array.new_label(5, na)
+var tf2_lines  = array.new_line(5, na)
+var tf2_labels = array.new_label(5, na)
+var tf3_lines  = array.new_line(5, na)
+var tf3_labels = array.new_label(5, na)
+var tf4_lines  = array.new_line(5, na)
+var tf4_labels = array.new_label(5, na)
+
+float globalMaxStr = 2.0
+if useTF1
+    for i = 0 to 4
+        if not na(array.get(tf1_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf1_strs, i))
+if useTF2
+    for i = 0 to 4
+        if not na(array.get(tf2_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf2_strs, i))
+if useTF3
+    for i = 0 to 4
+        if not na(array.get(tf3_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf3_strs, i))
+if useTF4
+    for i = 0 to 4
+        if not na(array.get(tf4_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf4_strs, i))
+
+// ── Draw S/R helper ──
+drawSRTF(bool use, array<float> mids, array<float> his, array<float> los, array<float> strs, array<line> lines, array<label> labels, color resCol, color supCol, string style, int width, string tfStr) =>
+    if use and barstate.islast
+        for i = 0 to 4
+            line.delete(array.get(lines, i))
+            label.delete(array.get(labels, i))
+            float mid = array.get(mids, i)
+            float str = array.get(strs, i)
+            if not na(mid)
+                bool isRes = mid >= close
+                color baseCol = isRes ? resCol : supCol
+                float strRatio = dynColor ? math.min(str / globalMaxStr, 1.0) : 0.5
+                color lineCol = color.new(baseCol, math.round(60 - strRatio * 40))
+                float rate = 100 * (mid - close) / close
+                string strTxt = showStrength ? ' ×' + str.tostring(math.round(str)) : ''
+                array.set(lines, i, line.new(math.max(bar_index - 5000, 0), mid, bar_index + labelloc, mid, color=lineCol, style=getLineStyle(style), width=width))
+                if showLabels
+                    string txt = tfLabel(tfStr) + ' ' + str.tostring(mid) + ' ' + str.tostring(rate, '#.##') + '%' + strTxt
+                    array.set(labels, i, label.new(bar_index + labelloc, mid, txt, color=lineCol, textcolor=color.white, style=isRes ? label.style_label_down : label.style_label_up, size=size.small))
+
+drawSRTF(useTF1, tf1_mids, tf1_his, tf1_los, tf1_strs, tf1_lines, tf1_labels, tf1ResColor, tf1SupColor, tf1Style, tf1Width, tf1)
+drawSRTF(useTF2, tf2_mids, tf2_his, tf2_los, tf2_strs, tf2_lines, tf2_labels, tf2ResColor, tf2SupColor, tf2Style, tf2Width, tf2)
+drawSRTF(useTF3, tf3_mids, tf3_his, tf3_los, tf3_strs, tf3_lines, tf3_labels, tf3ResColor, tf3SupColor, tf3Style, tf3Width, tf3)
+drawSRTF(useTF4, tf4_mids, tf4_his, tf4_los, tf4_strs, tf4_lines, tf4_labels, tf4ResColor, tf4SupColor, tf4Style, tf4Width, tf4)
+
+// ── S/R Signal Detection ──
+var allMids = array.new_float(0)
+var allHis  = array.new_float(0)
+var allLos  = array.new_float(0)
+array.clear(allMids)
+array.clear(allHis)
+array.clear(allLos)
+if useTF1
+    for i = 0 to 4
+        if not na(array.get(tf1_mids, i))
+            array.push(allMids, array.get(tf1_mids, i))
+            array.push(allHis, array.get(tf1_his, i))
+            array.push(allLos, array.get(tf1_los, i))
+if useTF2
+    for i = 0 to 4
+        if not na(array.get(tf2_mids, i))
+            array.push(allMids, array.get(tf2_mids, i))
+            array.push(allHis, array.get(tf2_his, i))
+            array.push(allLos, array.get(tf2_los, i))
+if useTF3
+    for i = 0 to 4
+        if not na(array.get(tf3_mids, i))
+            array.push(allMids, array.get(tf3_mids, i))
+            array.push(allHis, array.get(tf3_his, i))
+            array.push(allLos, array.get(tf3_los, i))
+if useTF4
+    for i = 0 to 4
+        if not na(array.get(tf4_mids, i))
+            array.push(allMids, array.get(tf4_mids, i))
+            array.push(allHis, array.get(tf4_his, i))
+            array.push(allLos, array.get(tf4_los, i))
+
+crossed_over  = false
+crossed_under = false
+near_level    = false
+for x = 0 to array.size(allMids) > 0 ? array.size(allMids) - 1 : na
+    float mid = array.get(allMids, x)
+    if close[1] <= mid and close > mid
+        crossed_over := true
+    if close[1] >= mid and close < mid
+        crossed_under := true
+    if alertProximity
+        float dist = math.abs(close - mid) / mid * 100
+        if dist <= proximityPct and dist > 0
+            near_level := true
+
+alertcondition(crossed_over, title='Resistance Broken', message='🔴 Resistance Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(crossed_under, title='Support Broken', message='🟢 Support Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(crossed_over or crossed_under, title='S/R Level Broken', message='⚡️ S/R Level Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(near_level, title='Approaching S/R', message='⚠️ {{ticker}} approaching S/R at {{close}} ({{interval}})')
+
+
+// ══════════════════════════════════════════════════════════════
+// ██  PART 2: KEY LEVELS (IDWM — Refined)
+// ══════════════════════════════════════════════════════════════
+
+// ── Key Levels Display ──
+kl_display    = input.string(defval='Standard', title='Display Style', options=['Standard', 'Right Anchored'], group='Key Levels Display', inline='kldisp')
+kl_merge      = input.bool(defval=true, title='Merge Levels', group='Key Levels Display', inline='kldisp')
+kl_dist       = input.int(defval=30, title='Distance', minval=5, maxval=500, group='Key Levels Display', inline='kldist')
+kl_radist     = input.int(defval=250, title='Anchor Distance', minval=5, maxval=500, group='Key Levels Display', inline='kldist')
+kl_labelsize  = input.string(defval='Small', title='Text Size', options=['Small', 'Medium', 'Large'], group='Key Levels Display')
+kl_linesize   = input.string(defval='Small', title='Line Width', options=['Small', 'Medium', 'Large'], group='Key Levels Display', inline='klline')
+kl_linestyle  = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dashed', 'Dotted'], group='Key Levels Display', inline='klline')
+kl_shorthand  = input.bool(defval=false, title='ShortHand Labels', group='Key Levels Display')
+kl_showprice  = input.bool(defval=true, title='Show Price in Label', group='Key Levels Display', inline='klprice')
+kl_showdist   = input.bool(defval=true, title='Show Distance %', group='Key Levels Display', inline='klprice')
+kl_autofade   = input.bool(defval=true, title='Auto-Fade Distant Levels', group='Key Levels Display', tooltip='Levels far from price become more transparent.')
+kl_fadepct    = input.float(defval=5.0, title='Fade Beyond %', minval=1.0, maxval=20.0, step=0.5, group='Key Levels Display')
+kl_zones      = input.bool(defval=false, title='Show H/L Zones (fills)', group='Key Levels Display', tooltip='Semi-transparent fill between Prev High and Prev Low.')
+
+// ── 4H ──
+kl_4h_open    = input.bool(defval=false, title='Open', group='Key Levels: 4H', inline='kl4h')
+kl_4h_hl      = input.bool(defval=false, title='Prev H/L', group='Key Levels: 4H', inline='kl4h')
+kl_4h_mid     = input.bool(defval=false, title='Prev Mid', group='Key Levels: 4H', inline='kl4h')
+kl_4h_color   = input.color(defval=color.orange, title='', group='Key Levels: 4H', inline='kl4h')
+
+// ── Daily ──
+kl_d_open     = input.bool(defval=true, title='Open', group='Key Levels: Daily', inline='kld')
+kl_d_hl       = input.bool(defval=false, title='Prev H/L', group='Key Levels: Daily', inline='kld')
+kl_d_mid      = input.bool(defval=false, title='Prev Mid', group='Key Levels: Daily', inline='kld')
+kl_d_close    = input.bool(defval=false, title='Prev Close', group='Key Levels: Daily', inline='kld2')
+kl_d_color    = input.color(defval=#08bcd4, title='', group='Key Levels: Daily', inline='kld2')
+
+// ── Monday Range ──
+kl_mon_hl     = input.bool(defval=true, title='Range', group='Key Levels: Monday', inline='klmon')
+kl_mon_mid    = input.bool(defval=true, title='Mid', group='Key Levels: Monday', inline='klmon')
+kl_mon_color  = input.color(defval=color.white, title='', group='Key Levels: Monday', inline='klmon')
+
+// ── Weekly ──
+kl_w_open     = input.bool(defval=true, title='Open', group='Key Levels: Weekly', inline='klw')
+kl_w_hl       = input.bool(defval=true, title='Prev H/L', group='Key Levels: Weekly', inline='klw')
+kl_w_mid      = input.bool(defval=true, title='Prev Mid', group='Key Levels: Weekly', inline='klw')
+kl_w_close    = input.bool(defval=false, title='Prev Close', group='Key Levels: Weekly', inline='klw2')
+kl_w_color    = input.color(defval=#fffcbc, title='', group='Key Levels: Weekly', inline='klw2')
+
+// ── Monthly ──
+kl_m_open     = input.bool(defval=true, title='Open', group='Key Levels: Monthly', inline='klm')
+kl_m_hl       = input.bool(defval=true, title='Prev H/L', group='Key Levels: Monthly', inline='klm')
+kl_m_mid      = input.bool(defval=true, title='Prev Mid', group='Key Levels: Monthly', inline='klm')
+kl_m_close    = input.bool(defval=false, title='Prev Close', group='Key Levels: Monthly', inline='klm2')
+kl_m_color    = input.color(defval=#08d48c, title='', group='Key Levels: Monthly', inline='klm2')
+
+// ── Quarterly ──
+kl_q_open     = input.bool(defval=true, title='Open', group='Key Levels: Quarterly', inline='klq')
+kl_q_hl       = input.bool(defval=false, title='Prev H/L', group='Key Levels: Quarterly', inline='klq')
+kl_q_mid      = input.bool(defval=true, title='Prev Mid', group='Key Levels: Quarterly', inline='klq')
+kl_q_color    = input.color(defval=color.red, title='', group='Key Levels: Quarterly', inline='klq')
+
+// ── Yearly ──
+kl_y_open     = input.bool(defval=true, title='Open', group='Key Levels: Yearly', inline='kly')
+kl_y_hl       = input.bool(defval=false, title='Current H/L', group='Key Levels: Yearly', inline='kly')
+kl_y_mid      = input.bool(defval=true, title='Mid', group='Key Levels: Yearly', inline='kly')
+kl_y_color    = input.color(defval=color.red, title='', group='Key Levels: Yearly', inline='kly')
+
+// ── FX Sessions ──
+kl_london     = input.bool(defval=false, title='London', group='Key Levels: Sessions', inline='klsess')
+kl_ny         = input.bool(defval=false, title='New York', group='Key Levels: Sessions', inline='klsess')
+kl_asia       = input.bool(defval=false, title='Asia', group='Key Levels: Sessions', inline='klsess')
+kl_sess_color = input.color(defval=color.white, title='', group='Key Levels: Sessions', inline='klsess')
+kl_london_t   = input.session("0800-1600", "London Session", group='Key Levels: Sessions')
+kl_ny_t       = input.session("1400-2100", "New York Session", group='Key Levels: Sessions')
+kl_asia_t     = input.session("0000-0900", "Asia Session", group='Key Levels: Sessions')
+
+// ── Key Levels: request.security data ──
+[kl_daily_time, kl_daily_open]       = request.security(syminfo.tickerid, 'D', [time, open], lookahead=barmerge.lookahead_on)
+[kl_dailyh_time, kl_dailyh_val]     = request.security(syminfo.tickerid, 'D', [time[1], high[1]], lookahead=barmerge.lookahead_on)
+[kl_dailyl_time, kl_dailyl_val]     = request.security(syminfo.tickerid, 'D', [time[1], low[1]], lookahead=barmerge.lookahead_on)
+kl_daily_close_val = request.security(syminfo.tickerid, 'D', close[1], lookahead=barmerge.lookahead_on)
+kl_cdailyh = request.security(syminfo.tickerid, 'D', high, lookahead=barmerge.lookahead_on)
+kl_cdailyl = request.security(syminfo.tickerid, 'D', low, lookahead=barmerge.lookahead_on)
+
+[kl_weekly_time, kl_weekly_open]     = request.security(syminfo.tickerid, 'W', [time, open], lookahead=barmerge.lookahead_on)
+[kl_weeklyh_time, kl_weeklyh_val]   = request.security(syminfo.tickerid, 'W', [time[1], high[1]], lookahead=barmerge.lookahead_on)
+[kl_weeklyl_time, kl_weeklyl_val]   = request.security(syminfo.tickerid, 'W', [time[1], low[1]], lookahead=barmerge.lookahead_on)
+kl_weekly_close_val = request.security(syminfo.tickerid, 'W', close[1], lookahead=barmerge.lookahead_on)
+
+[kl_monthly_time, kl_monthly_open]   = request.security(syminfo.tickerid, 'M', [time, open], lookahead=barmerge.lookahead_on)
+[kl_monthlyh_time, kl_monthlyh_val] = request.security(syminfo.tickerid, 'M', [time[1], high[1]], lookahead=barmerge.lookahead_on)
+[kl_monthlyl_time, kl_monthlyl_val] = request.security(syminfo.tickerid, 'M', [time[1], low[1]], lookahead=barmerge.lookahead_on)
+kl_monthly_close_val = request.security(syminfo.tickerid, 'M', close[1], lookahead=barmerge.lookahead_on)
+
+[kl_qtr_time, kl_qtr_open]          = request.security(syminfo.tickerid, '3M', [time, open], lookahead=barmerge.lookahead_on)
+[kl_qtrh_time, kl_qtrh_val]         = request.security(syminfo.tickerid, '3M', [time[1], high[1]], lookahead=barmerge.lookahead_on)
+[kl_qtrl_time, kl_qtrl_val]         = request.security(syminfo.tickerid, '3M', [time[1], low[1]], lookahead=barmerge.lookahead_on)
+
+[kl_yearly_time, kl_yearly_open]     = request.security(syminfo.tickerid, '12M', [time, open], lookahead=barmerge.lookahead_on)
+[kl_yearlyh_time, kl_yearlyh_val]   = request.security(syminfo.tickerid, '12M', [time, high], lookahead=barmerge.lookahead_on)
+[kl_yearlyl_time, kl_yearlyl_val]   = request.security(syminfo.tickerid, '12M', [time, low], lookahead=barmerge.lookahead_on)
+
+[kl_intra_time, kl_intra_open]       = request.security(syminfo.tickerid, '240', [time, open], lookahead=barmerge.lookahead_on)
+[kl_intrah_time, kl_intrah_val]     = request.security(syminfo.tickerid, '240', [time[1], high[1]], lookahead=barmerge.lookahead_on)
+[kl_intral_time, kl_intral_val]     = request.security(syminfo.tickerid, '240', [time[1], low[1]], lookahead=barmerge.lookahead_on)
+
+// ── Monday tracking ──
+var kl_monday_time = time
+var kl_monday_high = high
+var kl_monday_low  = low
+var kl_untested_monday = false
+
+if kl_weekly_time != kl_weekly_time[1]
+    kl_untested_monday := false
+
+if kl_mon_hl and not kl_untested_monday
+    kl_untested_monday := true
+    kl_monday_time := kl_daily_time
+    kl_monday_high := kl_cdailyh
+    kl_monday_low  := kl_cdailyl
+
+// ── FX Session tracking ──
+kl_London = not na(time(timeframe.period, kl_london_t))
+kl_US     = not na(time(timeframe.period, kl_ny_t))
+kl_Asia   = not na(time(timeframe.period, kl_asia_t))
+
+var kl_clondonh = 0.0
+var kl_clondonl = close
+var kl_londontime = time
+var kl_flondonh = 0.0
+var kl_flondonl = 0.0
+var kl_flondono = 0.0
+var kl_onelondonfalse = false
+
+if kl_London
+    if high > kl_clondonh
+        kl_clondonh := high
+    if low < kl_clondonl
+        kl_clondonl := low
+    if kl_onelondonfalse
+        kl_londontime := time
+        kl_flondono := open
+    kl_flondonh := kl_clondonh
+    kl_flondonl := kl_clondonl
+    kl_onelondonfalse := false
+else
+    if not kl_onelondonfalse
+        kl_flondonh := kl_clondonh
+        kl_flondonl := kl_clondonl
+    kl_onelondonfalse := true
+    kl_clondonh := 0.0
+    kl_clondonl := close
+
+var kl_cushigh = 0.0
+var kl_cuslow  = close
+var kl_ustime  = time
+var kl_fushigh = 0.0
+var kl_fuslow  = 0.0
+var kl_fusopen = 0.0
+var kl_oneusfalse = false
+
+if kl_US
+    if high > kl_cushigh
+        kl_cushigh := high
+    if low < kl_cuslow
+        kl_cuslow := low
+    if kl_oneusfalse
+        kl_ustime := time
+        kl_fusopen := open
+    kl_fushigh := kl_cushigh
+    kl_fuslow  := kl_cuslow
+    kl_oneusfalse := false
+else
+    if not kl_oneusfalse
+        kl_fushigh := kl_cushigh
+        kl_fuslow  := kl_cuslow
+    kl_oneusfalse := true
+    kl_cushigh := 0.0
+    kl_cuslow  := close
+
+var kl_casiahigh = 0.0
+var kl_casialow  = close
+var kl_asiatime  = time
+var kl_fasiahigh = 0.0
+var kl_fasialow  = 0.0
+var kl_fasiaopen = 0.0
+var kl_oneasiafalse = false
+
+if kl_Asia
+    if high > kl_casiahigh
+        kl_casiahigh := high
+    if low < kl_casialow
+        kl_casialow := low
+    if kl_oneasiafalse
+        kl_asiatime := time
+        kl_fasiaopen := open
+    kl_fasiahigh := kl_casiahigh
+    kl_fasialow  := kl_casialow
+    kl_oneasiafalse := false
+else
+    if not kl_oneasiafalse
+        kl_fasiahigh := kl_casiahigh
+        kl_fasialow  := kl_casialow
+    kl_oneasiafalse := true
+    kl_casiahigh := 0.0
+    kl_casialow  := close
+
+// ── Key Level sizing ──
+kl_lw = kl_linesize == 'Small' ? 1 : kl_linesize == 'Medium' ? 2 : 3
+kl_fs = kl_labelsize == 'Small' ? size.small : kl_labelsize == 'Medium' ? size.normal : size.large
+kl_ls = kl_linestyle == 'Dashed' ? line.style_dashed : kl_linestyle == 'Dotted' ? line.style_dotted : line.style_solid
+
+// ── Merge arrays ──
+var kl_prices = array.new_float(0)
+var kl_lbls   = array.new_label(0)
+
+kl_get_limit_right(bars) => timenow + (time - time[1]) * bars
+
+kl_mergetol = input.float(defval=0.15, title='Merge Tolerance %', minval=0.01, maxval=1.0, step=0.05, group='Key Levels Display', tooltip='Labels within this % of each other get merged into one.')
+
+var kl_mlines = array.new_line(0)
+
+f_KLMerge(prices, labels, price, lbl, ln, col) =>
+    bool merged = false
+    if array.size(prices) > 0
+        for i = 0 to array.size(prices) - 1
+            float existing_price = array.get(prices, i)
+            float dist = math.abs(price - existing_price) / existing_price * 100
+            if dist < kl_mergetol
+                existing = array.get(labels, i)
+                label.set_text(existing, label.get_text(lbl) + ' / ' + label.get_text(existing))
+                label.set_textcolor(existing, col)
+                label.delete(lbl)
+                line.delete(ln)
+                merged := true
+                break
+    if not merged
+        array.push(prices, price)
+        array.push(labels, lbl)
+
+// ── Build label text with price + distance ──
+f_KLText(string name, float price) =>
+    string result = name
+    if kl_showprice and not na(price)
+        result := result + ' ' + str.tostring(price)
+    if kl_showdist and not na(price) and price > 0
+        float pct = (price - close) / close * 100
+        result := result + ' (' + (pct >= 0 ? '+' : '') + str.tostring(pct, '#.##') + '%)'
+    result
+
+// ── Auto-fade: compute transparency based on distance from price ──
+f_KLFade(float price, color col) =>
+    if kl_autofade and not na(price) and price > 0
+        float dist = math.abs(close - price) / price * 100
+        int transp = dist > kl_fadepct ? math.min(math.round(40 + (dist - kl_fadepct) * 8), 85) : 0
+        color.new(col, transp)
+    else
+        col
+
+// ── Draw key level (enhanced) ──
+// isMid: true = dashed line style for midpoints
+f_DrawKL(bool enabled, int srcTime, float price, string name, color col, bool isMid) =>
+    if enabled and barstate.islast and not na(price)
+        lr = kl_get_limit_right(kl_dist)
+        x1 = kl_display == 'Right Anchored' ? kl_get_limit_right(kl_radist) : srcTime
+        color fadedCol = f_KLFade(price, col)
+        string txt = f_KLText(name, price)
+        lwidth = isMid ? math.max(kl_lw - 1, 1) : kl_lw
+        l = line.new(x1=x1, x2=lr, y1=price, y2=price, color=fadedCol, width=lwidth, xloc=xloc.bar_time, style=isMid ? line.style_dashed : kl_ls)
+        lb = label.new(x=lr, y=price, text=txt, style=label.style_none, textcolor=fadedCol, size=kl_fs, xloc=xloc.bar_time)
+        if kl_merge
+            f_KLMerge(kl_prices, kl_lbls, price, lb, l, fadedCol)
+
+// ── Draw H/L zone fill ──
+f_DrawZone(bool enabled, int srcTime, float hiPrice, float loPrice, color col) =>
+    if enabled and kl_zones and barstate.islast and not na(hiPrice) and not na(loPrice)
+        lr = kl_get_limit_right(kl_dist)
+        x1 = kl_display == 'Right Anchored' ? kl_get_limit_right(kl_radist) : srcTime
+        color zoneCol = color.new(col, 90)
+        box.new(left=x1, top=hiPrice, right=lr, bottom=loPrice, bgcolor=zoneCol, border_color=color.new(col, 80), border_width=0, xloc=xloc.bar_time)
+
+if barstate.islast
+    kl_prices := array.new_float(0)
+    kl_lbls   := array.new_label(0)
+
+    // ── 4H ──
+    f_DrawKL(kl_4h_open, kl_intra_time, kl_intra_open, kl_shorthand ? '4H-O' : '4H Open', kl_4h_color, false)
+    f_DrawKL(kl_4h_hl, kl_intrah_time, kl_intrah_val, kl_shorthand ? 'P-4H-H' : 'Prev 4H High', kl_4h_color, false)
+    f_DrawKL(kl_4h_hl, kl_intral_time, kl_intral_val, kl_shorthand ? 'P-4H-L' : 'Prev 4H Low', kl_4h_color, false)
+    f_DrawKL(kl_4h_mid, kl_intrah_time, (kl_intrah_val + kl_intral_val) / 2, kl_shorthand ? 'P-4H-M' : 'Prev 4H Mid', kl_4h_color, true)
+    f_DrawZone(kl_4h_hl, kl_intrah_time, kl_intrah_val, kl_intral_val, kl_4h_color)
+
+    // ── Daily ──
+    f_DrawKL(kl_d_open, kl_daily_time, kl_daily_open, kl_shorthand ? 'DO' : 'Daily Open', kl_d_color, false)
+    f_DrawKL(kl_d_hl, kl_dailyh_time, kl_dailyh_val, kl_shorthand ? 'PDH' : 'Prev Day High', kl_d_color, false)
+    f_DrawKL(kl_d_hl, kl_dailyl_time, kl_dailyl_val, kl_shorthand ? 'PDL' : 'Prev Day Low', kl_d_color, false)
+    f_DrawKL(kl_d_mid, kl_dailyh_time, (kl_dailyh_val + kl_dailyl_val) / 2, kl_shorthand ? 'PDM' : 'Prev Day Mid', kl_d_color, true)
+    f_DrawKL(kl_d_close, kl_dailyh_time, kl_daily_close_val, kl_shorthand ? 'PDC' : 'Prev Day Close', kl_d_color, false)
+    f_DrawZone(kl_d_hl, kl_dailyh_time, kl_dailyh_val, kl_dailyl_val, kl_d_color)
+
+    // ── Monday ──
+    f_DrawKL(kl_mon_hl, kl_monday_time, kl_monday_high, kl_shorthand ? 'MDAY-H' : 'Monday High', kl_mon_color, false)
+    f_DrawKL(kl_mon_hl, kl_monday_time, kl_monday_low, kl_shorthand ? 'MDAY-L' : 'Monday Low', kl_mon_color, false)
+    f_DrawKL(kl_mon_mid, kl_monday_time, (kl_monday_high + kl_monday_low) / 2, kl_shorthand ? 'MDAY-M' : 'Monday Mid', kl_mon_color, true)
+    f_DrawZone(kl_mon_hl, kl_monday_time, kl_monday_high, kl_monday_low, kl_mon_color)
+
+    // ── Weekly ──
+    f_DrawKL(kl_w_open, kl_weekly_time, kl_weekly_open, kl_shorthand ? 'WO' : 'Weekly Open', kl_w_color, false)
+    f_DrawKL(kl_w_hl, kl_weeklyh_time, kl_weeklyh_val, kl_shorthand ? 'PWH' : 'Prev Week High', kl_w_color, false)
+    f_DrawKL(kl_w_hl, kl_weeklyl_time, kl_weeklyl_val, kl_shorthand ? 'PWL' : 'Prev Week Low', kl_w_color, false)
+    f_DrawKL(kl_w_mid, kl_weeklyh_time, (kl_weeklyh_val + kl_weeklyl_val) / 2, kl_shorthand ? 'PWM' : 'Prev Week Mid', kl_w_color, true)
+    f_DrawKL(kl_w_close, kl_weeklyh_time, kl_weekly_close_val, kl_shorthand ? 'PWC' : 'Prev Week Close', kl_w_color, false)
+    f_DrawZone(kl_w_hl, kl_weeklyh_time, kl_weeklyh_val, kl_weeklyl_val, kl_w_color)
+
+    // ── Monthly ──
+    f_DrawKL(kl_m_open, kl_monthly_time, kl_monthly_open, kl_shorthand ? 'MO' : 'Monthly Open', kl_m_color, false)
+    f_DrawKL(kl_m_hl, kl_monthlyh_time, kl_monthlyh_val, kl_shorthand ? 'PMH' : 'Prev Month High', kl_m_color, false)
+    f_DrawKL(kl_m_hl, kl_monthlyl_time, kl_monthlyl_val, kl_shorthand ? 'PML' : 'Prev Month Low', kl_m_color, false)
+    f_DrawKL(kl_m_mid, kl_monthlyh_time, (kl_monthlyh_val + kl_monthlyl_val) / 2, kl_shorthand ? 'PMM' : 'Prev Month Mid', kl_m_color, true)
+    f_DrawKL(kl_m_close, kl_monthlyh_time, kl_monthly_close_val, kl_shorthand ? 'PMC' : 'Prev Month Close', kl_m_color, false)
+    f_DrawZone(kl_m_hl, kl_monthlyh_time, kl_monthlyh_val, kl_monthlyl_val, kl_m_color)
+
+    // ── Quarterly ──
+    f_DrawKL(kl_q_open, kl_qtr_time, kl_qtr_open, kl_shorthand ? 'QO' : 'Quarterly Open', kl_q_color, false)
+    f_DrawKL(kl_q_hl, kl_qtrh_time, kl_qtrh_val, kl_shorthand ? 'PQH' : 'Prev Quarter High', kl_q_color, false)
+    f_DrawKL(kl_q_hl, kl_qtrl_time, kl_qtrl_val, kl_shorthand ? 'PQL' : 'Prev Quarter Low', kl_q_color, false)
+    f_DrawKL(kl_q_mid, kl_qtrh_time, (kl_qtrh_val + kl_qtrl_val) / 2, kl_shorthand ? 'PQM' : 'Prev Quarter Mid', kl_q_color, true)
+    f_DrawZone(kl_q_hl, kl_qtrh_time, kl_qtrh_val, kl_qtrl_val, kl_q_color)
+
+    // ── Yearly ──
+    f_DrawKL(kl_y_open, kl_yearly_time, kl_yearly_open, kl_shorthand ? 'YO' : 'Yearly Open', kl_y_color, false)
+    f_DrawKL(kl_y_hl, kl_yearlyh_time, kl_yearlyh_val, kl_shorthand ? 'CYH' : 'Current Year High', kl_y_color, false)
+    f_DrawKL(kl_y_hl, kl_yearlyl_time, kl_yearlyl_val, kl_shorthand ? 'CYL' : 'Current Year Low', kl_y_color, false)
+    f_DrawKL(kl_y_mid, kl_yearlyh_time, (kl_yearlyh_val + kl_yearlyl_val) / 2, kl_shorthand ? 'CYM' : 'Current Year Mid', kl_y_color, true)
+    f_DrawZone(kl_y_hl, kl_yearlyh_time, kl_yearlyh_val, kl_yearlyl_val, kl_y_color)
+
+    // ── FX Sessions ──
+    f_DrawKL(kl_london, kl_londontime, kl_flondonh, kl_shorthand ? 'Lon-H' : 'London High', kl_sess_color, false)
+    f_DrawKL(kl_london, kl_londontime, kl_flondonl, kl_shorthand ? 'Lon-L' : 'London Low', kl_sess_color, false)
+    f_DrawKL(kl_london, kl_londontime, kl_flondono, kl_shorthand ? 'Lon-O' : 'London Open', kl_sess_color, false)
+
+    f_DrawKL(kl_ny, kl_ustime, kl_fushigh, kl_shorthand ? 'NY-H' : 'New York High', kl_sess_color, false)
+    f_DrawKL(kl_ny, kl_ustime, kl_fuslow, kl_shorthand ? 'NY-L' : 'New York Low', kl_sess_color, false)
+    f_DrawKL(kl_ny, kl_ustime, kl_fusopen, kl_shorthand ? 'NY-O' : 'New York Open', kl_sess_color, false)
+
+    f_DrawKL(kl_asia, kl_asiatime, kl_fasiahigh, kl_shorthand ? 'AS-H' : 'Asia High', kl_sess_color, false)
+    f_DrawKL(kl_asia, kl_asiatime, kl_fasialow, kl_shorthand ? 'AS-L' : 'Asia Low', kl_sess_color, false)
+    f_DrawKL(kl_asia, kl_asiatime, kl_fasiaopen, kl_shorthand ? 'AS-O' : 'Asia Open', kl_sess_color, false)
