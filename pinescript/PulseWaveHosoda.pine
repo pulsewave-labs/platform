@@ -40,17 +40,15 @@ var float[] swingPrice = array.new_float(0)
 var int[]   swingBar   = array.new_int(0)
 var bool[]  swingIsHi  = array.new_bool(0)
 
-maxSwings = 20
+int MAX_SWINGS = 20
 
 if not na(pivHi)
-    // Check min swing size
-    lastLo = na(float(na))
+    float lastLo = float(na)
     for i = 0 to array.size(swingIsHi) - 1
         if not array.get(swingIsHi, i)
             lastLo := array.get(swingPrice, i)
             break
     if na(lastLo) or math.abs(pivHi - lastLo) / lastLo * 100 >= minSwing
-        // Avoid consecutive same-type swings — replace if last was also high
         if array.size(swingIsHi) > 0 and array.get(swingIsHi, 0)
             if pivHi > array.get(swingPrice, 0)
                 array.set(swingPrice, 0, pivHi)
@@ -59,13 +57,13 @@ if not na(pivHi)
             array.unshift(swingPrice, pivHi)
             array.unshift(swingBar, bar_index - pivotLen)
             array.unshift(swingIsHi, true)
-            if array.size(swingPrice) > maxSwings
+            if array.size(swingPrice) > MAX_SWINGS
                 array.pop(swingPrice)
                 array.pop(swingBar)
                 array.pop(swingIsHi)
 
 if not na(pivLo)
-    lastHi = na(float(na))
+    float lastHi = float(na)
     for i = 0 to array.size(swingIsHi) - 1
         if array.get(swingIsHi, i)
             lastHi := array.get(swingPrice, i)
@@ -79,7 +77,7 @@ if not na(pivLo)
             array.unshift(swingPrice, pivLo)
             array.unshift(swingBar, bar_index - pivotLen)
             array.unshift(swingIsHi, false)
-            if array.size(swingPrice) > maxSwings
+            if array.size(swingPrice) > MAX_SWINGS
                 array.pop(swingPrice)
                 array.pop(swingBar)
                 array.pop(swingIsHi)
@@ -142,52 +140,24 @@ if barstate.islast
                 wavesDrawn += 1
                 color tCol = isBullWave ? bullCol : bearCol
 
-                // Calculate targets
-                float nTarget = na  // N-wave: B + (H - R)  →  for bull: rPrice + (hPrice - rPrice) ... actually
-                float vTarget = na  // V-wave
-                float eTarget = na  // E-wave
-                float ntTarget = na // NT-wave
+                // Hosoda wave targets
+                float nTarget  = float(na)
+                float vTarget  = float(na)
+                float eTarget  = float(na)
+                float ntTarget = float(na)
 
                 if isBullWave
-                    // Standard Hosoda formulas for bullish
-                    nTarget  := bPrice + (hPrice - rPrice)    // I  — N wave
-                    vTarget  := bPrice + (bPrice - rPrice)    // Actually V = H + (H - R)... let me use proper formulas
-                    // Corrected Hosoda:
-                    // N = R + (H - B)     "the move from B to H, added to R"
-                    // V = R + (R - B)     "symmetrical from B through R" ... actually
-                    // Let me use the standard:
-                    // N target (I):  R + (H - B)
-                    // V target (II): H + (H - B)  ... no
-                    // Standard Ichimoku targets:
-                    // N = B + (H - R)
-                    // V = B + (B - R)  = 2B - R
-                    // E = H + (H - R)  = 2H - R
-                    // NT = H + (H - B) ... wait
-
-                    // CORRECT Hosoda wave theory:
-                    // Given B(base), H(high), R(return/pullback)
-                    // N-wave:  R + (H - B)           — most reliable
-                    // V-wave:  R + (R - B) = 2R - B  — symmetrical
-                    // E-wave:  R + (H - B) * 2 = 2H - 2B + R  ... no
-                    // Actually the classic formulas:
-                    // N = B + (H - R)  ... this projects from B
-                    // More commonly:
-                    // I  (N):  R + (H - B)
-                    // II (V):  H + (H - B) = 2H - B
-                    // III(E):  H + (H - R) = 2H - R (extended)
-                    // NT:      R + (B - R) ... no
-
-                    // Let me use the widely-accepted versions:
-                    nTarget  := rPrice + (hPrice - bPrice)     // I  — N wave (most common)
+                    // Bullish: B(low) → H(high) → R(pullback low)
+                    nTarget  := rPrice + (hPrice - bPrice)     // I  — N wave
                     vTarget  := hPrice + (hPrice - bPrice)     // II — V wave (2H - B)
-                    eTarget  := hPrice + (hPrice - rPrice)     // III — E wave (2H - R, extended)
+                    eTarget  := hPrice + (hPrice - rPrice)     // III — E wave (2H - R)
                     ntTarget := rPrice + (rPrice - bPrice)     // NT wave (2R - B)
                 else
-                    // Bearish (inverted)
+                    // Bearish: B(high) → H(low) → R(pullback high)
                     nTarget  := rPrice - (bPrice - hPrice)     // I
-                    vTarget  := hPrice - (bPrice - hPrice)     // II (2H - B)
-                    eTarget  := hPrice - (rPrice - hPrice)     // III (2H - R)
-                    ntTarget := rPrice - (rPrice - bPrice)     // NT (2R - B) = bPrice
+                    vTarget  := hPrice - (bPrice - hPrice)     // II
+                    eTarget  := hPrice - (rPrice - hPrice)     // III
+                    ntTarget := rPrice - (rPrice - bPrice)     // NT
 
                 // Draw B-H-R labels
                 if showSwings
