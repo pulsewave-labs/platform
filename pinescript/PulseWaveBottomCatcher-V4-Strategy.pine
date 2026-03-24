@@ -1,0 +1,297 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PulseWave Labs
+// Bottom Catcher V4 — V3 + breakeven stop + hard max loss cap
+// V3 diagnosis: 83% WR but 8 Trail/SL blowups (-1% to -4%) nuked P&L
+// V4 fixes: breakeven after N bars, hard 0.5% max loss cap, tighter initial SL
+
+//@version=6
+strategy('PW Bottom Catcher V4', 'PW Bottom V4', overlay=true, default_qty_type=strategy.percent_of_equity, default_qty_value=5, initial_capital=10000, commission_type=strategy.commission.percent, commission_value=0.06, slippage=2, pyramiding=0, calc_on_every_tick=false)
+
+// ──────────────────────────────────────────────────────────────
+// INPUTS
+// ──────────────────────────────────────────────────────────────
+g_detect = "Bottom Detection"
+rsiLen       = input.int(14, "RSI Length", minval=5, maxval=30, group=g_detect)
+rsiOversold  = input.int(35, "RSI Oversold Zone", minval=15, maxval=45, group=g_detect)
+divLookback  = input.int(14, "Divergence Lookback", minval=5, maxval=30, group=g_detect)
+volMult      = input.float(1.8, "Volume Spike Multiplier", minval=1.2, maxval=4.0, step=0.1, group=g_detect)
+volLen       = input.int(20, "Volume MA Length", minval=10, maxval=50, group=g_detect)
+wickRatio    = input.float(2.0, "Min Wick:Body Ratio", minval=1.0, maxval=5.0, step=0.5, group=g_detect)
+bbLen        = input.int(20, "BB Length", minval=10, maxval=50, group=g_detect)
+bbMult       = input.float(2.0, "BB Multiplier", minval=1.0, maxval=3.0, step=0.5, group=g_detect)
+stochLen     = input.int(14, "Stoch RSI Length", minval=5, maxval=21, group=g_detect)
+stochSmooth  = input.int(3, "Stoch RSI Smooth", minval=1, maxval=7, group=g_detect)
+stochOB      = input.int(20, "Stoch Oversold", minval=5, maxval=30, group=g_detect)
+macdFast     = input.int(12, "MACD Fast", minval=5, maxval=20, group=g_detect)
+macdSlow     = input.int(26, "MACD Slow", minval=15, maxval=40, group=g_detect)
+macdSig      = input.int(9, "MACD Signal", minval=3, maxval=15, group=g_detect)
+
+g_entry = "Entry & Risk"
+minSignals   = input.int(3, "Min Confluence Signals", minval=1, maxval=6, group=g_entry)
+maxLossPct   = input.float(0.5, "Max Loss % (hard cap)", minval=0.1, maxval=2.0, step=0.1, group=g_entry)
+cooldownBars = input.int(15, "Cooldown Bars After Trade", minval=1, maxval=50, group=g_entry)
+maxHoldBars  = input.int(150, "Max Hold Bars (time stop)", minval=30, maxval=500, group=g_entry)
+beBars       = input.int(10, "Bars to Breakeven", minval=3, maxval=30, group=g_entry)
+bePadPct     = input.float(0.05, "BE Pad % Above Entry", minval=0.0, maxval=0.2, step=0.01, group=g_entry)
+
+g_exit = "Smart Exit"
+rsiExitLevel = input.int(65, "RSI Exit Level", minval=55, maxval=85, group=g_exit)
+useRSIslope  = input.bool(true, "Exit on RSI Slope Reversal", group=g_exit)
+rsiSlopeLen  = input.int(3, "RSI Slope Lookback", minval=2, maxval=7, group=g_exit)
+trailActivate = input.float(0.3, "Trail Activate %", minval=0.1, maxval=1.5, step=0.1, group=g_exit)
+trailOffset  = input.float(0.15, "Trail Offset %", minval=0.05, maxval=0.5, step=0.05, group=g_exit)
+useEMAexit   = input.bool(true, "Exit on EMA Cross Down", group=g_exit)
+useMACDexit  = input.bool(true, "Exit on MACD Bear Cross", group=g_exit)
+minProfitForMomentumExit = input.float(0.15, "Min Profit % for Momentum Exit", minval=0.0, maxval=0.5, step=0.05, group=g_exit)
+
+g_confirm = "Confirmation"
+useConfirmCandle = input.bool(true, "Require Confirmation Candle", group=g_confirm)
+maxWaitBars  = input.int(3, "Max Bars to Wait for Confirm", minval=1, maxval=5, group=g_confirm)
+
+g_filter = "Filters"
+useADXfilter = input.bool(true, "Filter Strong Downtrends", group=g_filter)
+adxLen       = input.int(14, "ADX Length", minval=7, maxval=21, group=g_filter)
+adxMax       = input.int(40, "ADX Max (skip if above)", minval=25, maxval=60, group=g_filter)
+
+// ──────────────────────────────────────────────────────────────
+// INDICATORS
+// ──────────────────────────────────────────────────────────────
+rsiVal = ta.rsi(close, rsiLen)
+volSMA = ta.sma(volume, volLen)
+volSpike = volume >= volSMA * volMult
+
+bbBasis = ta.sma(close, bbLen)
+bbDev = bbMult * ta.stdev(close, bbLen)
+bbLower = bbBasis - bbDev
+bbUpper = bbBasis + bbDev
+
+[macdLine, signalLine, histLine] = ta.macd(close, macdFast, macdSlow, macdSig)
+
+stochRSI = ta.rsi(close, stochLen)
+stochK = ta.sma(ta.stoch(stochRSI, stochRSI, stochRSI, stochLen), stochSmooth)
+stochD = ta.sma(stochK, stochSmooth)
+
+[diPlus, diMinus, adxVal] = ta.dmi(adxLen, adxLen)
+
+ema9 = ta.ema(close, 9)
+ema21 = ta.ema(close, 21)
+
+// ──────────────────────────────────────────────────────────────
+// BOTTOM SIGNAL DETECTION
+// ──────────────────────────────────────────────────────────────
+priceLow = ta.lowest(low, divLookback)
+rsiAtLow = ta.lowest(rsiVal, divLookback)
+priceLL = low <= priceLow[1] and low == ta.lowest(low, 3)
+rsiHL = rsiVal > rsiAtLow[1]
+rsiInOversold = rsiVal < rsiOversold or rsiVal[1] < rsiOversold or rsiVal[2] < rsiOversold
+sig_divergence = priceLL and rsiHL and rsiInOversold
+
+bullishCandle = close > open
+bearishPrior = close[1] < open[1]
+sig_volumeClimax = volSpike and bullishCandle and (bearishPrior or close[1] < close[2])
+
+body = math.abs(close - open)
+lowerWick = math.min(close, open) - low
+upperWick = high - math.max(close, open)
+bodyNonZero = math.max(body, syminfo.mintick)
+sig_wickReject = lowerWick >= bodyNonZero * wickRatio and upperWick < body * 0.5 and body > 0
+
+sig_bbReclaim = low < bbLower and close > bbLower and close > open
+sig_stochCross = ta.crossover(stochK, stochD) and stochK[1] < stochOB
+sig_macdShift = histLine > histLine[1] and histLine[1] > histLine[2] and histLine < 0 and histLine[1] < histLine[2]
+
+int confluence = 0
+if sig_divergence
+    confluence += 1
+if sig_volumeClimax
+    confluence += 1
+if sig_wickReject
+    confluence += 1
+if sig_bbReclaim
+    confluence += 1
+if sig_stochCross
+    confluence += 1
+if sig_macdShift
+    confluence += 1
+
+// ──────────────────────────────────────────────────────────────
+// CONFIRMATION CANDLE
+// ──────────────────────────────────────────────────────────────
+var bool pendingSignal = false
+var int signalBar = 0
+var float signalLow = na
+
+bool rawSignal = confluence >= minSignals and strategy.position_size == 0
+
+if rawSignal and not pendingSignal
+    pendingSignal := true
+    signalBar := bar_index
+    signalLow := ta.lowest(low, 5)
+
+bool confirmed = false
+if pendingSignal and bar_index > signalBar
+    int barsWaiting = bar_index - signalBar
+    if useConfirmCandle
+        confirmed := close > open
+    else
+        confirmed := true
+    if barsWaiting > maxWaitBars
+        pendingSignal := false
+        signalLow := na
+
+// ──────────────────────────────────────────────────────────────
+// FILTERS
+// ──────────────────────────────────────────────────────────────
+bool adxOk = not useADXfilter or adxVal < adxMax or diPlus > diMinus
+
+var int lastTradeBar = 0
+bool cooldownOk = bar_index - lastTradeBar >= cooldownBars
+
+bool microTrendOk = close > ema9 or ema9 > ema9[1]
+
+// ──────────────────────────────────────────────────────────────
+// ENTRY
+// ──────────────────────────────────────────────────────────────
+bool longCondition = false
+
+if useConfirmCandle
+    longCondition := confirmed and pendingSignal and adxOk and cooldownOk and microTrendOk
+else
+    longCondition := rawSignal and adxOk and cooldownOk and microTrendOk
+
+var float entryPx = na
+var int entryBar = 0
+var bool beApplied = false
+
+if longCondition
+    entryPx := close
+    entryBar := bar_index
+    beApplied := false
+    
+    // Hard max loss SL — never risk more than maxLossPct from entry, period
+    float hardSL = close * (1 - maxLossPct / 100)
+    
+    strategy.entry("Bottom", strategy.long)
+    strategy.exit("SL", "Bottom", stop=hardSL)
+    
+    lastTradeBar := bar_index
+    pendingSignal := false
+    signalLow := na
+
+// ──────────────────────────────────────────────────────────────
+// DYNAMIC STOP MANAGEMENT
+// ──────────────────────────────────────────────────────────────
+if strategy.position_size > 0
+    int barsInTrade = bar_index - entryBar
+    float unrealizedPct = (close - entryPx) / entryPx * 100
+    
+    // Phase 1: After beBars, move SL to breakeven + pad
+    if barsInTrade >= beBars and not beApplied
+        float beStop = entryPx * (1 + bePadPct / 100)
+        // Only move to BE if price is at least at entry (don't lock in a loss)
+        if close >= entryPx
+            strategy.exit("BE", "Bottom", stop=beStop, trail_price=entryPx * (1 + trailActivate / 100), trail_offset=math.round(entryPx * trailOffset / 100 / syminfo.mintick))
+            beApplied := true
+    
+    // Phase 2: If in good profit, tighten trail
+    if unrealizedPct >= trailActivate and beApplied
+        float tightTrail = entryPx * (1 + trailActivate / 100)
+        strategy.exit("Trail", "Bottom", trail_price=tightTrail, trail_offset=math.round(entryPx * trailOffset / 100 / syminfo.mintick))
+
+// ──────────────────────────────────────────────────────────────
+// SMART EXITS (momentum-based — the proven winners)
+// ──────────────────────────────────────────────────────────────
+if strategy.position_size > 0
+    float unrealizedPct = (close - entryPx) / entryPx * 100
+    bool inProfit = unrealizedPct >= minProfitForMomentumExit
+
+    // 1. RSI level exit
+    bool rsiExit = rsiVal >= rsiExitLevel and inProfit
+
+    // 2. RSI slope reversal
+    float rsiSlope = rsiVal - rsiVal[rsiSlopeLen]
+    float rsiSlopePrev = rsiVal[1] - rsiVal[rsiSlopeLen + 1]
+    bool rsiFading = useRSIslope and rsiSlopePrev > 0 and rsiSlope < 0 and rsiVal > 50 and inProfit
+
+    // 3. EMA cross down
+    bool emaBearCross = useEMAexit and ta.crossunder(ema9, ema21) and inProfit
+
+    // 4. MACD bear cross
+    bool macdBearCross = useMACDexit and ta.crossunder(macdLine, signalLine) and macdLine > 0 and inProfit
+
+    // V4: Quick loss exit — if losing after beBars and no momentum recovery, just cut it
+    int barsInTrade2 = bar_index - entryBar
+    bool quickLossExit = barsInTrade2 >= beBars and unrealizedPct < -0.1 and rsiVal < 45
+
+    if rsiExit
+        strategy.close("Bottom", comment="RSI Exit")
+        lastTradeBar := bar_index
+    else if rsiFading
+        strategy.close("Bottom", comment="RSI Fade")
+        lastTradeBar := bar_index
+    else if emaBearCross
+        strategy.close("Bottom", comment="EMA Exit")
+        lastTradeBar := bar_index
+    else if macdBearCross
+        strategy.close("Bottom", comment="MACD Exit")
+        lastTradeBar := bar_index
+    else if quickLossExit
+        strategy.close("Bottom", comment="Quick Cut")
+        lastTradeBar := bar_index
+
+// Time stop
+if strategy.position_size > 0 and bar_index - entryBar >= maxHoldBars
+    strategy.close("Bottom", comment="Time Stop")
+    lastTradeBar := bar_index
+
+// ──────────────────────────────────────────────────────────────
+// VISUALS
+// ──────────────────────────────────────────────────────────────
+plotshape(rawSignal, "SIGNAL", shape.diamond, location.belowbar, color.new(#ffa500, 30), size=size.tiny)
+plotshape(longCondition, "ENTRY", shape.labelup, location.belowbar, color.new(#00e5a0, 0), text="▲", textcolor=color.white, size=size.small)
+plotshape(pendingSignal and not confirmed and bar_index > signalBar, "PENDING", shape.circle, location.belowbar, color.new(#ffff00, 50), size=size.tiny)
+
+plot(bbUpper, "BB Upper", color.new(color.gray, 70), 1)
+plot(bbLower, "BB Lower", color.new(color.gray, 70), 1)
+plot(bbBasis, "BB Mid", color.new(color.gray, 85), 1)
+plot(ema9, "EMA 9", color.new(#00e5a0, 70), 1)
+plot(ema21, "EMA 21", color.new(#ff4976, 70), 1)
+
+// Dashboard
+var table meter = table.new(position.top_right, 3, 11, bgcolor=color.new(#0a0a0c, 10), border_width=1, border_color=color.new(color.white, 90))
+if barstate.islast
+    table.cell(meter, 0, 0, "BOTTOM CATCHER V4", text_color=#00e5a0, text_size=size.small, text_halign=text.align_left)
+    table.cell(meter, 2, 0, str.tostring(confluence) + "/6", text_color=confluence >= minSignals ? #00e5a0 : color.gray, text_size=size.small)
+
+    table.cell(meter, 0, 1, "RSI Div", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 1, sig_divergence ? "✓" : "—", text_color=sig_divergence ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 2, "Vol Climax", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 2, sig_volumeClimax ? "✓" : "—", text_color=sig_volumeClimax ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 3, "Wick Reject", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 3, sig_wickReject ? "✓" : "—", text_color=sig_wickReject ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 4, "BB Reclaim", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 4, sig_bbReclaim ? "✓" : "—", text_color=sig_bbReclaim ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 5, "Stoch Cross", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 5, sig_stochCross ? "✓" : "—", text_color=sig_stochCross ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 6, "MACD Shift", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 6, sig_macdShift ? "✓" : "—", text_color=sig_macdShift ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 7, "RSI", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 7, str.tostring(math.round(rsiVal, 1)), text_color=rsiVal > rsiExitLevel ? #ffa500 : rsiVal < rsiOversold ? #00e5a0 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 8, "Pending", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 8, pendingSignal ? "YES" : "—", text_color=pendingSignal ? #ffa500 : color.new(color.white, 70), text_size=size.tiny)
+
+    table.cell(meter, 0, 9, "ADX", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 9, str.tostring(math.round(adxVal)), text_color=adxOk ? #00e5a0 : #ff4976, text_size=size.tiny)
+
+    // V4: show position state
+    string posState = strategy.position_size > 0 ? (beApplied ? "BE SET" : "OPEN") : "FLAT"
+    color posColor = strategy.position_size > 0 ? (beApplied ? #00e5a0 : #ffa500) : color.new(color.white, 70)
+    table.cell(meter, 0, 10, "Position", text_color=color.new(color.white, 50), text_size=size.tiny, text_halign=text.align_left)
+    table.cell(meter, 2, 10, posState, text_color=posColor, text_size=size.tiny)
