@@ -220,17 +220,99 @@ function scoreMacro(data) {
   }
 }
 
+function scoreCVD(data) {
+  if (data?.error) return { score: 0, confidence: 0, reason: 'no data' }
+
+  let score = 0
+  const reasons = []
+
+  // CVD trend
+  const trendScores = {
+    accelerating_buy: 60, buying: 30, neutral: 0, selling: -30, accelerating_sell: -60
+  }
+  score += trendScores[data.trend] || 0
+  reasons.push(`CVD trend: ${data.trend}`)
+
+  // Divergence is a powerful signal
+  if (data.divergence) {
+    if (data.divergenceType === 'bullish_divergence') {
+      score += 30
+      reasons.push('BULLISH DIVERGENCE (CVD up, price down)')
+    } else {
+      score -= 30
+      reasons.push('BEARISH DIVERGENCE (CVD down, price up)')
+    }
+  }
+
+  return {
+    score: clamp(score),
+    confidence: 75,
+    reason: reasons.join(' | ') + ` | CVD: ${data.cvd > 0 ? '+' : ''}${data.cvd.toFixed(1)}`
+  }
+}
+
+function scoreVolumeProfile(data) {
+  if (data?.error) return { score: 0, confidence: 0, reason: 'no data' }
+
+  let score = 0
+  const reasons = []
+
+  // Price vs Value Area
+  if (data.priceVsVA === 'above_VA') {
+    score += 20 // breakout above value = bullish
+    reasons.push('Price above Value Area (breakout)')
+  } else if (data.priceVsVA === 'below_VA') {
+    score -= 20 // breakdown below value = bearish
+    reasons.push('Price below Value Area (breakdown)')
+  } else {
+    reasons.push('Price inside Value Area')
+  }
+
+  // POC delta — who dominated at the most-traded price
+  if (data.poc.delta > 0) {
+    score += 10
+    reasons.push(`POC $${data.poc.price} buyer dominated`)
+  } else {
+    score -= 10
+    reasons.push(`POC $${data.poc.price} seller dominated`)
+  }
+
+  return {
+    score: clamp(score),
+    confidence: 60,
+    reason: reasons.join(' | ') + ` | VA: $${data.valueAreaLow}-$${data.valueAreaHigh}`
+  }
+}
+
+function scoreLargeTrades(data) {
+  if (data?.error) return { score: 0, confidence: 0, reason: 'no data' }
+
+  const netDelta = data.largeNetDelta
+  // Large trades net delta — whales buying or selling
+  const score = clamp(netDelta * 15) // scale: ±5 BTC net = significant
+
+  const side = netDelta > 0 ? 'net buying' : 'net selling'
+  return {
+    score,
+    confidence: 70,
+    reason: `Large trades: ${data.largeTrades} (${data.whaleTrades} whale) | ${side} ${Math.abs(netDelta).toFixed(1)} BTC | ${data.largeToTotal}% of volume`
+  }
+}
+
 // Weights for final composite
 const WEIGHTS = {
-  orderbook: 0.10,
-  funding: 0.15,
-  openInterest: 0.08,
-  longShort: 0.10,
-  taker: 0.12,
-  options: 0.10,
-  fearGreed: 0.08,
-  technicals: 0.17,
-  macro: 0.10,
+  orderbook: 0.08,
+  funding: 0.12,
+  openInterest: 0.07,
+  longShort: 0.08,
+  taker: 0.08,
+  options: 0.08,
+  fearGreed: 0.06,
+  technicals: 0.13,
+  macro: 0.07,
+  cvd: 0.10,
+  volumeProfile: 0.06,
+  largeTrades: 0.07,
 }
 
 export function scoreAll(snapshot) {
@@ -246,6 +328,9 @@ export function scoreAll(snapshot) {
     fearGreed: scoreFearGreed(d.fearGreed),
     technicals: scoreTechnicals(d.technicals),
     macro: scoreMacro(d.macro),
+    cvd: scoreCVD(d.cvd),
+    volumeProfile: scoreVolumeProfile(d.volumeProfile),
+    largeTrades: scoreLargeTrades(d.largeTrades),
   }
 
   // Weighted composite

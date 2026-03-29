@@ -2,6 +2,7 @@ import * as binance from './fetchers/binance.js'
 import * as bybit from './fetchers/bybit.js'
 import * as deribit from './fetchers/deribit.js'
 import * as macro from './fetchers/macro.js'
+import * as flow from './fetchers/flow.js'
 import { calculateTechnicals } from './fetchers/technicals.js'
 
 async function safeFetch(name, fn) {
@@ -20,39 +21,34 @@ export async function fetchAll() {
   const ts = Date.now()
 
   // Fetch everything in parallel
-  const [
-    binanceOrderbook,
-    binanceFunding,
-    binanceOI,
-    binanceLSRatio,
-    binanceTaker,
-    bybitOrderbook,
-    bybitFunding,
-    bybitLSRatio,
-    options,
-    volatility,
-    fearGreed,
-    macroData,
-    klines1h,
-    klines4h,
-    klines1d,
-  ] = await Promise.all([
-    safeFetch('binance_orderbook', binance.getOrderbook),
-    safeFetch('binance_funding', binance.getFunding),
-    safeFetch('binance_oi', binance.getOpenInterest),
-    safeFetch('binance_lsratio', binance.getLongShortRatio),
-    safeFetch('binance_taker', binance.getTakerVolume),
-    safeFetch('bybit_orderbook', bybit.getOrderbook),
-    safeFetch('bybit_funding', bybit.getFunding),
-    safeFetch('bybit_lsratio', bybit.getLongShortRatio),
-    safeFetch('deribit_options', deribit.getOptionsData),
-    safeFetch('deribit_volatility', deribit.getVolatility),
-    safeFetch('fear_greed', macro.getFearGreed),
-    safeFetch('macro', macro.getMacro),
-    safeFetch('klines_1h', () => binance.getKlines('1h', 200)),
-    safeFetch('klines_4h', () => binance.getKlines('4h', 200)),
-    safeFetch('klines_1d', () => binance.getKlines('1d', 200)),
-  ])
+  const results = {}
+  const jobs = [
+    ['binanceOrderbook', binance.getOrderbook],
+    ['binanceFunding', binance.getFunding],
+    ['binanceOI', binance.getOpenInterest],
+    ['binanceLSRatio', binance.getLongShortRatio],
+    ['binanceTaker', binance.getTakerVolume],
+    ['bybitOrderbook', bybit.getOrderbook],
+    ['bybitFunding', bybit.getFunding],
+    ['bybitLSRatio', bybit.getLongShortRatio],
+    ['options', deribit.getOptionsData],
+    ['volatility', deribit.getVolatility],
+    ['fearGreed', macro.getFearGreed],
+    ['macro', macro.getMacro],
+    ['cvd', flow.getCVD],
+    ['volumeProfile', flow.getVolumeProfile],
+    ['largeTrades', flow.getLargeTrades],
+    ['liquidations', flow.getLiquidationEstimates],
+    ['klines1h', () => binance.getKlines('1h', 200)],
+    ['klines4h', () => binance.getKlines('4h', 200)],
+    ['klines1d', () => binance.getKlines('1d', 200)],
+  ]
+  const fetched = await Promise.all(jobs.map(([name, fn]) => safeFetch(name, fn)))
+  jobs.forEach(([name], i) => { results[name] = fetched[i] })
+  const { binanceOrderbook, binanceFunding, binanceOI, binanceLSRatio, binanceTaker,
+          bybitOrderbook, bybitFunding, bybitLSRatio, options, volatility,
+          fearGreed, macro: macroData, cvd, volumeProfile, largeTrades, liquidations,
+          klines1h, klines4h, klines1d } = results
 
   // Calculate technicals from klines
   let technicals = { source: 'technicals', error: 'kline data missing' }
@@ -77,6 +73,10 @@ export async function fetchAll() {
       fearGreed,
       macro: macroData,
       technicals,
+      cvd,
+      volumeProfile,
+      largeTrades,
+      liquidations,
     }
   }
 

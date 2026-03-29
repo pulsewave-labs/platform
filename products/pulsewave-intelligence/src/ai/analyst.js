@@ -52,6 +52,13 @@ ${Object.entries(scoreResult.signals).map(([k, v]) =>
 - 1D Trend: ${snapshot.data.technicals?.d1?.trend?.trend || '?'}
 - Key S/R (4H): S ${JSON.stringify(snapshot.data.technicals?.h4?.sr?.supports?.slice(0,2))} | R ${JSON.stringify(snapshot.data.technicals?.h4?.sr?.resistances?.slice(0,2))}
 
+**Order Flow:**
+- CVD: ${snapshot.data.cvd?.cvd || '?'} (trend: ${snapshot.data.cvd?.trend || '?'}) ${snapshot.data.cvd?.divergence ? '⚠️ DIVERGENCE: ' + snapshot.data.cvd?.divergenceType : ''}
+- Volume Profile POC: $${snapshot.data.volumeProfile?.poc?.price || '?'} (delta: ${snapshot.data.volumeProfile?.poc?.delta || '?'}) | Price ${snapshot.data.volumeProfile?.priceVsVA || '?'}
+- Value Area: $${snapshot.data.volumeProfile?.valueAreaLow || '?'} - $${snapshot.data.volumeProfile?.valueAreaHigh || '?'}
+- Large Trades: ${snapshot.data.largeTrades?.largeTrades || '?'} (${snapshot.data.largeTrades?.whaleTrades || '?'} whale) | Net: ${snapshot.data.largeTrades?.largeNetDelta || '?'} BTC
+- Liquidation magnets: Long liq (50x) $${snapshot.data.liquidations?.nearestLongLiq?.price || '?'} | Short liq (50x) $${snapshot.data.liquidations?.nearestShortLiq?.price || '?'}
+
 Generate your market read. Be specific and actionable.`
 
   const response = await client.messages.create({
