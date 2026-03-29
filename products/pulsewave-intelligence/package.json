@@ -1,0 +1,18 @@
+{
+  "name": "pulsewave-intelligence",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "fetch": "node src/fetch-all.js",
+    "score": "node src/score.js",
+    "analyze": "node src/analyze.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "node-fetch": "^3.3.2",
+    "https-proxy-agent": "^7.0.6",
+    "cron": "^3.5.0"
+  }
+}
