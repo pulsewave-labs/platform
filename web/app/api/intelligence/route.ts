@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import nodeFetch from 'node-fetch'
 
 const PROXY_URL = 'http://masonboroff:UQdolU8%3Dg808@ddc.oxylabs.io:8001'
 const proxyAgent = new HttpsProxyAgent(PROXY_URL)
@@ -18,12 +19,12 @@ async function proxyFetch(url: string) {
   const needsProxy = url.includes('binance.com') || url.includes('bybit.com')
 
   if (needsProxy) {
-    const res = await fetch(url, { agent: proxyAgent as any, signal: AbortSignal.timeout(12000) } as any)
+    const res = await nodeFetch(url, { agent: proxyAgent, timeout: 12000 })
     if (!res.ok) throw new Error(`proxy-${res.status}`)
     return res.json()
   }
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+  const res = await nodeFetch(url, { timeout: 10000 })
   if (!res.ok) throw new Error(`${res.status}`)
   return res.json()
 }
