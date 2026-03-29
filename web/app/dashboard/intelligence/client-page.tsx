@@ -86,6 +86,9 @@ export default function IntelligenceDashboard() {
         {d.data.cvd?.divergence && <Tag label={`⚠ ${d.data.cvd.divergenceType.replace('_',' ')}`} bull={d.data.cvd.divergenceType.includes('bullish')} />}
         {d.data.taker && <Tag label={`Taker B/S: ${d.data.taker.ratio.toFixed(2)}`} bull={d.data.taker.ratio > 1.1} />}
         {d.data.largeTrades && <Tag label={`Whales: ${d.data.largeTrades.netDelta > 0 ? '+' : ''}${d.data.largeTrades.netDelta.toFixed(1)} BTC`} bull={d.data.largeTrades.netDelta > 0} />}
+        {d.data.cme && <Tag label={`CME Basis: ${d.data.cme.basis > 0 ? '+' : ''}${d.data.cme.basis}%`} bull={d.data.cme.basis > 0} />}
+        {d.data.stablecoins && Math.abs(d.data.stablecoins.totalChange) > 0.05 && <Tag label={`Stables: ${d.data.stablecoins.signal}`} bull={d.data.stablecoins.totalChange > 0} />}
+        {d.data.optionsFlow && d.data.optionsFlow.totalLarge > 0 && <Tag label={`Opts Flow: ${d.data.optionsFlow.netFlow > 0 ? '+' : ''}${d.data.optionsFlow.netFlow}`} bull={d.data.optionsFlow.netFlow > 0} />}
       </div>
 
       {/* Bias gauge */}
@@ -313,6 +316,159 @@ export default function IntelligenceDashboard() {
               </div>
             </div>
           </>}
+        </Card>
+
+        {/* Options Flow */}
+        <Card title="OPTIONS FLOW — LARGE PRINTS">
+          {d.data.optionsFlow ? <>
+            <div className="flex gap-4 mb-3">
+              <div>
+                <div className="text-[8px] text-white/20">BULLISH</div>
+                <div className="text-base font-bold text-[#00e5a0]">{d.data.optionsFlow.bullish}</div>
+              </div>
+              <div>
+                <div className="text-[8px] text-white/20">BEARISH</div>
+                <div className="text-base font-bold text-[#ff4976]">{d.data.optionsFlow.bearish}</div>
+              </div>
+              <div>
+                <div className="text-[8px] text-white/20">NET</div>
+                <div className="text-base font-bold" style={{ color: c(d.data.optionsFlow.netFlow) }}>
+                  {d.data.optionsFlow.netFlow > 0 ? '+' : ''}{d.data.optionsFlow.netFlow}
+                </div>
+              </div>
+            </div>
+            {(d.data.optionsFlow.recent || []).slice(0, 6).map((t: any, i: number) => (
+              <div key={i} className="flex gap-1.5 py-0.5 text-[9px] border-b border-white/[0.02]">
+                <span className="w-[130px] truncate text-white/50">{t.instrument}</span>
+                <span className="font-semibold" style={{ color: t.direction === 'buy' ? '#00e5a0' : '#ff4976' }}>{t.direction?.toUpperCase()}</span>
+                <span className="text-white/30 ml-auto">{t.amount?.toFixed(1)}</span>
+              </div>
+            ))}
+          </> : <div className="text-[10px] text-white/20">No large prints detected</div>}
+        </Card>
+
+        {/* Funding Differential */}
+        <Card title="CROSS-EXCHANGE FUNDING">
+          {d.data.fundingDiff ? <>
+            <div className="flex gap-4 mb-2">
+              <div>
+                <div className="text-[8px] text-white/20">BINANCE</div>
+                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.binance) }}>
+                  {(d.data.fundingDiff.binance * 100).toFixed(4)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-[8px] text-white/20">BYBIT</div>
+                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.bybit) }}>
+                  {(d.data.fundingDiff.bybit * 100).toFixed(4)}%
+                </div>
+              </div>
+              <div>
+                <div className="text-[8px] text-white/20">DIFF</div>
+                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.diff) }}>
+                  {(d.data.fundingDiff.diff * 100).toFixed(4)}%
+                </div>
+              </div>
+            </div>
+            <div className="text-[10px] text-white/30">{d.data.fundingDiff.signal.replace('_', ' ')}</div>
+          </> : <div className="text-[10px] text-white/20">Loading...</div>}
+        </Card>
+
+        {/* CME Basis */}
+        <Card title="CME FUTURES BASIS">
+          {d.data.cme ? <>
+            <div className="flex gap-4 mb-2">
+              <div>
+                <div className="text-[8px] text-white/20">CME PRICE</div>
+                <div className="text-sm font-semibold">${fmt(d.data.cme.price)}</div>
+              </div>
+              <div>
+                <div className="text-[8px] text-white/20">BASIS</div>
+                <div className="text-sm font-semibold" style={{ color: c(d.data.cme.basis) }}>
+                  {d.data.cme.basis > 0 ? '+' : ''}{d.data.cme.basis}%
+                </div>
+              </div>
+              {d.data.cme.gap && <div>
+                <div className="text-[8px] text-white/20">GAP</div>
+                <div className="text-sm font-semibold" style={{ color: d.data.cme.gapFilled ? '#5c6370' : '#e5c07b' }}>
+                  ${d.data.cme.gap.toLocaleString()} {d.data.cme.gapFilled ? '(filled)' : '(open)'}
+                </div>
+              </div>}
+            </div>
+            <div className="text-[10px] text-white/30">{d.data.cme.basisLabel}</div>
+          </> : <div className="text-[10px] text-white/20">Market closed or unavailable</div>}
+        </Card>
+
+        {/* Correlations */}
+        <Card title="CORRELATIONS (7D HOURLY)">
+          {d.data.correlations ? <>
+            {[
+              ['BTC / ETH', d.data.correlations.ethBtc, 'normally 0.85+'],
+              ['BTC / DXY', d.data.correlations.dxyBtc, 'normally negative'],
+              ['BTC / SPX', d.data.correlations.spxBtc, 'risk-on correlation'],
+              ['BTC / Gold', d.data.correlations.goldBtc, 'safe haven comparison'],
+            ].map(([label, val, note]) => {
+              const v = val as number | null
+              const absV = Math.abs(v || 0)
+              const barCol = v === null ? '#333' : v > 0 ? '#00e5a0' : '#ff4976'
+              return (
+                <div key={label as string} className="flex items-center gap-2 py-1.5 border-b border-white/[0.02]">
+                  <span className="w-[80px] text-[10px] text-white/40">{label as string}</span>
+                  <div className="flex-1 h-2 bg-white/[0.03] rounded overflow-hidden relative">
+                    <div className="absolute h-full rounded" style={{
+                      background: barCol, width: `${absV * 50}%`,
+                      left: (v || 0) >= 0 ? '50%' : `${50 - absV * 50}%`,
+                    }} />
+                    <div className="absolute h-full w-px bg-white/10 left-1/2" />
+                  </div>
+                  <span className="w-[40px] text-right text-[10px] font-semibold" style={{ color: barCol }}>
+                    {v !== null ? (v > 0 ? '+' : '') + v.toFixed(2) : '—'}
+                  </span>
+                </div>
+              )
+            })}
+            <div className="text-[9px] text-white/15 mt-1">← inverse | neutral | correlated →</div>
+          </> : <div className="text-[10px] text-white/20">Computing...</div>}
+        </Card>
+
+        {/* Stablecoins */}
+        <Card title="STABLECOIN SUPPLY (24H)">
+          {d.data.stablecoins ? <>
+            <div className="flex gap-4 mb-3">
+              {d.data.stablecoins.usdtMcap && <div>
+                <div className="text-[8px] text-white/20">USDT</div>
+                <div className="text-sm font-semibold">${fmtK(d.data.stablecoins.usdtMcap)}</div>
+                <div className="text-[9px]" style={{ color: c(d.data.stablecoins.usdtChange24h || 0) }}>
+                  {d.data.stablecoins.usdtChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdtChange24h}%
+                </div>
+              </div>}
+              {d.data.stablecoins.usdcMcap && <div>
+                <div className="text-[8px] text-white/20">USDC</div>
+                <div className="text-sm font-semibold">${fmtK(d.data.stablecoins.usdcMcap)}</div>
+                <div className="text-[9px]" style={{ color: c(d.data.stablecoins.usdcChange24h || 0) }}>
+                  {d.data.stablecoins.usdcChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdcChange24h}%
+                </div>
+              </div>}
+            </div>
+            <div className="text-[10px]" style={{ color: d.data.stablecoins.totalChange > 0 ? '#00e5a0' : d.data.stablecoins.totalChange < 0 ? '#ff4976' : '#5c6370' }}>
+              {d.data.stablecoins.signal}
+            </div>
+          </> : <div className="text-[10px] text-white/20">Loading...</div>}
+        </Card>
+
+        {/* On-chain */}
+        <Card title="LARGE BTC TRANSACTIONS">
+          {d.data.onchain && d.data.onchain.count > 0 ? <>
+            <div className="text-[10px] text-white/30 mb-2">
+              {d.data.onchain.count} large txs | Total: {d.data.onchain.totalBTC} BTC
+            </div>
+            {(d.data.onchain.recent || []).map((tx: any, i: number) => (
+              <div key={i} className="flex justify-between text-[10px] py-0.5 border-b border-white/[0.02]">
+                <span className="text-white/30 font-mono">{tx.hash}...</span>
+                <span className="font-semibold text-[#c678dd]">{tx.btc} BTC</span>
+              </div>
+            ))}
+          </> : <div className="text-[10px] text-white/20">No large transactions detected</div>}
         </Card>
       </div>
     </div>

@@ -9,6 +9,9 @@ const BINANCE_DATA = 'https://fapi.binance.com/futures/data'
 const BYBIT_API = 'https://api.bybit.com/v5'
 const DERIBIT_API = 'https://www.deribit.com/api/v2/public'
 const FNG_API = 'https://api.alternative.me/fng'
+const COINGECKO_API = 'https://api.coingecko.com/api/v3'
+const BLOCKCHAIR_API = 'https://api.blockchair.com/bitcoin'
+const YAHOO_API = 'https://query1.finance.yahoo.com/v8/finance/chart'
 
 // Cache: store last snapshot, refresh if older than 2 min
 let cachedSnapshot: any = null
@@ -70,8 +73,22 @@ async function fetchSnapshot() {
     // Deribit
     safeFetch('options', `${DERIBIT_API}/get_book_summary_by_currency?currency=BTC&kind=option`),
     safeFetch('deribitIndex', `${DERIBIT_API}/get_index_price?index_name=btc_usd`),
+    // Deribit options flow (recent large trades)
+    safeFetch('deribitTrades', `${DERIBIT_API}/get_last_trades_by_currency?currency=BTC&kind=option&count=100`),
+    // ETH klines for correlation
+    safeFetch('ethKlines', `${BINANCE_FAPI}/klines?symbol=ETHUSDT&interval=1h&limit=168`),
+    // CME BTC futures
+    safeFetch('cmeBtc', `${YAHOO_API}/BTC=F?interval=1d&range=5d`),
+    // Stablecoin market caps
+    safeFetch('usdt', `${COINGECKO_API}/coins/tether?localization=false&tickers=false&community_data=false&developer_data=false`),
+    safeFetch('usdc', `${COINGECKO_API}/coins/usd-coin?localization=false&tickers=false&community_data=false&developer_data=false`),
+    // On-chain: large BTC transactions
+    safeFetch('onchain', `${BLOCKCHAIR_API}/transactions?s=output_total(desc)&limit=10`),
     // Macro
     safeFetch('fng', `${FNG_API}/?limit=7`),
+    safeFetch('dxy', `${YAHOO_API}/DX-Y.NYB?interval=1h&range=7d`),
+    safeFetch('spx', `${YAHOO_API}/^GSPC?interval=1h&range=7d`),
+    safeFetch('gold', `${YAHOO_API}/GC=F?interval=1h&range=7d`),
   ])
 
   const r: Record<string, any> = {}
@@ -267,6 +284,164 @@ async function fetchSnapshot() {
     }
   }
 
+  // ─── NEW: Options Flow (large Deribit trades) ──────
+  let optionsFlow: any = null
+  if (r.deribitTrades?.ok) {
+    try {
+      const trades = r.deribitTrades.data?.result?.trades || []
+      const largeTrades2 = trades.filter((t: any) => (t.amount || 0) * (t.price || 0) > 50000) // >$50K notional approx
+      const bullFlow = largeTrades2.filter((t: any) => {
+        const isCall = t.instrument_name?.includes('-C')
+        const isBuy = t.direction === 'buy'
+        return (isCall && isBuy) || (!isCall && !isBuy) // buy calls or sell puts = bullish
+      })
+      const bearFlow = largeTrades2.filter((t: any) => {
+        const isCall = t.instrument_name?.includes('-C')
+        const isBuy = t.direction === 'buy'
+        return (!isCall && isBuy) || (isCall && !isBuy) // buy puts or sell calls = bearish
+      })
+      optionsFlow = {
+        totalLarge: largeTrades2.length,
+        bullish: bullFlow.length, bearish: bearFlow.length,
+        netFlow: bullFlow.length - bearFlow.length,
+        recent: largeTrades2.slice(0, 10).map((t: any) => ({
+          instrument: t.instrument_name, direction: t.direction,
+          amount: t.amount, price: t.price, iv: t.iv,
+          ts: t.timestamp,
+        }))
+      }
+    } catch {}
+  }
+
+  // ─── NEW: Funding Differential ────────────────────
+  let fundingDiff: any = null
+  if (r.funding?.ok && r.bybitTicker?.ok) {
+    try {
+      const binanceRate = +r.funding.data.lastFundingRate
+      const bybitRate = +r.bybitTicker.data.result.list[0].fundingRate
+      const diff = binanceRate - bybitRate
+      fundingDiff = {
+        binance: binanceRate, bybit: bybitRate,
+        diff, absDiff: Math.abs(diff),
+        signal: Math.abs(diff) > 0.0003 ? (diff > 0 ? 'binance_higher' : 'bybit_higher') : 'aligned',
+      }
+    } catch {}
+  }
+
+  // ─── NEW: CME Basis + Gap ─────────────────────────
+  let cme: any = null
+  if (r.cmeBtc?.ok) {
+    try {
+      const chart = r.cmeBtc.data?.chart?.result?.[0]
+      if (chart) {
+        const closes = chart.indicators.quote[0].close.filter((c: any) => c !== null)
+        const cmeLast = closes[closes.length - 1]
+        const cmePrev = closes[closes.length - 2]
+        const spot = price || 0
+        const basis = spot > 0 ? ((cmeLast - spot) / spot * 100) : 0
+        const gap = cmePrev ? cmeLast - cmePrev : 0
+        // Friday close vs current = potential gap
+        cme = {
+          price: +cmeLast.toFixed(2),
+          basis: +basis.toFixed(3),
+          basisLabel: basis > 0.5 ? 'premium (bullish institutional)' : basis < -0.5 ? 'discount (bearish institutional)' : 'neutral',
+          fridayClose: cmePrev ? +cmePrev.toFixed(2) : null,
+          gap: gap !== 0 ? +gap.toFixed(2) : null,
+          gapFilled: gap !== 0 && Math.abs(spot - cmePrev) < Math.abs(gap) * 0.1,
+        }
+      }
+    } catch {}
+  }
+
+  // ─── NEW: Correlations ────────────────────────────
+  let correlations: any = null
+  try {
+    const calcCorrelation = (x: number[], y: number[]) => {
+      const n = Math.min(x.length, y.length)
+      if (n < 10) return null
+      const xSlice = x.slice(-n), ySlice = y.slice(-n)
+      const xMean = xSlice.reduce((s, v) => s + v, 0) / n
+      const yMean = ySlice.reduce((s, v) => s + v, 0) / n
+      let num = 0, denX = 0, denY = 0
+      for (let i = 0; i < n; i++) {
+        const dx = xSlice[i] - xMean, dy = ySlice[i] - yMean
+        num += dx * dy; denX += dx * dx; denY += dy * dy
+      }
+      const den = Math.sqrt(denX * denY)
+      return den === 0 ? 0 : +(num / den).toFixed(3)
+    }
+
+    const btcCloses = r.klines1h?.ok ? r.klines1h.data.map((k: any) => +k[4]) : []
+    const ethCloses = r.ethKlines?.ok ? r.ethKlines.data.map((k: any) => +k[4]) : []
+
+    const getYahooCloses = (d: any) => {
+      try { return d.data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close?.filter((c: any) => c !== null) || [] } catch { return [] }
+    }
+    const dxyCloses = r.dxy?.ok ? getYahooCloses(r.dxy) : []
+    const spxCloses = r.spx?.ok ? getYahooCloses(r.spx) : []
+    const goldCloses = r.gold?.ok ? getYahooCloses(r.gold) : []
+
+    // Convert to returns for correlation (price changes, not levels)
+    const toReturns = (arr: number[]) => arr.slice(1).map((v, i) => (v - arr[i]) / arr[i])
+
+    const btcReturns = toReturns(btcCloses)
+    const ethReturns = toReturns(ethCloses)
+    const dxyReturns = toReturns(dxyCloses)
+    const spxReturns = toReturns(spxCloses)
+    const goldReturns = toReturns(goldCloses)
+
+    correlations = {
+      ethBtc: calcCorrelation(btcReturns, ethReturns),
+      dxyBtc: calcCorrelation(btcReturns, dxyReturns),
+      spxBtc: calcCorrelation(btcReturns, spxReturns),
+      goldBtc: calcCorrelation(btcReturns, goldReturns),
+      period: '7d hourly',
+    }
+  } catch {}
+
+  // ─── NEW: Stablecoin Supply ───────────────────────
+  let stablecoins: any = null
+  try {
+    const usdtMcap = r.usdt?.ok ? r.usdt.data?.market_data?.market_cap?.usd : null
+    const usdtChange24h = r.usdt?.ok ? r.usdt.data?.market_data?.market_cap_change_percentage_24h_in_currency?.usd : null
+    const usdcMcap = r.usdc?.ok ? r.usdc.data?.market_data?.market_cap?.usd : null
+    const usdcChange24h = r.usdc?.ok ? r.usdc.data?.market_data?.market_cap_change_percentage_24h_in_currency?.usd : null
+
+    if (usdtMcap || usdcMcap) {
+      const totalMcap = (usdtMcap || 0) + (usdcMcap || 0)
+      // Weighted average change
+      const totalChange = usdtMcap && usdcMcap
+        ? ((usdtChange24h || 0) * usdtMcap + (usdcChange24h || 0) * usdcMcap) / totalMcap
+        : (usdtChange24h || usdcChange24h || 0)
+
+      stablecoins = {
+        usdtMcap, usdtChange24h: usdtChange24h ? +usdtChange24h.toFixed(3) : null,
+        usdcMcap, usdcChange24h: usdcChange24h ? +usdcChange24h.toFixed(3) : null,
+        totalMcap, totalChange: +totalChange.toFixed(3),
+        signal: totalChange > 0.1 ? 'minting (bullish)' : totalChange < -0.1 ? 'burning (bearish)' : 'stable',
+      }
+    }
+  } catch {}
+
+  // ─── NEW: On-chain Large Transactions ─────────────
+  let onchain: any = null
+  if (r.onchain?.ok) {
+    try {
+      const txs = r.onchain.data?.data || []
+      const largeTxs = txs.filter((tx: any) => tx.output_total > 100 * 1e8) // >100 BTC
+      onchain = {
+        count: largeTxs.length,
+        totalBTC: +(largeTxs.reduce((s: number, tx: any) => s + tx.output_total, 0) / 1e8).toFixed(2),
+        recent: largeTxs.slice(0, 5).map((tx: any) => ({
+          hash: tx.hash?.slice(0, 12),
+          btc: +(tx.output_total / 1e8).toFixed(2),
+          fee: +(tx.fee / 1e8).toFixed(6),
+          ts: tx.time,
+        }))
+      }
+    } catch {}
+  }
+
   // Fear & Greed
   let fearGreed: any = null
   if (r.fng?.ok) {
@@ -404,11 +579,52 @@ async function fetchSnapshot() {
   if (largeTrades) {
     signals.largeTrades = { score: clamp(largeTrades.netDelta * 15), confidence: 70, reason: `${largeTrades.count} large (${largeTrades.whaleCount} whale) | Net: ${largeTrades.netDelta > 0 ? '+' : ''}${largeTrades.netDelta} BTC` }
   }
+  // Options Flow
+  if (optionsFlow && optionsFlow.totalLarge > 0) {
+    const s = clamp(optionsFlow.netFlow * 15)
+    signals.optionsFlow = { score: s, confidence: 55, reason: `${optionsFlow.bullish} bullish / ${optionsFlow.bearish} bearish large prints` }
+  }
+  // Funding Differential
+  if (fundingDiff && fundingDiff.absDiff > 0.0001) {
+    // Big diff = opportunity, direction depends on which is higher
+    const s = clamp(fundingDiff.diff * -50000) // contrarian — if Binance higher, shorts crowded there
+    signals.fundingDiff = { score: s, confidence: 45, reason: `Binance ${(fundingDiff.binance*100).toFixed(4)}% vs Bybit ${(fundingDiff.bybit*100).toFixed(4)}% (${fundingDiff.signal})` }
+  }
+  // CME
+  if (cme) {
+    let s = 0
+    if (cme.basis > 0.5) s = 20; else if (cme.basis < -0.5) s = -20
+    if (cme.gap && !cme.gapFilled) s += cme.gap > 0 ? -10 : 10 // gap fill pull
+    signals.cme = { score: clamp(s), confidence: 50, reason: `Basis: ${cme.basis > 0 ? '+' : ''}${cme.basis}% | ${cme.gap ? 'Gap: $' + cme.gap : 'No gap'}` }
+  }
+  // Correlations
+  if (correlations) {
+    let s = 0; const reasons: string[] = []
+    // DXY inverse correlation — if BTC-DXY correlation is strongly negative (normal), neutral. If breaking, alert.
+    if (correlations.dxyBtc !== null) {
+      if (correlations.dxyBtc > 0.3) { s -= 15; reasons.push(`BTC-DXY positive (unusual)`) }
+      reasons.push(`DXY: ${correlations.dxyBtc}`)
+    }
+    if (correlations.spxBtc !== null) reasons.push(`SPX: ${correlations.spxBtc}`)
+    if (correlations.ethBtc !== null && correlations.ethBtc < 0.7) { s -= 10; reasons.push(`ETH decorrelating (${correlations.ethBtc})`) }
+    signals.correlations = { score: clamp(s), confidence: 40, reason: reasons.join(' | ') }
+  }
+  // Stablecoins
+  if (stablecoins) {
+    let s = 0
+    if (stablecoins.totalChange > 0.3) s = 25 // big mint
+    else if (stablecoins.totalChange > 0.1) s = 15
+    else if (stablecoins.totalChange < -0.3) s = -25 // big burn
+    else if (stablecoins.totalChange < -0.1) s = -15
+    signals.stablecoins = { score: clamp(s), confidence: 50, reason: `24h supply change: ${stablecoins.totalChange > 0 ? '+' : ''}${stablecoins.totalChange}% (${stablecoins.signal})` }
+  }
 
-  // Composite
+  // Composite — rebalanced weights
   const WEIGHTS: Record<string, number> = {
-    orderbook: 0.08, funding: 0.12, openInterest: 0.07, longShort: 0.08, taker: 0.08,
-    options: 0.08, fearGreed: 0.06, technicals: 0.13, cvd: 0.10, volumeProfile: 0.06, largeTrades: 0.07,
+    orderbook: 0.06, funding: 0.09, openInterest: 0.06, longShort: 0.07, taker: 0.07,
+    options: 0.06, fearGreed: 0.04, technicals: 0.10, cvd: 0.09, volumeProfile: 0.05,
+    largeTrades: 0.06, optionsFlow: 0.06, fundingDiff: 0.04, cme: 0.05,
+    correlations: 0.04, stablecoins: 0.06,
   }
   let weightedSum = 0, totalWeight = 0, totalConf = 0, active = 0
   for (const [k, s] of Object.entries(signals)) {
@@ -424,7 +640,7 @@ async function fetchSnapshot() {
   return {
     timestamp: Date.now(), price, sourcesOk: okCount, sourcesTotal: results.length,
     composite, bias, confidence, signals,
-    data: { orderbook, funding, oi, lsRatio, taker, cvd, volumeProfile, largeTrades, liquidations, options, fearGreed, technicals },
+    data: { orderbook, funding, oi, lsRatio, taker, cvd, volumeProfile, largeTrades, liquidations, options, fearGreed, technicals, optionsFlow, fundingDiff, cme, correlations, stablecoins, onchain },
   }
 }
 
