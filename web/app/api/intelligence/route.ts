@@ -13,23 +13,32 @@ let cacheTime = 0
 const CACHE_TTL = 2 * 60 * 1000
 
 async function proxyFetch(url: string) {
-  // Use proxy for Binance/Bybit (geo-blocked)
   const needsProxy = url.includes('binance.com') || url.includes('bybit.com')
 
   if (needsProxy) {
-    // In Next.js edge/serverless we can't use http proxy agent easily
-    // Instead, use a fetch-based approach through the proxy
-    const { HttpsProxyAgent } = await import('https-proxy-agent')
-    const agent = new HttpsProxyAgent(PROXY_URL)
-    const res = await fetch(url, { agent: agent as any, signal: AbortSignal.timeout(10000) } as any)
-    if (!res.ok) throw new Error(`${res.status}`)
-    return res.json()
+    // Use HTTP CONNECT proxy via https-proxy-agent (Node.js runtime only)
+    try {
+      const { HttpsProxyAgent } = require('https-proxy-agent')
+      const agent = new HttpsProxyAgent(PROXY_URL)
+      const res = await fetch(url, { agent, signal: AbortSignal.timeout(12000) } as any)
+      if (!res.ok) throw new Error(`${res.status}: ${await res.text().catch(() => '')}`)
+      return res.json()
+    } catch (e: any) {
+      // Fallback: try direct (works from some Vercel regions)
+      const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
+      if (!res.ok) throw new Error(`direct-${res.status}`)
+      return res.json()
+    }
   }
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
   if (!res.ok) throw new Error(`${res.status}`)
   return res.json()
 }
+
+// Force Node.js runtime (not Edge) so https-proxy-agent works
+export const runtime = 'nodejs'
+export const maxDuration = 30
 
 async function safeFetch(name: string, url: string) {
   try {
