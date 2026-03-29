@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
+import { HttpsProxyAgent } from 'https-proxy-agent'
 
 const PROXY_URL = 'http://masonboroff:UQdolU8%3Dg808@ddc.oxylabs.io:8001'
+const proxyAgent = new HttpsProxyAgent(PROXY_URL)
 const BINANCE_FAPI = 'https://fapi.binance.com/fapi/v1'
 const BINANCE_DATA = 'https://fapi.binance.com/futures/data'
 const BYBIT_API = 'https://api.bybit.com/v5'
@@ -16,19 +18,9 @@ async function proxyFetch(url: string) {
   const needsProxy = url.includes('binance.com') || url.includes('bybit.com')
 
   if (needsProxy) {
-    // Use HTTP CONNECT proxy via https-proxy-agent (Node.js runtime only)
-    try {
-      const { HttpsProxyAgent } = require('https-proxy-agent')
-      const agent = new HttpsProxyAgent(PROXY_URL)
-      const res = await fetch(url, { agent, signal: AbortSignal.timeout(12000) } as any)
-      if (!res.ok) throw new Error(`${res.status}: ${await res.text().catch(() => '')}`)
-      return res.json()
-    } catch (e: any) {
-      // Fallback: try direct (works from some Vercel regions)
-      const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
-      if (!res.ok) throw new Error(`direct-${res.status}`)
-      return res.json()
-    }
+    const res = await fetch(url, { agent: proxyAgent as any, signal: AbortSignal.timeout(12000) } as any)
+    if (!res.ok) throw new Error(`proxy-${res.status}`)
+    return res.json()
   }
 
   const res = await fetch(url, { signal: AbortSignal.timeout(10000) })
