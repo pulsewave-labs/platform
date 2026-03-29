@@ -240,10 +240,11 @@ async function fetchSnapshot() {
   // Options
   let options: any = null
   if (r.options?.ok && r.deribitIndex?.ok) {
-    const btcPrice = r.deribitIndex.data.index_price
+    const btcPrice = r.deribitIndex.data?.index_price || r.deribitIndex.data?.result?.index_price
     let callOI = 0, putOI = 0
     const strikes: Record<number, { strike: number; callOI: number; putOI: number }> = {}
-    for (const opt of r.options.data) {
+    const optionsData = Array.isArray(r.options.data) ? r.options.data : (r.options.data?.result || [])
+    for (const opt of optionsData) {
       const parts = opt.instrument_name.split('-')
       const strike = +parts[2], type = parts[3], oiVal = opt.open_interest || 0
       if (type === 'C') callOI += oiVal; else putOI += oiVal
@@ -267,7 +268,10 @@ async function fetchSnapshot() {
   // Fear & Greed
   let fearGreed: any = null
   if (r.fng?.ok) {
-    fearGreed = { value: +r.fng.data.data[0].value, label: r.fng.data.data[0].value_classification }
+    try {
+      const fngData = r.fng.data?.data || r.fng.data
+      fearGreed = { value: +fngData[0].value, label: fngData[0].value_classification }
+    } catch {}
   }
 
   // Technicals from klines
