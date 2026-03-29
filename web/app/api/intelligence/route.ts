@@ -644,7 +644,25 @@ async function fetchSnapshot() {
   }
 }
 
-export async function GET() {
+// Fire-and-forget: store snapshot + check alerts
+async function sideEffects(snapshot: any, baseUrl: string) {
+  const secret = process.env.INTELLIGENCE_SECRET
+  if (!secret) return
+  try {
+    await Promise.allSettled([
+      nodeFetch(`${baseUrl}/api/intelligence/store`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, snapshot }), timeout: 5000,
+      }),
+      nodeFetch(`${baseUrl}/api/intelligence/alerts`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret, snapshot }), timeout: 5000,
+      }),
+    ])
+  } catch {}
+}
+
+export async function GET(req: Request) {
   try {
     if (cachedSnapshot && Date.now() - cacheTime < CACHE_TTL) {
       return NextResponse.json(cachedSnapshot)
@@ -652,6 +670,11 @@ export async function GET() {
     const snapshot = await fetchSnapshot()
     cachedSnapshot = snapshot
     cacheTime = Date.now()
+
+    // Store snapshot + check alerts (non-blocking)
+    const baseUrl = new URL(req.url).origin
+    sideEffects(snapshot, baseUrl).catch(() => {})
+
     return NextResponse.json(snapshot)
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 })

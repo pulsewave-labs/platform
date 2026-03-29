@@ -3,6 +3,23 @@
 import { useEffect, useState, useCallback } from 'react'
 
 type Signal = { score: number; confidence: number; reason: string }
+type Patterns = {
+  matches: number; message?: string
+  outcomes?: {
+    h4: OutcomeSet; h24: OutcomeSet; h72: OutcomeSet
+  }
+  topMatches?: Array<{
+    ts: string; price: number; composite: number; bias: string
+    fearGreed: number | null; lsRatio: number | null
+    change4h: number | null; change24h: number | null; change72h: number | null
+    similarity: number
+  }>
+}
+type OutcomeSet = {
+  count: number; avgChange: number | null; medianChange: number | null
+  bullRate: number | null; best: string | null; worst: string | null
+  distribution?: { strongRally: number; rally: number; chop: number; dip: number; crash: number }
+}
 type Snapshot = {
   timestamp: number; price: number; sourcesOk: number; sourcesTotal: number
   composite: number; bias: string; confidence: number
@@ -20,18 +37,34 @@ function ago(t: number) { const s = Math.floor((Date.now() - t)/1000); return s 
 
 export default function IntelligenceDashboard() {
   const [data, setData] = useState<Snapshot | null>(null)
+  const [patterns, setPatterns] = useState<Patterns | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+
+  const loadPatterns = useCallback(async (snap: Snapshot) => {
+    try {
+      const params = new URLSearchParams({
+        composite: String(snap.composite),
+        bias: snap.bias,
+        ...(snap.data.fearGreed ? { fearGreed: String(snap.data.fearGreed.value) } : {}),
+        ...(snap.data.lsRatio ? { lsRatio: String(snap.data.lsRatio.ratio) } : {}),
+      })
+      const res = await fetch(`/api/intelligence/patterns?${params}`)
+      if (res.ok) setPatterns(await res.json())
+    } catch {}
+  }, [])
 
   const load = useCallback(async () => {
     try {
       setLoading(true)
       const res = await fetch('/api/intelligence')
       if (!res.ok) throw new Error('Failed to fetch')
-      setData(await res.json())
+      const snap = await res.json()
+      setData(snap)
       setError('')
+      loadPatterns(snap)
     } catch (e: any) { setError(e.message) } finally { setLoading(false) }
-  }, [])
+  }, [loadPatterns])
 
   useEffect(() => { load(); const i = setInterval(load, 15 * 60 * 1000); return () => clearInterval(i) }, [load])
 
@@ -396,6 +429,96 @@ export default function IntelligenceDashboard() {
             </Card>
           )}
         </div>
+      </div>
+
+      {/* ═══ PATTERN ENGINE ═══ */}
+      <div className="p-4 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+        <div className="flex items-baseline gap-2 mb-3">
+          <span className="text-[9px] text-white/20 tracking-[0.15em] font-semibold">HISTORICAL PATTERN ENGINE</span>
+          <span className="text-[8px] text-white/10">Similar conditions → What happened next</span>
+        </div>
+        {patterns && patterns.matches > 0 && patterns.outcomes ? (
+          <>
+            <div className="text-[10px] text-white/30 mb-3">
+              Found <b className="text-white/50">{patterns.matches}</b> similar historical moments
+            </div>
+
+            {/* Outcome horizons */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+              {([
+                ['4H', patterns.outcomes.h4],
+                ['24H', patterns.outcomes.h24],
+                ['72H', patterns.outcomes.h72],
+              ] as [string, OutcomeSet][]).map(([label, o]) => (
+                <div key={label} className="p-3 rounded bg-white/[0.02] border border-white/[0.03]">
+                  <div className="text-[8px] text-white/15 tracking-[0.15em] mb-2">AFTER {label}</div>
+                  {o.count > 0 ? <>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-lg font-bold" style={{ color: (o.avgChange || 0) >= 0 ? bull : bear }}>
+                        {(o.avgChange || 0) > 0 ? '+' : ''}{o.avgChange}%
+                      </span>
+                      <span className="text-[10px] text-white/20">avg</span>
+                      <span className="text-xs text-white/30">
+                        ({(o.medianChange || 0) > 0 ? '+' : ''}{o.medianChange}% med)
+                      </span>
+                    </div>
+                    <div className="flex gap-3 text-[10px] mb-2">
+                      <span style={{ color: (o.bullRate || 0) > 55 ? bull : (o.bullRate || 0) < 45 ? bear : warn }}>
+                        {o.bullRate}% bullish
+                      </span>
+                      <span className="text-white/15">n={o.count}</span>
+                    </div>
+                    <div className="flex gap-2 text-[9px]">
+                      <span className="text-white/15">Best: <b style={{ color: bull }}>{o.best}%</b></span>
+                      <span className="text-white/15">Worst: <b style={{ color: bear }}>{o.worst}%</b></span>
+                    </div>
+                    {o.distribution && (
+                      <div className="flex h-[6px] rounded-full overflow-hidden mt-2 gap-px">
+                        {[
+                          [o.distribution.crash, bear, 'Crash'],
+                          [o.distribution.dip, '#f87171', 'Dip'],
+                          [o.distribution.chop, neutral, 'Chop'],
+                          [o.distribution.rally, '#4ade80', 'Rally'],
+                          [o.distribution.strongRally, bull, 'Moon'],
+                        ].map(([pct, color, label]) => pct as number > 0 ? (
+                          <div key={label as string} title={`${label}: ${pct}%`} className="h-full rounded-sm" style={{ width: `${pct}%`, background: color as string, minWidth: pct as number > 0 ? 3 : 0 }} />
+                        ) : null)}
+                      </div>
+                    )}
+                  </> : <div className="text-[10px] text-white/15">Insufficient data</div>}
+                </div>
+              ))}
+            </div>
+
+            {/* Top matches */}
+            {patterns.topMatches && patterns.topMatches.length > 0 && <>
+              <div className="text-[9px] text-white/15 tracking-wider mb-1.5">CLOSEST MATCHES</div>
+              <div className="space-y-px">
+                {patterns.topMatches.map((m, i) => (
+                  <div key={i} className="flex items-center gap-3 py-1.5 px-2 text-[10px] border-b border-white/[0.02] rounded hover:bg-white/[0.01]">
+                    <span className="text-white/15 w-[70px]">{new Date(m.ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                    <span className="text-white/30 w-[70px]">${m.price.toLocaleString()}</span>
+                    <span className="font-semibold w-[32px]" style={{ color: sc(m.composite) }}>{m.composite > 0 ? '+' : ''}{m.composite}</span>
+                    <span className="text-white/20 w-[60px]">{m.bias}</span>
+                    <span className="flex-1" />
+                    {m.change4h !== null && <span className="w-[45px] text-right" style={{ color: sc(m.change4h) }}>{m.change4h > 0 ? '+' : ''}{m.change4h}%</span>}
+                    {m.change24h !== null && <span className="w-[52px] text-right font-semibold" style={{ color: sc(m.change24h) }}>{m.change24h > 0 ? '+' : ''}{m.change24h}%</span>}
+                    {m.change72h !== null && <span className="w-[52px] text-right" style={{ color: sc(m.change72h) }}>{m.change72h > 0 ? '+' : ''}{m.change72h}%</span>}
+                  </div>
+                ))}
+                <div className="flex gap-3 py-1 px-2 text-[8px] text-white/10">
+                  <span className="w-[70px]">Date</span><span className="w-[70px]">Price</span><span className="w-[32px]">Score</span><span className="w-[60px]">Bias</span>
+                  <span className="flex-1" /><span className="w-[45px] text-right">4h</span><span className="w-[52px] text-right">24h</span><span className="w-[52px] text-right">72h</span>
+                </div>
+              </div>
+            </>}
+          </>
+        ) : (
+          <div className="text-center py-6">
+            <div className="text-[11px] text-white/20 mb-1">📊 Collecting data...</div>
+            <div className="text-[10px] text-white/10">Pattern matching will activate after ~48 hours of snapshots with outcome tracking.</div>
+          </div>
+        )}
       </div>
 
       {/* ═══ FEAR & GREED FOOTER ═══ */}
