@@ -10,10 +10,13 @@ type Snapshot = {
   data: any
 }
 
-function c(val: number) { return val > 0 ? '#00e5a0' : val < 0 ? '#ff4976' : '#5c6370' }
-function fmt(n: number | null | undefined) { return n?.toLocaleString('en-US') ?? '—' }
-function fmtK(n: number) { return n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : fmt(n) }
+// ── Helpers ──────────────────────────────────────────
+const bull = '#00e5a0', bear = '#ff4976', neutral = '#5c6370', warn = '#e5c07b', purple = '#c678dd', cyan = '#56b6c2'
+function sc(val: number) { return val > 0 ? bull : val < 0 ? bear : neutral }
+function fmt(n: number | null | undefined) { return n != null ? n.toLocaleString('en-US') : '—' }
+function fmtK(n: number) { return n >= 1e12 ? (n/1e12).toFixed(1)+'T' : n >= 1e9 ? (n/1e9).toFixed(1)+'B' : n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : fmt(n) }
 function ts(t: number) { return new Date(t).toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' }) }
+function ago(t: number) { const s = Math.floor((Date.now() - t)/1000); return s < 60 ? `${s}s ago` : s < 3600 ? `${Math.floor(s/60)}m ago` : `${Math.floor(s/3600)}h ago` }
 
 export default function IntelligenceDashboard() {
   const [data, setData] = useState<Snapshot | null>(null)
@@ -27,11 +30,7 @@ export default function IntelligenceDashboard() {
       if (!res.ok) throw new Error('Failed to fetch')
       setData(await res.json())
       setError('')
-    } catch (e: any) {
-      setError(e.message)
-    } finally {
-      setLoading(false)
-    }
+    } catch (e: any) { setError(e.message) } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { load(); const i = setInterval(load, 15 * 60 * 1000); return () => clearInterval(i) }, [load])
@@ -39,471 +38,489 @@ export default function IntelligenceDashboard() {
   if (!data && loading) return (
     <div className="flex items-center justify-center h-[60vh]">
       <div className="text-center">
-        <div className="w-8 h-8 border-2 border-[#00e5a0]/30 border-t-[#00e5a0] rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-xs mono text-white/30">FETCHING 17 DATA SOURCES...</p>
+        <div className="w-8 h-8 border-2 border-[#00e5a0]/30 border-t-[#00e5a0] rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-[11px] mono text-white/30 tracking-widest">AGGREGATING 29 DATA SOURCES</p>
       </div>
     </div>
   )
-
   if (error && !data) return <div className="text-center text-red-400 py-20 mono text-sm">{error}</div>
 
   const d = data!
-  const biasColor = d.composite >= 5 ? '#00e5a0' : d.composite <= -5 ? '#ff4976' : '#e5c07b'
+  const biasColor = d.composite >= 20 ? bull : d.composite >= 5 ? '#4ade80' : d.composite <= -20 ? bear : d.composite <= -5 ? '#f87171' : warn
 
   return (
-    <div className="mono">
-      {/* Header stats */}
-      <div className="flex flex-wrap items-center gap-4 md:gap-6 mb-4">
-        <div>
-          <div className="text-[10px] text-white/30 tracking-wider">BTC / USDT</div>
-          <div className="text-2xl font-bold" style={{ color: d.composite >= 0 ? '#00e5a0' : '#ff4976' }}>
-            ${fmt(d.price)}
+    <div className="mono space-y-4">
+
+      {/* ═══ TOP BAR ═══ */}
+      <div className="flex items-end justify-between flex-wrap gap-3">
+        <div className="flex items-end gap-6">
+          <div>
+            <span className="text-[10px] text-white/20 tracking-[0.2em] block mb-0.5">BTC / USDT PERP</span>
+            <span className="text-3xl font-bold tracking-tight" style={{ color: d.composite >= 0 ? bull : bear }}>
+              ${d.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </span>
+          </div>
+          <div className="flex items-center gap-1 pb-1">
+            <span className="text-xl font-bold" style={{ color: biasColor }}>{d.bias}</span>
+            <span className="text-[10px] text-white/20 ml-1">{d.confidence}% conf</span>
           </div>
         </div>
-        {[
-          ['CVD', d.data.cvd?.cvd?.toFixed(1), c(d.data.cvd?.cvd || 0)],
-          ['FUNDING', d.data.funding ? (d.data.funding.rate * 100).toFixed(4) + '%' : '—', c(-(d.data.funding?.rate || 0))],
-          ['OI', d.data.oi ? fmtK(d.data.oi.current) + ' BTC' : '—', '#c8ccd4'],
-          ['F&G', d.data.fearGreed ? `${d.data.fearGreed.value} ${d.data.fearGreed.label}` : '—', d.data.fearGreed?.value <= 25 ? '#ff4976' : d.data.fearGreed?.value >= 75 ? '#00e5a0' : '#e5c07b'],
-          ['L/S', d.data.lsRatio?.ratio?.toFixed(2) || '—', d.data.lsRatio?.ratio > 1.2 ? '#ff4976' : '#00e5a0'],
-        ].map(([label, val, col]) => (
-          <div key={label as string}>
-            <div className="text-[9px] text-white/20 tracking-widest">{label as string}</div>
-            <div className="text-sm font-semibold" style={{ color: col as string }}>{val as string}</div>
-          </div>
-        ))}
-        <div className="ml-auto flex items-center gap-3">
-          <button onClick={load} disabled={loading} className="text-[10px] px-3 py-1 border border-white/[0.06] rounded text-white/40 hover:text-white/70 hover:border-white/10 transition-colors disabled:opacity-30">
-            {loading ? 'REFRESHING...' : 'REFRESH'}
+        <div className="flex items-center gap-3 pb-1">
+          <span className="text-[10px] text-white/15">{d.sourcesOk}/{d.sourcesTotal} sources · {ago(d.timestamp)}</span>
+          <button onClick={load} disabled={loading}
+            className="text-[10px] px-3 py-1.5 border border-white/[0.06] rounded text-white/30 hover:text-white/60 hover:border-white/[0.12] transition-all disabled:opacity-20">
+            {loading ? '···' : '↻ REFRESH'}
           </button>
-          <span className="text-[9px] text-white/20">{d.sourcesOk}/{d.sourcesTotal} sources · {ts(d.timestamp)}</span>
         </div>
       </div>
 
-      {/* Tags */}
-      <div className="flex flex-wrap gap-1.5 mb-4">
-        {d.data.cvd && <Tag label={`CVD: ${d.data.cvd.trend.replace('_',' ')}`} bull={d.data.cvd.cvd > 0} />}
-        {d.data.cvd?.divergence && <Tag label={`⚠ ${d.data.cvd.divergenceType.replace('_',' ')}`} bull={d.data.cvd.divergenceType.includes('bullish')} />}
-        {d.data.taker && <Tag label={`Taker B/S: ${d.data.taker.ratio.toFixed(2)}`} bull={d.data.taker.ratio > 1.1} />}
-        {d.data.largeTrades && <Tag label={`Whales: ${d.data.largeTrades.netDelta > 0 ? '+' : ''}${d.data.largeTrades.netDelta.toFixed(1)} BTC`} bull={d.data.largeTrades.netDelta > 0} />}
-        {d.data.cme && <Tag label={`CME Basis: ${d.data.cme.basis > 0 ? '+' : ''}${d.data.cme.basis}%`} bull={d.data.cme.basis > 0} />}
-        {d.data.stablecoins && Math.abs(d.data.stablecoins.totalChange) > 0.05 && <Tag label={`Stables: ${d.data.stablecoins.signal}`} bull={d.data.stablecoins.totalChange > 0} />}
-        {d.data.optionsFlow && d.data.optionsFlow.totalLarge > 0 && <Tag label={`Opts Flow: ${d.data.optionsFlow.netFlow > 0 ? '+' : ''}${d.data.optionsFlow.netFlow}`} bull={d.data.optionsFlow.netFlow > 0} />}
-      </div>
-
-      {/* Bias gauge */}
-      <div className="flex items-center gap-6 p-4 rounded-lg border border-white/[0.04] bg-white/[0.01] mb-4">
-        <div>
-          <div className="text-2xl font-bold tracking-tight" style={{ color: biasColor }}>{d.bias}</div>
-          <div className="text-[10px] text-white/20">{d.confidence}% confidence</div>
+      {/* ═══ COMPOSITE GAUGE ═══ */}
+      <div className="relative h-8 rounded bg-white/[0.02] overflow-hidden border border-white/[0.04]">
+        {/* Background gradient */}
+        <div className="absolute inset-0 opacity-20" style={{ background: 'linear-gradient(to right, #ff4976, #ff4976 20%, #e5c07b 40%, #5c6370 50%, #e5c07b 60%, #00e5a0 80%, #00e5a0)' }} />
+        {/* Center line */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/10" />
+        {/* Score marker */}
+        <div className="absolute top-0 bottom-0 flex items-center transition-all duration-700" style={{ left: `${(d.composite + 100) / 2}%` }}>
+          <div className="w-1 h-full rounded" style={{ background: biasColor, boxShadow: `0 0 12px ${biasColor}` }} />
         </div>
-        <div className="flex-1 h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
-          <div className="h-full rounded-full transition-all duration-500" style={{
-            width: `${(d.composite + 100) / 2}%`,
-            background: `linear-gradient(to right, #ff4976, #e5c07b 50%, #00e5a0)`
-          }} />
-        </div>
-        <div className="text-lg font-bold min-w-[50px] text-right" style={{ color: c(d.composite) }}>
-          {d.composite > 0 ? '+' : ''}{d.composite}
+        {/* Labels */}
+        <div className="absolute inset-0 flex items-center justify-between px-3">
+          <span className="text-[8px] text-white/20">STRONG BEAR</span>
+          <span className="text-sm font-bold" style={{ color: biasColor }}>{d.composite > 0 ? '+' : ''}{d.composite}</span>
+          <span className="text-[8px] text-white/20">STRONG BULL</span>
         </div>
       </div>
 
-      {/* Main grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Signals */}
-        <Card title="SIGNAL BREAKDOWN">
+      {/* ═══ QUICK STATS ROW ═══ */}
+      <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
+        <QuickStat label="FUNDING" value={d.data.funding ? `${(d.data.funding.rate * 100).toFixed(4)}%` : '—'} color={sc(-(d.data.funding?.rate || 0))} sub={d.data.fundingDiff ? `Δ ${(d.data.fundingDiff.diff * 100).toFixed(4)}%` : undefined} />
+        <QuickStat label="OI (24H)" value={d.data.oi ? `${d.data.oi.delta24h > 0 ? '+' : ''}${d.data.oi.delta24h}%` : '—'} color={sc(d.data.oi?.delta24h || 0)} sub={d.data.oi ? fmtK(d.data.oi.current) + ' BTC' : undefined} />
+        <QuickStat label="L/S RATIO" value={d.data.lsRatio?.ratio?.toFixed(2) || '—'} color={d.data.lsRatio?.ratio > 1.5 ? bear : d.data.lsRatio?.ratio < 0.7 ? bull : warn} sub={d.data.lsRatio ? `${d.data.lsRatio.longPct}L / ${d.data.lsRatio.shortPct}S` : undefined} />
+        <QuickStat label="TAKER B/S" value={d.data.taker?.ratio?.toFixed(2) || '—'} color={sc((d.data.taker?.ratio || 1) - 1)} sub={d.data.taker?.ratio > 1 ? 'buyers aggressive' : 'sellers aggressive'} />
+        <QuickStat label="CVD" value={d.data.cvd?.cvd?.toFixed(0) || '—'} color={sc(d.data.cvd?.cvd || 0)} sub={d.data.cvd?.trend?.replace('_', ' ')} alert={d.data.cvd?.divergence} />
+        <QuickStat label="F&G INDEX" value={d.data.fearGreed ? `${d.data.fearGreed.value}` : '—'} color={d.data.fearGreed?.value <= 25 ? bear : d.data.fearGreed?.value >= 75 ? bull : warn} sub={d.data.fearGreed?.label} />
+        <QuickStat label="P/C RATIO" value={d.data.options?.pcRatio?.toFixed(2) || '—'} color={d.data.options?.pcRatio > 0.7 ? bear : bull} sub={d.data.options ? `Pain: $${fmtK(d.data.options.maxPain)}` : undefined} />
+        <QuickStat label="CME BASIS" value={d.data.cme ? `${d.data.cme.basis > 0 ? '+' : ''}${d.data.cme.basis}%` : '—'} color={sc(d.data.cme?.basis || 0)} sub={d.data.cme?.basisLabel?.split(' ')[0]} />
+        <QuickStat label="STABLES" value={d.data.stablecoins ? `${d.data.stablecoins.totalChange > 0 ? '+' : ''}${d.data.stablecoins.totalChange}%` : '—'} color={sc(d.data.stablecoins?.totalChange || 0)} sub={d.data.stablecoins?.signal?.split(' ')[0]} />
+      </div>
+
+      {/* ═══ SIGNAL GRID ═══ */}
+      <Section title="SIGNAL BREAKDOWN">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-0.5">
           {Object.entries(d.signals).map(([k, s]) => (
-            <div key={k} className="flex items-center gap-2 py-1 border-b border-white/[0.02] last:border-0">
-              <span className="w-[90px] text-[10px] text-white/30 truncate">{k}</span>
-              <div className="flex-1 h-1 bg-white/[0.03] rounded relative">
-                <div className={`absolute h-full rounded ${s.score >= 0 ? 'bg-[#00e5a0]' : 'bg-[#ff4976]'}`}
-                  style={{ width: `${Math.abs(s.score) / 2}%`, [s.score >= 0 ? 'left' : 'right']: '50%' }} />
-              </div>
-              <span className="w-[35px] text-right text-[10px] font-semibold" style={{ color: c(s.score) }}>
-                {s.score > 0 ? '+' : ''}{s.score}
-              </span>
-            </div>
+            <SignalBar key={k} name={k} score={s.score} confidence={s.confidence} reason={s.reason} />
           ))}
-        </Card>
+        </div>
+      </Section>
 
-        {/* CVD */}
-        <Card title="CUMULATIVE VOLUME DELTA (4H)">
-          {d.data.cvd && <>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-lg font-bold" style={{ color: c(d.data.cvd.cvd) }}>{d.data.cvd.cvd.toFixed(1)}</span>
-              <span className="text-[9px] px-1.5 py-0.5 rounded" style={{
-                background: d.data.cvd.cvd > 0 ? 'rgba(0,229,160,0.1)' : 'rgba(255,73,118,0.1)',
-                color: c(d.data.cvd.cvd)
-              }}>{d.data.cvd.trend.replace('_', ' ')}</span>
-            </div>
-            {d.data.cvd.divergence && (
-              <div className="text-[10px] mb-2" style={{ color: '#e5c07b' }}>
-                ⚠ {d.data.cvd.divergenceType.replace('_', ' ').toUpperCase()}
+      {/* ═══ MAIN GRID — 3 columns ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+
+        {/* Column 1: Order Flow */}
+        <div className="space-y-3">
+          <Card title="ORDER BOOK" sub="Binance Futures · Top 5">
+            {d.data.orderbook && <>
+              <div className="space-y-px">
+                {[...d.data.orderbook.asks].reverse().map((a: any, i: number) => (
+                  <OBRow key={'a'+i} price={a.price} qty={a.qty} total={a.value} side="ask"
+                    maxVal={Math.max(...[...d.data.orderbook.asks, ...d.data.orderbook.bids].map((l: any) => l.value))} />
+                ))}
               </div>
-            )}
-            <div className="flex items-end gap-[2px] h-[50px]">
-              {(d.data.cvd.series || []).map((s: any, i: number) => {
-                const maxAbs = Math.max(...d.data.cvd.series.map((x: any) => Math.abs(x.delta)), 0.01)
-                const h = Math.abs(s.delta) / maxAbs * 45
-                return <div key={i} className="flex-1 rounded-t-sm" style={{
-                  height: `${Math.max(h, 2)}px`,
-                  background: s.delta >= 0 ? '#00e5a0' : '#ff4976', opacity: 0.6
-                }} />
+              <div className="text-center text-[10px] py-1.5 my-1 border-y border-white/[0.04]">
+                <span className="text-white/20">SPREAD </span>
+                <span style={{ color: cyan }}>${d.data.orderbook.spread.toFixed(1)}</span>
+                <span className="text-white/20 ml-3">IMBALANCE </span>
+                <span style={{ color: sc(d.data.orderbook.imbalance) }}>{d.data.orderbook.imbalance > 0 ? '+' : ''}{d.data.orderbook.imbalance.toFixed(1)}%</span>
+              </div>
+              <div className="space-y-px">
+                {d.data.orderbook.bids.map((b: any, i: number) => (
+                  <OBRow key={'b'+i} price={b.price} qty={b.qty} total={b.value} side="bid"
+                    maxVal={Math.max(...[...d.data.orderbook.asks, ...d.data.orderbook.bids].map((l: any) => l.value))} />
+                ))}
+              </div>
+            </>}
+          </Card>
+
+          <Card title="CVD" sub="4H Cumulative Volume Delta">
+            {d.data.cvd && <>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xl font-bold" style={{ color: sc(d.data.cvd.cvd) }}>{d.data.cvd.cvd > 0 ? '+' : ''}{d.data.cvd.cvd.toFixed(1)}</span>
+                <Pill text={d.data.cvd.trend.replace('_', ' ')} bull={d.data.cvd.cvd > 0} />
+                {d.data.cvd.divergence && <Pill text={`⚠ ${d.data.cvd.divergenceType.replace('_', ' ')}`} color={warn} />}
+              </div>
+              <div className="flex items-end gap-[1px] h-[48px]">
+                {(d.data.cvd.series || []).map((s: any, i: number) => {
+                  const maxAbs = Math.max(...d.data.cvd.series.map((x: any) => Math.abs(x.delta)), 0.01)
+                  return <div key={i} className="flex-1 rounded-t-sm transition-all" style={{
+                    height: `${Math.max(Math.abs(s.delta) / maxAbs * 44, 1)}px`,
+                    background: s.delta >= 0 ? bull : bear, opacity: 0.5 + (i / d.data.cvd.series.length * 0.5)
+                  }} />
+                })}
+              </div>
+            </>}
+          </Card>
+
+          <Card title="LARGE TRADES" sub="≥1 BTC · Binance Futures">
+            {d.data.largeTrades && <>
+              <div className="flex gap-4 mb-3">
+                <MiniStat label="NET DELTA" value={`${d.data.largeTrades.netDelta > 0 ? '+' : ''}${d.data.largeTrades.netDelta.toFixed(1)} BTC`} color={sc(d.data.largeTrades.netDelta)} />
+                <MiniStat label="LARGE" value={d.data.largeTrades.count} />
+                <MiniStat label="WHALE (≥5)" value={d.data.largeTrades.whaleCount} color={purple} />
+                <MiniStat label="% OF VOL" value={`${d.data.largeTrades.pctOfTotal}%`} />
+              </div>
+              <div className="max-h-[180px] overflow-y-auto scrollbar-none space-y-px">
+                {(d.data.largeTrades.recent || []).slice(0, 8).map((t: any, i: number) => (
+                  <div key={i} className={`flex items-center gap-2 py-1 px-1.5 text-[10px] rounded ${t.whale ? 'bg-[#c678dd]/[0.06]' : ''}`}>
+                    <span className="text-white/15 w-[44px]">{ts(t.time)}</span>
+                    <span className="w-[28px] font-bold" style={{ color: t.side === 'BUY' ? bull : bear }}>{t.side}</span>
+                    <span className="text-white/40 flex-1">${t.price.toLocaleString()}</span>
+                    <span className="font-semibold text-white/70">{t.qty.toFixed(3)}</span>
+                    <span className="text-white/20 w-[52px] text-right">${fmtK(t.value)}</span>
+                  </div>
+                ))}
+              </div>
+            </>}
+          </Card>
+        </div>
+
+        {/* Column 2: Positioning & Structure */}
+        <div className="space-y-3">
+          <Card title="VOLUME PROFILE" sub="$100 Buckets · 4H">
+            {d.data.volumeProfile && <>
+              <div className="flex gap-3 mb-3 text-[10px]">
+                <span className="text-white/20">POC: <b className="text-[#e5c07b]">${fmt(d.data.volumeProfile.poc.price)}</b></span>
+                <span className="text-white/20">VA: <b className="text-white/40">${fmt(d.data.volumeProfile.valueAreaLow)} – ${fmt(d.data.volumeProfile.valueAreaHigh)}</b></span>
+                <Pill text={d.data.volumeProfile.priceVsVA.replace('_', ' ')} bull={d.data.volumeProfile.priceVsVA === 'above_VA'} />
+              </div>
+              <div className="space-y-[2px]">
+                {[...d.data.volumeProfile.topBuckets].sort((a: any, b: any) => b.price - a.price).map((b: any) => {
+                  const maxVol = Math.max(...d.data.volumeProfile.topBuckets.map((x: any) => x.vol))
+                  const isPOC = b.price === d.data.volumeProfile.poc.price
+                  const pct = b.vol / maxVol
+                  return (
+                    <div key={b.price} className={`flex items-center gap-2 ${isPOC ? 'bg-[#e5c07b]/[0.04] rounded px-1 -mx-1' : ''}`}>
+                      <span className={`w-[58px] text-[10px] text-right ${isPOC ? 'text-[#e5c07b] font-bold' : 'text-white/30'}`}>
+                        ${b.price.toLocaleString()}
+                      </span>
+                      <div className="flex-1 h-[14px] bg-white/[0.02] rounded-sm overflow-hidden flex">
+                        <div style={{ width: `${pct * (b.delta > 0 ? 60 : 40)}%`, background: `${bull}40` }} />
+                        <div style={{ width: `${pct * (b.delta > 0 ? 40 : 60)}%`, background: `${bear}40` }} />
+                      </div>
+                      <span className="w-[32px] text-[9px] text-white/20 text-right">{b.vol.toFixed(0)}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>}
+          </Card>
+
+          <Card title="LIQUIDATION MAP" sub="Estimated Cascade Levels">
+            {d.data.liquidations && <>
+              <div className="text-[9px] text-white/15 tracking-wider mb-1">SHORT LIQUIDATIONS ↑</div>
+              <div className="space-y-px mb-2">
+                {[...d.data.liquidations.shortLiqs].reverse().map((l: any) => (
+                  <LiqRow key={'s'+l.leverage} leverage={l.leverage} price={l.price} distance={l.distance} side="short" />
+                ))}
+              </div>
+              <div className="text-center py-1.5 border-y border-white/[0.04] mb-2">
+                <span className="text-[10px] font-bold" style={{ color: cyan }}>${d.price.toLocaleString()}</span>
+                <span className="text-[9px] text-white/15 ml-2">CURRENT</span>
+              </div>
+              <div className="text-[9px] text-white/15 tracking-wider mb-1">LONG LIQUIDATIONS ↓</div>
+              <div className="space-y-px">
+                {d.data.liquidations.longLiqs.map((l: any) => (
+                  <LiqRow key={'l'+l.leverage} leverage={l.leverage} price={l.price} distance={l.distance} side="long" />
+                ))}
+              </div>
+            </>}
+          </Card>
+
+          <Card title="TECHNICALS" sub="Multi-Timeframe · RSI + MACD + S/R">
+            {d.data.technicals && Object.entries(d.data.technicals as Record<string, any>).map(([tf, t]) => {
+              const label = tf === 'h1' ? '1H' : tf === 'h4' ? '4H' : '1D'
+              const trendCol = t.trend?.includes('bull') ? bull : t.trend?.includes('bear') ? bear : warn
+              return (
+                <div key={tf} className="py-2 border-b border-white/[0.03] last:border-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold" style={{ color: trendCol }}>{label}</span>
+                    <span className="text-[10px] text-white/25">{t.trend}</span>
+                    <span className="ml-auto text-[10px]">
+                      RSI <b style={{ color: t.rsi < 30 ? bull : t.rsi > 70 ? bear : '#c8ccd4' }}>{t.rsi}</b>
+                    </span>
+                    <span className="text-[10px]">
+                      MACD <b style={{ color: t.macd?.rising ? bull : bear }}>{t.macd?.rising ? '▲' : '▼'}</b>
+                    </span>
+                  </div>
+                  {(t.supports?.length > 0 || t.resistances?.length > 0) && (
+                    <div className="flex gap-4 text-[9px]">
+                      <span className="text-white/15">S: <span style={{ color: bull }}>{t.supports?.slice(0, 2).map((p: number) => '$' + fmt(p)).join(' · ') || '—'}</span></span>
+                      <span className="text-white/15">R: <span style={{ color: bear }}>{t.resistances?.slice(0, 2).map((p: number) => '$' + fmt(p)).join(' · ') || '—'}</span></span>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </Card>
+        </div>
+
+        {/* Column 3: Derivatives + Macro */}
+        <div className="space-y-3">
+          <Card title="OPTIONS" sub="Deribit · P/C + Max Pain + Flow">
+            {d.data.options && <>
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                <MiniStat label="P/C RATIO" value={d.data.options.pcRatio} color={d.data.options.pcRatio > 0.7 ? bear : bull} />
+                <MiniStat label="MAX PAIN" value={`$${fmtK(d.data.options.maxPain)}`} />
+                <MiniStat label="CALL OI" value={fmtK(d.data.options.callOI)} color={bull} />
+                <MiniStat label="PUT OI" value={fmtK(d.data.options.putOI)} color={bear} />
+              </div>
+              <div className="text-[9px] text-white/15 tracking-wider mb-1">TOP STRIKES BY OI</div>
+              {(d.data.options.topStrikes || []).slice(0, 5).map((s: any) => {
+                const total = s.callOI + s.putOI
+                const callPct = total > 0 ? s.callOI / total * 100 : 50
+                return (
+                  <div key={s.strike} className="flex items-center gap-2 py-1 border-b border-white/[0.02]">
+                    <span className="w-[60px] text-[10px] text-white/40">${fmt(s.strike)}</span>
+                    <div className="flex-1 h-[10px] rounded-sm overflow-hidden flex bg-white/[0.02]">
+                      <div style={{ width: `${callPct}%`, background: `${bull}50` }} />
+                      <div style={{ width: `${100 - callPct}%`, background: `${bear}50` }} />
+                    </div>
+                    <span className="text-[9px] text-white/20 w-[40px] text-right">{fmtK(total)}</span>
+                  </div>
+                )
               })}
-            </div>
-          </>}
-        </Card>
+            </>}
+            {d.data.optionsFlow && d.data.optionsFlow.totalLarge > 0 && <>
+              <div className="text-[9px] text-white/15 tracking-wider mt-3 mb-1">LARGE PRINTS (&gt;$50K)</div>
+              <div className="flex gap-3 mb-2">
+                <MiniStat label="BULLISH" value={d.data.optionsFlow.bullish} color={bull} />
+                <MiniStat label="BEARISH" value={d.data.optionsFlow.bearish} color={bear} />
+                <MiniStat label="NET" value={`${d.data.optionsFlow.netFlow > 0 ? '+' : ''}${d.data.optionsFlow.netFlow}`} color={sc(d.data.optionsFlow.netFlow)} />
+              </div>
+            </>}
+          </Card>
 
-        {/* Orderbook */}
-        <Card title="ORDER BOOK — BINANCE FUTURES">
-          {d.data.orderbook && <>
-            {[...d.data.orderbook.asks].reverse().map((a: any, i: number) => {
-              const maxVal = Math.max(...[...d.data.orderbook.asks, ...d.data.orderbook.bids].map((l: any) => l.value))
-              return <OBRow key={'a'+i} price={a.price} qty={a.qty} pct={a.value/maxVal*100} side="ask" />
-            })}
-            <div className="text-center text-[10px] text-[#56b6c2] py-1 border-y border-white/[0.04]">
-              SPREAD: ${d.data.orderbook.spread.toFixed(1)}
-            </div>
-            {d.data.orderbook.bids.map((b: any, i: number) => {
-              const maxVal = Math.max(...[...d.data.orderbook.asks, ...d.data.orderbook.bids].map((l: any) => l.value))
-              return <OBRow key={'b'+i} price={b.price} qty={b.qty} pct={b.value/maxVal*100} side="bid" />
-            })}
-          </>}
-        </Card>
+          <Card title="FUNDING" sub="Cross-Exchange Comparison">
+            {d.data.funding && <>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="flex-1 text-center py-2 rounded bg-white/[0.02]">
+                  <div className="text-[8px] text-white/20 tracking-wider mb-0.5">BINANCE</div>
+                  <div className="text-sm font-bold" style={{ color: sc(-d.data.funding.rate) }}>
+                    {(d.data.funding.rate * 100).toFixed(4)}%
+                  </div>
+                </div>
+                {d.data.fundingDiff && <div className="flex-1 text-center py-2 rounded bg-white/[0.02]">
+                  <div className="text-[8px] text-white/20 tracking-wider mb-0.5">BYBIT</div>
+                  <div className="text-sm font-bold" style={{ color: sc(-d.data.fundingDiff.bybit) }}>
+                    {(d.data.fundingDiff.bybit * 100).toFixed(4)}%
+                  </div>
+                </div>}
+              </div>
+              {d.data.fundingDiff && d.data.fundingDiff.absDiff > 0.0001 && (
+                <div className="text-[10px] text-center rounded py-1 bg-white/[0.02]">
+                  <span className="text-white/20">Differential: </span>
+                  <span className="font-semibold" style={{ color: warn }}>{(d.data.fundingDiff.diff * 100).toFixed(4)}%</span>
+                  <span className="text-white/20 ml-2">{d.data.fundingDiff.signal.replace('_', ' ')}</span>
+                </div>
+              )}
+            </>}
+          </Card>
 
-        {/* Large Trades */}
-        <Card title="LARGE TRADES (≥1 BTC)" className="lg:row-span-2">
-          {d.data.largeTrades && <>
-            <div className="text-[10px] mb-2 text-white/40">
-              <span style={{ color: c(d.data.largeTrades.netDelta) }}>
-                Net: {d.data.largeTrades.netDelta > 0 ? '+' : ''}{d.data.largeTrades.netDelta.toFixed(1)} BTC
-              </span>
-              {' · '}{d.data.largeTrades.count} large · {d.data.largeTrades.whaleCount} whale · {d.data.largeTrades.pctOfTotal}% of vol
-            </div>
-            <div className="max-h-[300px] overflow-y-auto scrollbar-none">
-              {(d.data.largeTrades.recent || []).map((t: any, i: number) => (
-                <div key={i} className={`flex gap-1.5 py-1 text-[10px] border-b border-white/[0.02] ${t.whale ? 'bg-[#c678dd]/[0.05]' : ''}`}>
-                  <span className="text-white/20 w-[50px]">{ts(t.time)}</span>
-                  <span className="w-[30px] font-semibold" style={{ color: t.side === 'BUY' ? '#00e5a0' : '#ff4976' }}>{t.side}</span>
-                  <span className="w-[75px]">${t.price.toLocaleString()}</span>
-                  <span className="w-[50px] text-right">{t.qty.toFixed(3)}</span>
-                  <span className="flex-1 text-right text-white/30">${fmtK(t.value)}</span>
+          <Card title="CME FUTURES" sub="Institutional Positioning">
+            {d.data.cme ? <>
+              <div className="grid grid-cols-3 gap-2 mb-2">
+                <MiniStat label="CME PRICE" value={`$${fmt(d.data.cme.price)}`} />
+                <MiniStat label="BASIS" value={`${d.data.cme.basis > 0 ? '+' : ''}${d.data.cme.basis}%`} color={sc(d.data.cme.basis)} />
+                {d.data.cme.gap && <MiniStat label="GAP" value={`$${fmt(Math.abs(d.data.cme.gap))}`} color={d.data.cme.gapFilled ? neutral : warn} />}
+              </div>
+              <div className="text-[10px] text-white/30">{d.data.cme.basisLabel}</div>
+              {d.data.cme.gap && !d.data.cme.gapFilled && (
+                <div className="text-[10px] mt-1" style={{ color: warn }}>⚠ Open gap — CME gaps fill ~90% of the time</div>
+              )}
+            </> : <div className="text-[10px] text-white/20">Market closed</div>}
+          </Card>
+
+          <Card title="CORRELATIONS" sub="7D Rolling · Hourly Returns">
+            {d.data.correlations ? <div className="space-y-2">
+              {([
+                ['ETH', d.data.correlations.ethBtc, 'Normal: 0.85+', d.data.correlations.ethBtc !== null && d.data.correlations.ethBtc < 0.7],
+                ['DXY', d.data.correlations.dxyBtc, 'Normal: negative', d.data.correlations.dxyBtc !== null && d.data.correlations.dxyBtc > 0.3],
+                ['SPX', d.data.correlations.spxBtc, 'Risk-on proxy', false],
+                ['Gold', d.data.correlations.goldBtc, 'Safe haven', false],
+              ] as [string, number | null, string, boolean][]).map(([label, val, note, alert]) => (
+                <div key={label} className="flex items-center gap-2">
+                  <span className={`w-[36px] text-[10px] font-semibold ${alert ? 'text-[#e5c07b]' : 'text-white/40'}`}>{label}</span>
+                  <CorrBar value={val} />
+                  <span className="w-[40px] text-right text-[10px] font-bold" style={{ color: val !== null ? sc(val) : neutral }}>
+                    {val !== null ? (val > 0 ? '+' : '') + val.toFixed(2) : '—'}
+                  </span>
+                  {alert && <span className="text-[8px] text-[#e5c07b]">⚠</span>}
                 </div>
               ))}
-            </div>
-          </>}
-        </Card>
+            </div> : null}
+          </Card>
 
-        {/* Volume Profile */}
-        <Card title="VOLUME PROFILE ($100 BUCKETS)">
-          {d.data.volumeProfile && <>
-            <div className="text-[10px] text-white/30 mb-2">
-              POC: ${d.data.volumeProfile.poc.price.toLocaleString()} · VA: ${d.data.volumeProfile.valueAreaLow.toLocaleString()}-${d.data.volumeProfile.valueAreaHigh.toLocaleString()} · {d.data.volumeProfile.priceVsVA.replace('_', ' ')}
-            </div>
-            {[...d.data.volumeProfile.topBuckets].sort((a: any, b: any) => b.price - a.price).map((b: any) => {
-              const maxVol = Math.max(...d.data.volumeProfile.topBuckets.map((x: any) => x.vol))
-              const isPOC = b.price === d.data.volumeProfile.poc.price
-              return (
-                <div key={b.price} className="flex items-center gap-1.5 my-[2px]">
-                  <span className={`w-[65px] text-[10px] text-right ${isPOC ? 'text-[#e5c07b] font-semibold' : 'text-white/40'}`}>
-                    {isPOC ? '★ ' : ''}${b.price.toLocaleString()}
-                  </span>
-                  <div className={`flex-1 h-3 bg-white/[0.02] rounded-sm overflow-hidden relative ${isPOC ? 'ring-1 ring-[#e5c07b]/30' : ''}`}>
-                    <div className="absolute h-full bg-[#00e5a0]/30" style={{ width: `${b.vol / maxVol * (b.delta > 0 ? 60 : 40)}%` }} />
-                    <div className="absolute h-full bg-[#ff4976]/30" style={{ left: `${b.vol / maxVol * (b.delta > 0 ? 60 : 40)}%`, width: `${b.vol / maxVol * (b.delta > 0 ? 40 : 60)}%` }} />
-                    <span className="absolute right-1 text-[8px] text-white/20 leading-3">{b.vol.toFixed(0)}</span>
+          <Card title="STABLECOINS" sub="USDT + USDC Supply · 24H Change">
+            {d.data.stablecoins ? <>
+              <div className="flex gap-3 mb-2">
+                {d.data.stablecoins.usdtMcap && <div className="flex-1 text-center py-2 rounded bg-white/[0.02]">
+                  <div className="text-[8px] text-white/20 tracking-wider">USDT</div>
+                  <div className="text-xs font-semibold text-white/60">${fmtK(d.data.stablecoins.usdtMcap)}</div>
+                  <div className="text-[10px] font-bold" style={{ color: sc(d.data.stablecoins.usdtChange24h || 0) }}>
+                    {d.data.stablecoins.usdtChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdtChange24h}%
                   </div>
-                </div>
-              )
-            })}
-          </>}
-        </Card>
-
-        {/* Technicals */}
-        <Card title="MULTI-TIMEFRAME TECHNICALS">
-          {d.data.technicals && Object.entries(d.data.technicals as Record<string, any>).map(([tf, t]) => {
-            const label = tf === 'h1' ? '1H' : tf === 'h4' ? '4H' : '1D'
-            const trendCol = t.trend?.includes('bull') ? '#00e5a0' : t.trend?.includes('bear') ? '#ff4976' : '#e5c07b'
-            return (
-              <div key={tf} className="mb-3 last:mb-0">
-                <div className="font-semibold text-[11px] mb-1">
-                  <span style={{ color: trendCol }}>{label}</span>
-                  <span className="text-white/30"> — {t.trend}</span>
-                </div>
-                <div className="flex gap-3 text-[10px] text-white/30">
-                  <span>RSI: <b style={{ color: t.rsi < 30 ? '#00e5a0' : t.rsi > 70 ? '#ff4976' : '#c8ccd4' }}>{t.rsi}</b></span>
-                  <span>MACD: <b style={{ color: t.macd?.rising ? '#00e5a0' : '#ff4976' }}>{t.macd?.rising ? '↑' : '↓'}</b></span>
-                </div>
-                {t.supports?.length > 0 && (
-                  <div className="text-[9px] text-white/20 mt-0.5">
-                    S: {t.supports.slice(0, 2).map((p: number) => '$' + fmt(p)).join(', ')} | R: {t.resistances?.slice(0, 2).map((p: number) => '$' + fmt(p)).join(', ') || '—'}
+                </div>}
+                {d.data.stablecoins.usdcMcap && <div className="flex-1 text-center py-2 rounded bg-white/[0.02]">
+                  <div className="text-[8px] text-white/20 tracking-wider">USDC</div>
+                  <div className="text-xs font-semibold text-white/60">${fmtK(d.data.stablecoins.usdcMcap)}</div>
+                  <div className="text-[10px] font-bold" style={{ color: sc(d.data.stablecoins.usdcChange24h || 0) }}>
+                    {d.data.stablecoins.usdcChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdcChange24h}%
                   </div>
-                )}
+                </div>}
               </div>
-            )
-          })}
-        </Card>
+              <div className="text-[10px] text-center" style={{ color: sc(d.data.stablecoins.totalChange) }}>
+                {d.data.stablecoins.signal}
+              </div>
+            </> : null}
+          </Card>
 
-        {/* Liquidations */}
-        <Card title="LIQUIDATION ESTIMATES">
-          {d.data.liquidations && <>
-            <div className="text-[9px] text-white/20 mb-1">SHORT LIQUIDATIONS (above)</div>
-            {[...d.data.liquidations.shortLiqs].reverse().map((l: any) => (
-              <div key={'s'+l.leverage} className="flex justify-between text-[10px] py-0.5">
-                <span className="text-white/20 w-8">{l.leverage}x</span>
-                <span className="text-[#ff4976]">${l.price.toLocaleString()}</span>
-                <span className="text-white/20 w-10 text-right">{l.distance}</span>
-              </div>
-            ))}
-            <div className="text-center text-[10px] text-[#56b6c2] font-semibold py-1.5 my-1 border-y border-white/[0.04]">
-              ── ${d.price.toLocaleString()} ──
-            </div>
-            <div className="text-[9px] text-white/20 mb-1">LONG LIQUIDATIONS (below)</div>
-            {d.data.liquidations.longLiqs.map((l: any) => (
-              <div key={'l'+l.leverage} className="flex justify-between text-[10px] py-0.5">
-                <span className="text-white/20 w-8">{l.leverage}x</span>
-                <span className="text-[#00e5a0]">${l.price.toLocaleString()}</span>
-                <span className="text-white/20 w-10 text-right">{l.distance}</span>
-              </div>
-            ))}
-          </>}
-        </Card>
-
-        {/* Options + F&G */}
-        <Card title="OPTIONS — DERIBIT">
-          {d.data.options && <>
-            <div className="flex gap-4 mb-3">
-              <div>
-                <div className="text-[8px] text-white/20 tracking-wider">P/C RATIO</div>
-                <div className="text-base font-bold" style={{ color: d.data.options.pcRatio > 0.7 ? '#ff4976' : '#00e5a0' }}>{d.data.options.pcRatio}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20 tracking-wider">MAX PAIN</div>
-                <div className="text-base font-bold">${fmt(d.data.options.maxPain)}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20 tracking-wider">CALL OI</div>
-                <div className="text-xs text-[#00e5a0]">{fmtK(d.data.options.callOI)}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20 tracking-wider">PUT OI</div>
-                <div className="text-xs text-[#ff4976]">{fmtK(d.data.options.putOI)}</div>
-              </div>
-            </div>
-            {(d.data.options.topStrikes || []).slice(0, 5).map((s: any) => (
-              <div key={s.strike} className="flex justify-between text-[10px] py-0.5 border-b border-white/[0.02]">
-                <span>${fmt(s.strike)}</span>
-                <span className="text-[#00e5a0]">C: {fmtK(s.callOI)}</span>
-                <span className="text-[#ff4976]">P: {fmtK(s.putOI)}</span>
-              </div>
-            ))}
-          </>}
-          {d.data.fearGreed && <>
-            <div className="text-[9px] text-white/20 tracking-widest mt-4 mb-2">FEAR & GREED</div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold" style={{
-                color: d.data.fearGreed.value <= 25 ? '#ff4976' : d.data.fearGreed.value >= 75 ? '#00e5a0' : '#e5c07b'
-              }}>{d.data.fearGreed.value}</span>
-              <div className="flex-1">
-                <div className="text-[10px]" style={{
-                  color: d.data.fearGreed.value <= 25 ? '#ff4976' : d.data.fearGreed.value >= 75 ? '#00e5a0' : '#e5c07b'
-                }}>{d.data.fearGreed.label}</div>
-                <div className="h-1.5 rounded-full mt-1" style={{ background: 'linear-gradient(to right, #ff4976, #e5c07b, #00e5a0)' }}>
-                  <div className="relative">
-                    <div className="absolute w-0.5 h-3 bg-white rounded -top-[3px]" style={{ left: `${d.data.fearGreed.value}%` }} />
-                  </div>
+          {d.data.onchain && d.data.onchain.count > 0 && (
+            <Card title="ON-CHAIN" sub="Large BTC Transfers · >100 BTC">
+              <div className="text-[10px] text-white/30 mb-2">{d.data.onchain.count} txs · {d.data.onchain.totalBTC} BTC total</div>
+              {(d.data.onchain.recent || []).map((tx: any, i: number) => (
+                <div key={i} className="flex justify-between py-1 text-[10px] border-b border-white/[0.02]">
+                  <span className="text-white/20 font-mono">{tx.hash}…</span>
+                  <span className="font-bold" style={{ color: purple }}>{tx.btc} BTC</span>
                 </div>
-              </div>
-            </div>
-          </>}
-        </Card>
-
-        {/* Options Flow */}
-        <Card title="OPTIONS FLOW — LARGE PRINTS">
-          {d.data.optionsFlow ? <>
-            <div className="flex gap-4 mb-3">
-              <div>
-                <div className="text-[8px] text-white/20">BULLISH</div>
-                <div className="text-base font-bold text-[#00e5a0]">{d.data.optionsFlow.bullish}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20">BEARISH</div>
-                <div className="text-base font-bold text-[#ff4976]">{d.data.optionsFlow.bearish}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20">NET</div>
-                <div className="text-base font-bold" style={{ color: c(d.data.optionsFlow.netFlow) }}>
-                  {d.data.optionsFlow.netFlow > 0 ? '+' : ''}{d.data.optionsFlow.netFlow}
-                </div>
-              </div>
-            </div>
-            {(d.data.optionsFlow.recent || []).slice(0, 6).map((t: any, i: number) => (
-              <div key={i} className="flex gap-1.5 py-0.5 text-[9px] border-b border-white/[0.02]">
-                <span className="w-[130px] truncate text-white/50">{t.instrument}</span>
-                <span className="font-semibold" style={{ color: t.direction === 'buy' ? '#00e5a0' : '#ff4976' }}>{t.direction?.toUpperCase()}</span>
-                <span className="text-white/30 ml-auto">{t.amount?.toFixed(1)}</span>
-              </div>
-            ))}
-          </> : <div className="text-[10px] text-white/20">No large prints detected</div>}
-        </Card>
-
-        {/* Funding Differential */}
-        <Card title="CROSS-EXCHANGE FUNDING">
-          {d.data.fundingDiff ? <>
-            <div className="flex gap-4 mb-2">
-              <div>
-                <div className="text-[8px] text-white/20">BINANCE</div>
-                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.binance) }}>
-                  {(d.data.fundingDiff.binance * 100).toFixed(4)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20">BYBIT</div>
-                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.bybit) }}>
-                  {(d.data.fundingDiff.bybit * 100).toFixed(4)}%
-                </div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20">DIFF</div>
-                <div className="text-sm font-semibold" style={{ color: c(-d.data.fundingDiff.diff) }}>
-                  {(d.data.fundingDiff.diff * 100).toFixed(4)}%
-                </div>
-              </div>
-            </div>
-            <div className="text-[10px] text-white/30">{d.data.fundingDiff.signal.replace('_', ' ')}</div>
-          </> : <div className="text-[10px] text-white/20">Loading...</div>}
-        </Card>
-
-        {/* CME Basis */}
-        <Card title="CME FUTURES BASIS">
-          {d.data.cme ? <>
-            <div className="flex gap-4 mb-2">
-              <div>
-                <div className="text-[8px] text-white/20">CME PRICE</div>
-                <div className="text-sm font-semibold">${fmt(d.data.cme.price)}</div>
-              </div>
-              <div>
-                <div className="text-[8px] text-white/20">BASIS</div>
-                <div className="text-sm font-semibold" style={{ color: c(d.data.cme.basis) }}>
-                  {d.data.cme.basis > 0 ? '+' : ''}{d.data.cme.basis}%
-                </div>
-              </div>
-              {d.data.cme.gap && <div>
-                <div className="text-[8px] text-white/20">GAP</div>
-                <div className="text-sm font-semibold" style={{ color: d.data.cme.gapFilled ? '#5c6370' : '#e5c07b' }}>
-                  ${d.data.cme.gap.toLocaleString()} {d.data.cme.gapFilled ? '(filled)' : '(open)'}
-                </div>
-              </div>}
-            </div>
-            <div className="text-[10px] text-white/30">{d.data.cme.basisLabel}</div>
-          </> : <div className="text-[10px] text-white/20">Market closed or unavailable</div>}
-        </Card>
-
-        {/* Correlations */}
-        <Card title="CORRELATIONS (7D HOURLY)">
-          {d.data.correlations ? <>
-            {[
-              ['BTC / ETH', d.data.correlations.ethBtc, 'normally 0.85+'],
-              ['BTC / DXY', d.data.correlations.dxyBtc, 'normally negative'],
-              ['BTC / SPX', d.data.correlations.spxBtc, 'risk-on correlation'],
-              ['BTC / Gold', d.data.correlations.goldBtc, 'safe haven comparison'],
-            ].map(([label, val, note]) => {
-              const v = val as number | null
-              const absV = Math.abs(v || 0)
-              const barCol = v === null ? '#333' : v > 0 ? '#00e5a0' : '#ff4976'
-              return (
-                <div key={label as string} className="flex items-center gap-2 py-1.5 border-b border-white/[0.02]">
-                  <span className="w-[80px] text-[10px] text-white/40">{label as string}</span>
-                  <div className="flex-1 h-2 bg-white/[0.03] rounded overflow-hidden relative">
-                    <div className="absolute h-full rounded" style={{
-                      background: barCol, width: `${absV * 50}%`,
-                      left: (v || 0) >= 0 ? '50%' : `${50 - absV * 50}%`,
-                    }} />
-                    <div className="absolute h-full w-px bg-white/10 left-1/2" />
-                  </div>
-                  <span className="w-[40px] text-right text-[10px] font-semibold" style={{ color: barCol }}>
-                    {v !== null ? (v > 0 ? '+' : '') + v.toFixed(2) : '—'}
-                  </span>
-                </div>
-              )
-            })}
-            <div className="text-[9px] text-white/15 mt-1">← inverse | neutral | correlated →</div>
-          </> : <div className="text-[10px] text-white/20">Computing...</div>}
-        </Card>
-
-        {/* Stablecoins */}
-        <Card title="STABLECOIN SUPPLY (24H)">
-          {d.data.stablecoins ? <>
-            <div className="flex gap-4 mb-3">
-              {d.data.stablecoins.usdtMcap && <div>
-                <div className="text-[8px] text-white/20">USDT</div>
-                <div className="text-sm font-semibold">${fmtK(d.data.stablecoins.usdtMcap)}</div>
-                <div className="text-[9px]" style={{ color: c(d.data.stablecoins.usdtChange24h || 0) }}>
-                  {d.data.stablecoins.usdtChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdtChange24h}%
-                </div>
-              </div>}
-              {d.data.stablecoins.usdcMcap && <div>
-                <div className="text-[8px] text-white/20">USDC</div>
-                <div className="text-sm font-semibold">${fmtK(d.data.stablecoins.usdcMcap)}</div>
-                <div className="text-[9px]" style={{ color: c(d.data.stablecoins.usdcChange24h || 0) }}>
-                  {d.data.stablecoins.usdcChange24h > 0 ? '+' : ''}{d.data.stablecoins.usdcChange24h}%
-                </div>
-              </div>}
-            </div>
-            <div className="text-[10px]" style={{ color: d.data.stablecoins.totalChange > 0 ? '#00e5a0' : d.data.stablecoins.totalChange < 0 ? '#ff4976' : '#5c6370' }}>
-              {d.data.stablecoins.signal}
-            </div>
-          </> : <div className="text-[10px] text-white/20">Loading...</div>}
-        </Card>
-
-        {/* On-chain */}
-        <Card title="LARGE BTC TRANSACTIONS">
-          {d.data.onchain && d.data.onchain.count > 0 ? <>
-            <div className="text-[10px] text-white/30 mb-2">
-              {d.data.onchain.count} large txs | Total: {d.data.onchain.totalBTC} BTC
-            </div>
-            {(d.data.onchain.recent || []).map((tx: any, i: number) => (
-              <div key={i} className="flex justify-between text-[10px] py-0.5 border-b border-white/[0.02]">
-                <span className="text-white/30 font-mono">{tx.hash}...</span>
-                <span className="font-semibold text-[#c678dd]">{tx.btc} BTC</span>
-              </div>
-            ))}
-          </> : <div className="text-[10px] text-white/20">No large transactions detected</div>}
-        </Card>
+              ))}
+            </Card>
+          )}
+        </div>
       </div>
+
+      {/* ═══ FEAR & GREED FOOTER ═══ */}
+      {d.data.fearGreed && (
+        <div className="flex items-center gap-4 p-3 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+          <span className="text-[9px] text-white/15 tracking-widest w-[80px]">FEAR & GREED</span>
+          <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'linear-gradient(to right, #ff4976 0%, #e5c07b 40%, #00e5a0 100%)' }}>
+            <div className="relative h-full">
+              <div className="absolute w-2 h-4 bg-white rounded-full -top-1 shadow-lg shadow-white/20 transition-all duration-500" style={{ left: `${d.data.fearGreed.value}%`, transform: 'translateX(-50%)' }} />
+            </div>
+          </div>
+          <div className="text-right min-w-[80px]">
+            <span className="text-lg font-bold" style={{ color: d.data.fearGreed.value <= 25 ? bear : d.data.fearGreed.value >= 75 ? bull : warn }}>{d.data.fearGreed.value}</span>
+            <span className="text-[10px] text-white/30 ml-1.5">{d.data.fearGreed.label}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
-function Card({ title, children, className = '' }: { title: string; children: React.ReactNode; className?: string }) {
+// ── Components ───────────────────────────────────────
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className={`p-3 rounded-lg border border-white/[0.04] bg-white/[0.01] ${className}`}>
-      <div className="text-[9px] text-white/20 tracking-widest font-semibold mb-2.5">{title}</div>
+    <div className="p-3 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+      <div className="text-[9px] text-white/15 tracking-[0.2em] font-semibold mb-3">{title}</div>
       {children}
     </div>
   )
 }
 
-function Tag({ label, bull }: { label: string; bull: boolean }) {
+function Card({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
   return (
-    <span className={`text-[9px] px-2 py-0.5 rounded font-semibold tracking-wider uppercase ${
-      bull ? 'bg-[#00e5a0]/10 text-[#00e5a0]' : 'bg-[#ff4976]/10 text-[#ff4976]'
-    }`}>{label}</span>
+    <div className="p-3 rounded-lg border border-white/[0.04] bg-white/[0.01]">
+      <div className="flex items-baseline gap-2 mb-2.5">
+        <span className="text-[9px] text-white/20 tracking-[0.15em] font-semibold">{title}</span>
+        {sub && <span className="text-[8px] text-white/10">{sub}</span>}
+      </div>
+      {children}
+    </div>
   )
 }
 
-function OBRow({ price, qty, pct, side }: { price: number; qty: number; pct: number; side: 'bid' | 'ask' }) {
+function QuickStat({ label, value, color, sub, alert }: { label: string; value: string | number; color?: string; sub?: string; alert?: boolean }) {
   return (
-    <div className="flex items-center gap-1 py-[1px] relative">
-      <div className="absolute inset-0 opacity-[0.08]" style={{
-        background: side === 'bid' ? '#00e5a0' : '#ff4976',
-        width: `${pct}%`,
-        [side === 'bid' ? 'right' : 'left']: 0,
-      }} />
-      <span className={`w-[85px] text-right text-[10px] relative z-10 ${side === 'bid' ? 'text-[#00e5a0]' : 'text-[#ff4976]'}`}>
-        {price.toFixed(1)}
+    <div className={`text-center p-2 rounded-lg border border-white/[0.04] bg-white/[0.01] ${alert ? 'ring-1 ring-[#e5c07b]/30' : ''}`}>
+      <div className="text-[7px] text-white/15 tracking-[0.15em] mb-1">{label}</div>
+      <div className="text-sm font-bold" style={{ color: color || '#c8ccd4' }}>{value}</div>
+      {sub && <div className="text-[8px] text-white/20 mt-0.5 truncate">{sub}</div>}
+    </div>
+  )
+}
+
+function MiniStat({ label, value, color }: { label: string; value: string | number; color?: string }) {
+  return (
+    <div>
+      <div className="text-[7px] text-white/15 tracking-wider">{label}</div>
+      <div className="text-xs font-bold" style={{ color: color || '#c8ccd4' }}>{value}</div>
+    </div>
+  )
+}
+
+function Pill({ text, bull, color }: { text: string; bull?: boolean; color?: string }) {
+  const bg = color ? `${color}15` : bull ? 'rgba(0,229,160,0.1)' : 'rgba(255,73,118,0.1)'
+  const fg = color || (bull ? '#00e5a0' : '#ff4976')
+  return <span className="text-[9px] px-2 py-0.5 rounded font-semibold tracking-wider" style={{ background: bg, color: fg }}>{text}</span>
+}
+
+function SignalBar({ name, score, confidence, reason }: { name: string; score: number; confidence: number; reason: string }) {
+  const pct = Math.abs(score) / 2
+  const color = sc(score)
+  return (
+    <div className="flex items-center gap-2 py-1.5 border-b border-white/[0.015] group">
+      <span className="w-[90px] text-[10px] text-white/25 truncate capitalize">{name.replace(/([A-Z])/g, ' $1').trim()}</span>
+      <div className="flex-1 h-[6px] bg-white/[0.02] rounded-full relative overflow-hidden">
+        <div className="absolute top-0 bottom-0 w-px bg-white/[0.06] left-1/2" />
+        <div className="absolute h-full rounded-full transition-all duration-500" style={{
+          width: `${pct}%`, background: color,
+          ...(score >= 0 ? { left: '50%' } : { right: '50%' }),
+          boxShadow: `0 0 6px ${color}40`,
+        }} />
+      </div>
+      <span className="w-[32px] text-right text-[10px] font-bold tabular-nums" style={{ color }}>
+        {score > 0 ? '+' : ''}{score}
       </span>
-      <span className="w-[55px] text-right text-[10px] text-white/30 relative z-10">{qty.toFixed(3)}</span>
+    </div>
+  )
+}
+
+function OBRow({ price, qty, total, side, maxVal }: { price: number; qty: number; total: number; side: 'bid' | 'ask'; maxVal: number }) {
+  const pct = maxVal > 0 ? total / maxVal * 100 : 0
+  const color = side === 'bid' ? bull : bear
+  return (
+    <div className="flex items-center gap-1 h-[22px] relative">
+      <div className="absolute inset-0 rounded-sm" style={{ background: color, opacity: 0.06, width: `${pct}%`, ...(side === 'bid' ? { left: 0 } : { right: 0, marginLeft: 'auto' }) }} />
+      <span className="w-[80px] text-right text-[10px] relative z-10" style={{ color }}>{price.toFixed(1)}</span>
+      <span className="w-[55px] text-right text-[10px] text-white/25 relative z-10">{qty.toFixed(3)}</span>
+      <span className="w-[55px] text-right text-[9px] text-white/15 relative z-10">${fmtK(total)}</span>
+    </div>
+  )
+}
+
+function LiqRow({ leverage, price, distance, side }: { leverage: number; price: number; distance: string; side: 'long' | 'short' }) {
+  const color = side === 'short' ? bear : bull
+  return (
+    <div className="flex items-center gap-2 py-1">
+      <span className="w-[28px] text-[10px] text-white/20 text-right">{leverage}×</span>
+      <span className="text-[10px] font-semibold flex-1" style={{ color }}>${price.toLocaleString()}</span>
+      <span className="text-[9px] text-white/15">{distance}</span>
+    </div>
+  )
+}
+
+function CorrBar({ value }: { value: number | null }) {
+  if (value === null) return <div className="flex-1 h-[6px] bg-white/[0.02] rounded-full" />
+  const pct = Math.abs(value) * 50
+  return (
+    <div className="flex-1 h-[6px] bg-white/[0.02] rounded-full relative overflow-hidden">
+      <div className="absolute top-0 bottom-0 w-px bg-white/[0.06] left-1/2" />
+      <div className="absolute h-full rounded-full" style={{
+        width: `${pct}%`,
+        background: sc(value),
+        ...(value >= 0 ? { left: '50%' } : { right: '50%' }),
+      }} />
     </div>
   )
 }
