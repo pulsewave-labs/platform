@@ -1,0 +1,420 @@
+//@version=6
+indicator('PulseWave Indicator', 'PW', overlay=true, max_lines_count=500, max_labels_count=500, max_boxes_count=0)
+
+// ──────────────────────────────────────────────────────────────
+// SETUP
+// ──────────────────────────────────────────────────────────────
+prd       = input.int(defval=10, title='Pivot Period', minval=4, maxval=30, group='Setup', tooltip='Bars left/right for pivot detection. Higher = fewer but stronger levels.')
+ppsrc     = input.string(defval='High/Low', title='Source', options=['High/Low', 'Close/Open'], group='Setup', tooltip='High/Low = wick-based levels. Close/Open = body-based levels.')
+maxnumpp  = input.int(defval=60, title='Maximum Pivots', minval=5, maxval=200, group='Setup', tooltip='Recent pivot points to analyze. More = stronger level detection.')
+ChannelW  = input.int(defval=10, title='Max Channel Width %', minval=1, maxval=50, group='Setup', tooltip='Max S/R zone width as % of price range.')
+maxnumsr  = input.int(defval=8, title='Max S/R Levels', minval=1, maxval=15, group='Setup', tooltip='Maximum levels displayed per timeframe.')
+min_strength = input.int(defval=3, title='Min Strength', minval=1, maxval=10, group='Setup', tooltip='Minimum pivot touches to qualify as S/R. Higher = only the strongest levels.')
+cwLookback = input.int(defval=400, title='Lookback Period', minval=50, maxval=1000, group='Setup', tooltip='Bars used to calculate S/R clustering. 300-500 is the sweet spot.')
+
+// ──────────────────────────────────────────────────────────────
+// TIMEFRAME 1
+// ──────────────────────────────────────────────────────────────
+useTF1       = input.bool(defval=true, title='Enable', group='Timeframe 1')
+tf1          = input.timeframe(defval='30', title='Timeframe', group='Timeframe 1')
+tf1ResColor  = input.color(defval=color.rgb(220, 50, 50), title='Resistance Color', group='Timeframe 1')
+tf1SupColor  = input.color(defval=color.rgb(0, 150, 50), title='Support Color', group='Timeframe 1')
+tf1Style     = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 1')
+tf1Width     = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 1')
+
+// ──────────────────────────────────────────────────────────────
+// TIMEFRAME 2
+// ──────────────────────────────────────────────────────────────
+useTF2       = input.bool(defval=false, title='Enable', group='Timeframe 2')
+tf2          = input.timeframe(defval='240', title='Timeframe', group='Timeframe 2')
+tf2ResColor  = input.color(defval=color.rgb(255, 140, 0), title='Resistance Color', group='Timeframe 2')
+tf2SupColor  = input.color(defval=color.rgb(0, 180, 220), title='Support Color', group='Timeframe 2')
+tf2Style     = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 2')
+tf2Width     = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 2')
+
+// ──────────────────────────────────────────────────────────────
+// TIMEFRAME 3
+// ──────────────────────────────────────────────────────────────
+useTF3       = input.bool(defval=false, title='Enable', group='Timeframe 3')
+tf3          = input.timeframe(defval='D', title='Timeframe', group='Timeframe 3')
+tf3ResColor  = input.color(defval=color.rgb(180, 0, 255), title='Resistance Color', group='Timeframe 3')
+tf3SupColor  = input.color(defval=color.rgb(0, 200, 150), title='Support Color', group='Timeframe 3')
+tf3Style     = input.string(defval='Solid', title='Line Style', options=['Solid', 'Dotted', 'Dashed'], group='Timeframe 3')
+tf3Width     = input.int(defval=1, title='Line Width', minval=1, maxval=4, group='Timeframe 3')
+
+// ──────────────────────────────────────────────────────────────
+// DISPLAY
+// ──────────────────────────────────────────────────────────────
+showLabels   = input.bool(defval=true, title='Show Labels', group='Display')
+showStrength = input.bool(defval=true, title='Show Strength in Labels', group='Display', tooltip='Show touch count.')
+labelloc     = input.int(defval=20, title='Label Offset', group='Display')
+dynColor     = input.bool(defval=true, title='Dynamic Color by Strength', group='Display', tooltip='Stronger levels = more vivid.')
+labelSize    = input.string(defval='Small', title='Label Size', options=['Tiny', 'Small', 'Normal'], group='Display')
+
+// ──────────────────────────────────────────────────────────────
+// ALERTS
+// ──────────────────────────────────────────────────────────────
+alertProximity = input.bool(defval=false, title='Proximity Alerts', group='Alerts')
+proximityPct   = input.float(defval=0.5, title='Proximity %', minval=0.1, maxval=5.0, step=0.1, group='Alerts')
+
+// ──────────────────────────────────────────────────────────────
+// UTILITIES
+// ──────────────────────────────────────────────────────────────
+getLineStyle(s) =>
+    s == 'Dashed' ? line.style_dashed : s == 'Solid' ? line.style_solid : line.style_dotted
+
+tfLabel(tf) =>
+    tf == '1' ? '1m' : tf == '3' ? '3m' : tf == '5' ? '5m' : tf == '15' ? '15m' : tf == '30' ? '30m' : tf == '60' ? '1H' : tf == '120' ? '2H' : tf == '240' ? '4H' : tf == '480' ? '8H' : tf == 'D' ? '1D' : tf == 'W' ? '1W' : tf == 'M' ? '1M' : tf
+
+getLabelSize(s) =>
+    s == 'Tiny' ? size.tiny : s == 'Normal' ? size.normal : size.small
+
+// ──────────────────────────────────────────────────────────────
+// S/R ENGINE (runs per-timeframe via request.security)
+// ──────────────────────────────────────────────────────────────
+calcSR() =>
+    float _src1 = ppsrc == 'High/Low' ? high : math.max(close, open)
+    float _src2 = ppsrc == 'High/Low' ? low  : math.min(close, open)
+    float _ph = ta.pivothigh(_src1, prd, prd)
+    float _pl = ta.pivotlow(_src2, prd, prd)
+
+    var _pvt = array.new_float(0)
+    if not na(_ph) or not na(_pl)
+        array.unshift(_pvt, not na(_ph) ? _ph : _pl)
+        if array.size(_pvt) > maxnumpp
+            array.pop(_pvt)
+
+    float _highest = ta.highest(cwLookback)
+    float _lowest  = ta.lowest(cwLookback)
+    float _cw = (_highest - _lowest) * ChannelW / 100
+
+    var _sr_hi = array.new_float(0)
+    var _sr_lo = array.new_float(0)
+    var _sr_st = array.new_float(0)
+
+    if not na(_ph) or not na(_pl)
+        array.clear(_sr_hi)
+        array.clear(_sr_lo)
+        array.clear(_sr_st)
+
+        for i = 0 to array.size(_pvt) - 1
+            float _ilo = array.get(_pvt, i)
+            float _ihi = _ilo
+            int _numpp = 0
+            for j = 0 to array.size(_pvt) - 1
+                float _cpp = array.get(_pvt, j)
+                float _wdth = _cpp <= _ilo ? _ihi - _cpp : _cpp - _ilo
+                if _wdth <= _cw
+                    if _cpp <= _ihi
+                        _ilo := math.min(_ilo, _cpp)
+                    else
+                        _ihi := math.max(_ihi, _cpp)
+                    _numpp += 1
+
+            bool _valid = true
+            for k = 0 to array.size(_sr_hi) > 0 ? array.size(_sr_hi) - 1 : na
+                if array.get(_sr_hi, k) >= _ilo and array.get(_sr_hi, k) <= _ihi or array.get(_sr_lo, k) >= _ilo and array.get(_sr_lo, k) <= _ihi
+                    if _numpp >= array.get(_sr_st, k)
+                        array.remove(_sr_hi, k)
+                        array.remove(_sr_lo, k)
+                        array.remove(_sr_st, k)
+                    else
+                        _valid := false
+                    break
+
+            if _valid and _numpp >= min_strength
+                int _loc = array.size(_sr_st)
+                for m = _loc > 0 ? array.size(_sr_st) - 1 : na to 0
+                    if _numpp <= array.get(_sr_st, m)
+                        break
+                    _loc := m
+                if _loc < maxnumsr
+                    array.insert(_sr_hi, _loc, _ihi)
+                    array.insert(_sr_lo, _loc, _ilo)
+                    array.insert(_sr_st, _loc, _numpp)
+                    if array.size(_sr_st) > maxnumsr
+                        array.pop(_sr_st)
+                        array.pop(_sr_hi)
+                        array.pop(_sr_lo)
+
+    // Pack 5 levels
+    float _m0 = array.size(_sr_hi) > 0 ? math.round_to_mintick((array.get(_sr_hi, 0) + array.get(_sr_lo, 0)) / 2) : na
+    float _m1 = array.size(_sr_hi) > 1 ? math.round_to_mintick((array.get(_sr_hi, 1) + array.get(_sr_lo, 1)) / 2) : na
+    float _m2 = array.size(_sr_hi) > 2 ? math.round_to_mintick((array.get(_sr_hi, 2) + array.get(_sr_lo, 2)) / 2) : na
+    float _m3 = array.size(_sr_hi) > 3 ? math.round_to_mintick((array.get(_sr_hi, 3) + array.get(_sr_lo, 3)) / 2) : na
+    float _m4 = array.size(_sr_hi) > 4 ? math.round_to_mintick((array.get(_sr_hi, 4) + array.get(_sr_lo, 4)) / 2) : na
+    float _h0 = array.size(_sr_hi) > 0 ? array.get(_sr_hi, 0) : na
+    float _h1 = array.size(_sr_hi) > 1 ? array.get(_sr_hi, 1) : na
+    float _h2 = array.size(_sr_hi) > 2 ? array.get(_sr_hi, 2) : na
+    float _h3 = array.size(_sr_hi) > 3 ? array.get(_sr_hi, 3) : na
+    float _h4 = array.size(_sr_hi) > 4 ? array.get(_sr_hi, 4) : na
+    float _l0 = array.size(_sr_lo) > 0 ? array.get(_sr_lo, 0) : na
+    float _l1 = array.size(_sr_lo) > 1 ? array.get(_sr_lo, 1) : na
+    float _l2 = array.size(_sr_lo) > 2 ? array.get(_sr_lo, 2) : na
+    float _l3 = array.size(_sr_lo) > 3 ? array.get(_sr_lo, 3) : na
+    float _l4 = array.size(_sr_lo) > 4 ? array.get(_sr_lo, 4) : na
+    float _s0 = array.size(_sr_st) > 0 ? array.get(_sr_st, 0) : na
+    float _s1 = array.size(_sr_st) > 1 ? array.get(_sr_st, 1) : na
+    float _s2 = array.size(_sr_st) > 2 ? array.get(_sr_st, 2) : na
+    float _s3 = array.size(_sr_st) > 3 ? array.get(_sr_st, 3) : na
+    float _s4 = array.size(_sr_st) > 4 ? array.get(_sr_st, 4) : na
+    [_m0, _m1, _m2, _m3, _m4, _h0, _h1, _h2, _h3, _h4, _l0, _l1, _l2, _l3, _l4, _s0, _s1, _s2, _s3, _s4]
+
+// ──────────────────────────────────────────────────────────────
+// REQUEST S/R FROM EACH TIMEFRAME
+// ──────────────────────────────────────────────────────────────
+[tf1_m0,tf1_m1,tf1_m2,tf1_m3,tf1_m4,tf1_h0,tf1_h1,tf1_h2,tf1_h3,tf1_h4,tf1_l0,tf1_l1,tf1_l2,tf1_l3,tf1_l4,tf1_s0,tf1_s1,tf1_s2,tf1_s3,tf1_s4] = request.security(syminfo.tickerid, tf1, calcSR())
+[tf2_m0,tf2_m1,tf2_m2,tf2_m3,tf2_m4,tf2_h0,tf2_h1,tf2_h2,tf2_h3,tf2_h4,tf2_l0,tf2_l1,tf2_l2,tf2_l3,tf2_l4,tf2_s0,tf2_s1,tf2_s2,tf2_s3,tf2_s4] = request.security(syminfo.tickerid, tf2, calcSR())
+[tf3_m0,tf3_m1,tf3_m2,tf3_m3,tf3_m4,tf3_h0,tf3_h1,tf3_h2,tf3_h3,tf3_h4,tf3_l0,tf3_l1,tf3_l2,tf3_l3,tf3_l4,tf3_s0,tf3_s1,tf3_s2,tf3_s3,tf3_s4] = request.security(syminfo.tickerid, tf3, calcSR())
+
+// Pack into arrays
+tf1_mids = array.from(tf1_m0, tf1_m1, tf1_m2, tf1_m3, tf1_m4)
+tf1_his  = array.from(tf1_h0, tf1_h1, tf1_h2, tf1_h3, tf1_h4)
+tf1_los  = array.from(tf1_l0, tf1_l1, tf1_l2, tf1_l3, tf1_l4)
+tf1_strs = array.from(tf1_s0, tf1_s1, tf1_s2, tf1_s3, tf1_s4)
+
+tf2_mids = array.from(tf2_m0, tf2_m1, tf2_m2, tf2_m3, tf2_m4)
+tf2_his  = array.from(tf2_h0, tf2_h1, tf2_h2, tf2_h3, tf2_h4)
+tf2_los  = array.from(tf2_l0, tf2_l1, tf2_l2, tf2_l3, tf2_l4)
+tf2_strs = array.from(tf2_s0, tf2_s1, tf2_s2, tf2_s3, tf2_s4)
+
+tf3_mids = array.from(tf3_m0, tf3_m1, tf3_m2, tf3_m3, tf3_m4)
+tf3_his  = array.from(tf3_h0, tf3_h1, tf3_h2, tf3_h3, tf3_h4)
+tf3_los  = array.from(tf3_l0, tf3_l1, tf3_l2, tf3_l3, tf3_l4)
+tf3_strs = array.from(tf3_s0, tf3_s1, tf3_s2, tf3_s3, tf3_s4)
+
+// ──────────────────────────────────────────────────────────────
+// DRAW LEVELS — Inline Labels (no overlap)
+// ──────────────────────────────────────────────────────────────
+var tf1_lines  = array.new_line(5, na)
+var tf1_labels = array.new_label(5, na)
+var tf2_lines  = array.new_line(5, na)
+var tf2_labels = array.new_label(5, na)
+var tf3_lines  = array.new_line(5, na)
+var tf3_labels = array.new_label(5, na)
+
+// Find max strength across all TFs for dynamic color
+float globalMaxStr = 2.0
+if useTF1
+    for i = 0 to 4
+        if not na(array.get(tf1_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf1_strs, i))
+if useTF2
+    for i = 0 to 4
+        if not na(array.get(tf2_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf2_strs, i))
+if useTF3
+    for i = 0 to 4
+        if not na(array.get(tf3_strs, i))
+            globalMaxStr := math.max(globalMaxStr, array.get(tf3_strs, i))
+
+if barstate.islast
+
+    // ── Collect all level data for de-collision ──
+    // We gather all levels, sort by price, then nudge labels that are too close
+    var labelPrices  = array.new_float(0)
+    var labelTexts   = array.new_string(0)
+    var labelColors  = array.new_color(0)
+    var labelTFidx   = array.new_int(0)    // which TF (0,1,2)
+    var labelSlot    = array.new_int(0)     // which slot (0-4)
+    array.clear(labelPrices)
+    array.clear(labelTexts)
+    array.clear(labelColors)
+    array.clear(labelTFidx)
+    array.clear(labelSlot)
+
+    // Helper: build label text and color, collect for de-collision
+    // TF1
+    if useTF1
+        for i = 0 to 4
+            line.delete(array.get(tf1_lines, i))
+            label.delete(array.get(tf1_labels, i))
+            float mid = array.get(tf1_mids, i)
+            float str2 = array.get(tf1_strs, i)
+            if not na(mid)
+                bool isRes = mid >= close
+                color baseCol = isRes ? tf1ResColor : tf1SupColor
+                float strRatio = dynColor ? math.min(str2 / globalMaxStr, 1.0) : 0.5
+                color lineCol = color.new(baseCol, math.round(60 - strRatio * 40))
+                // Draw the line
+                array.set(tf1_lines, i, line.new(math.max(bar_index - 5000, 0), mid, bar_index + labelloc, mid, color=lineCol, style=getLineStyle(tf1Style), width=tf1Width))
+                // Prepare label
+                if showLabels
+                    float rate = 100 * (mid - close) / close
+                    string strTxt = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
+                    string txt = tfLabel(tf1) + '  ' + str.tostring(mid) + '  ' + str.tostring(rate, '#.##') + '%' + strTxt
+                    array.push(labelPrices, mid)
+                    array.push(labelTexts, txt)
+                    array.push(labelColors, lineCol)
+                    array.push(labelTFidx, 0)
+                    array.push(labelSlot, i)
+
+    // TF2
+    if useTF2
+        for i = 0 to 4
+            line.delete(array.get(tf2_lines, i))
+            label.delete(array.get(tf2_labels, i))
+            float mid = array.get(tf2_mids, i)
+            float str2 = array.get(tf2_strs, i)
+            if not na(mid)
+                bool isRes = mid >= close
+                color baseCol = isRes ? tf2ResColor : tf2SupColor
+                float strRatio = dynColor ? math.min(str2 / globalMaxStr, 1.0) : 0.5
+                color lineCol = color.new(baseCol, math.round(60 - strRatio * 40))
+                array.set(tf2_lines, i, line.new(math.max(bar_index - 5000, 0), mid, bar_index + labelloc, mid, color=lineCol, style=getLineStyle(tf2Style), width=tf2Width))
+                if showLabels
+                    float rate = 100 * (mid - close) / close
+                    string strTxt = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
+                    string txt = tfLabel(tf2) + '  ' + str.tostring(mid) + '  ' + str.tostring(rate, '#.##') + '%' + strTxt
+                    array.push(labelPrices, mid)
+                    array.push(labelTexts, txt)
+                    array.push(labelColors, lineCol)
+                    array.push(labelTFidx, 1)
+                    array.push(labelSlot, i)
+
+    // TF3
+    if useTF3
+        for i = 0 to 4
+            line.delete(array.get(tf3_lines, i))
+            label.delete(array.get(tf3_labels, i))
+            float mid = array.get(tf3_mids, i)
+            float str2 = array.get(tf3_strs, i)
+            if not na(mid)
+                bool isRes = mid >= close
+                color baseCol = isRes ? tf3ResColor : tf3SupColor
+                float strRatio = dynColor ? math.min(str2 / globalMaxStr, 1.0) : 0.5
+                color lineCol = color.new(baseCol, math.round(60 - strRatio * 40))
+                array.set(tf3_lines, i, line.new(math.max(bar_index - 5000, 0), mid, bar_index + labelloc, mid, color=lineCol, style=getLineStyle(tf3Style), width=tf3Width))
+                if showLabels
+                    float rate = 100 * (mid - close) / close
+                    string strTxt = showStrength ? ' ×' + str.tostring(math.round(str2)) : ''
+                    string txt = tfLabel(tf3) + '  ' + str.tostring(mid) + '  ' + str.tostring(rate, '#.##') + '%' + strTxt
+                    array.push(labelPrices, mid)
+                    array.push(labelTexts, txt)
+                    array.push(labelColors, lineCol)
+                    array.push(labelTFidx, 2)
+                    array.push(labelSlot, i)
+
+    // ── De-collision: sort labels by price, nudge overlapping ones ──
+    int numLabels = array.size(labelPrices)
+    if numLabels > 0
+        // Sort indices by price (ascending)
+        var sortIdx = array.new_int(0)
+        array.clear(sortIdx)
+        for i = 0 to numLabels - 1
+            array.push(sortIdx, i)
+        // Simple insertion sort by price
+        for i = 1 to numLabels - 1
+            int key = array.get(sortIdx, i)
+            float keyPrice = array.get(labelPrices, key)
+            int j = i - 1
+            while j >= 0
+                int jIdx = array.get(sortIdx, j)
+                if array.get(labelPrices, jIdx) > keyPrice
+                    array.set(sortIdx, j + 1, jIdx)
+                    j -= 1
+                else
+                    break
+            array.set(sortIdx, j + 1, key)
+
+        // Calculate minimum spacing (0.15% of price to avoid overlap)
+        float minSpacing = close * 0.0015
+
+        // Build adjusted Y positions — nudge up when too close
+        var adjPrices = array.new_float(0)
+        array.clear(adjPrices)
+        for i = 0 to numLabels - 1
+            array.push(adjPrices, 0.0)
+
+        // First pass: set initial positions
+        for i = 0 to numLabels - 1
+            int idx = array.get(sortIdx, i)
+            array.set(adjPrices, idx, array.get(labelPrices, idx))
+
+        // Second pass: push labels apart if too close (bottom-up)
+        for i = 1 to numLabels - 1
+            int currIdx = array.get(sortIdx, i)
+            int prevIdx = array.get(sortIdx, i - 1)
+            float currY = array.get(adjPrices, currIdx)
+            float prevY = array.get(adjPrices, prevIdx)
+            if currY - prevY < minSpacing
+                array.set(adjPrices, currIdx, prevY + minSpacing)
+
+        // Draw all labels at adjusted positions using label.style_none
+        for i = 0 to numLabels - 1
+            float adjY     = array.get(adjPrices, i)
+            string txt     = array.get(labelTexts, i)
+            color col      = array.get(labelColors, i)
+            int tfIdx      = array.get(labelTFidx, i)
+            int slot       = array.get(labelSlot, i)
+
+            label lbl = label.new(
+                 bar_index + labelloc, adjY, txt,
+                 color=color.new(color.black, 100),
+                 textcolor=col,
+                 style=label.style_none,
+                 textalign=text.align_left,
+                 size=getLabelSize(labelSize))
+
+            // Store back into the right TF array
+            if tfIdx == 0
+                array.set(tf1_labels, slot, lbl)
+            else if tfIdx == 1
+                array.set(tf2_labels, slot, lbl)
+            else
+                array.set(tf3_labels, slot, lbl)
+
+// ──────────────────────────────────────────────────────────────
+// SIGNAL DETECTION (across all enabled TFs)
+// ──────────────────────────────────────────────────────────────
+var allMids = array.new_float(0)
+var allHis  = array.new_float(0)
+var allLos  = array.new_float(0)
+array.clear(allMids)
+array.clear(allHis)
+array.clear(allLos)
+
+if useTF1
+    for i = 0 to 4
+        if not na(array.get(tf1_mids, i))
+            array.push(allMids, array.get(tf1_mids, i))
+            array.push(allHis, array.get(tf1_his, i))
+            array.push(allLos, array.get(tf1_los, i))
+if useTF2
+    for i = 0 to 4
+        if not na(array.get(tf2_mids, i))
+            array.push(allMids, array.get(tf2_mids, i))
+            array.push(allHis, array.get(tf2_his, i))
+            array.push(allLos, array.get(tf2_los, i))
+if useTF3
+    for i = 0 to 4
+        if not na(array.get(tf3_mids, i))
+            array.push(allMids, array.get(tf3_mids, i))
+            array.push(allHis, array.get(tf3_his, i))
+            array.push(allLos, array.get(tf3_los, i))
+
+// Breakout detection
+crossed_over  = false
+crossed_under = false
+near_level    = false
+
+for x = 0 to array.size(allMids) > 0 ? array.size(allMids) - 1 : na
+    float mid = array.get(allMids, x)
+    float hi2 = array.get(allHis, x)
+    float lo2 = array.get(allLos, x)
+    if close[1] <= mid and close > mid
+        crossed_over := true
+    if close[1] >= mid and close < mid
+        crossed_under := true
+    if alertProximity
+        float dist = math.abs(close - mid) / mid * 100
+        if dist <= proximityPct and dist > 0
+            near_level := true
+
+// ──────────────────────────────────────────────────────────────
+// ALERTS
+// ──────────────────────────────────────────────────────────────
+alertcondition(crossed_over, title='Resistance Broken', message='🔴 Resistance Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(crossed_under, title='Support Broken', message='🟢 Support Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(crossed_over or crossed_under, title='S/R Level Broken', message='⚡️ S/R Level Broken on {{ticker}} at {{close}} ({{interval}})')
+alertcondition(near_level, title='Approaching S/R', message='⚠️ {{ticker}} approaching S/R at {{close}} ({{interval}})')
