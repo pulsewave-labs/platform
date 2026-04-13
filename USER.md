@@ -2,15 +2,21 @@
 
 _Learn about the person you're helping. Update this as you go._
 
-- **Name:**
-- **What to call them:**
-- **Pronouns:** _(optional)_
-- **Timezone:**
+- **Name:** Mason _(assumed from project context; correct if needed)_
+- **What to call them:** Mason
+- **Pronouns:** _(not set)_
+- **Timezone:** UTC _(placeholder; confirm local timezone)_
 - **Notes:**
+  - Builds and operates PulseWave Labs products.
+  - Prefers direct, practical communication and fast iteration.
+  - Values shipping and measurable outcomes.
 
 ## Context
 
-_(What do they care about? What projects are they working on? What annoys them? What makes them laugh? Build this over time.)_
+- Current focus areas include PulseWave web app/product work, Pinescript systems, signal delivery/infrastructure, and growth assets.
+- Prefers premium dark/terminal visual styles for many builds.
+- Dislikes generic or hand-wavy work; expects specificity.
+- Responds best to concise updates, root-cause analysis, and concrete next steps.
 
 ---
 
