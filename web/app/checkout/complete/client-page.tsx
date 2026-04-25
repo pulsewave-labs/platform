@@ -1,12 +1,11 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 export default function CompleteClientPage() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const status = searchParams.get('status')
   const plan = searchParams.get('plan')
   const [step, setStep] = useState(0)
@@ -21,7 +20,6 @@ export default function CompleteClientPage() {
     }
   }, [status])
 
-  // Poll subscription status after successful checkout
   useEffect(() => {
     if (status !== 'success') return
     var attempts = 0
@@ -37,9 +35,7 @@ export default function CompleteClientPage() {
           }
         })
         .catch(function() {})
-      if (attempts >= maxAttempts) {
-        clearInterval(timer)
-      }
+      if (attempts >= maxAttempts) clearInterval(timer)
     }, 3000)
     return function() { clearInterval(timer) }
   }, [status])
@@ -62,16 +58,14 @@ export default function CompleteClientPage() {
   }
 
   const steps = [
-    { n: '1', title: 'Connect Telegram', desc: 'Link your account to receive instant signals the moment they fire.', href: '/dashboard/settings', label: 'Connect Now' },
-    { n: '2', title: 'Open the dashboard', desc: 'See live performance, equity curve, and your complete trade history.', href: '/dashboard', label: 'Open Dashboard' },
-    { n: '3', title: 'Wait for the next signal', desc: 'The engine scans 24/7 across 5 pairs. Average ~1 signal per day.', href: null, label: null },
+    { n: '1', title: 'Log your first trade', desc: 'Start with a thesis-first entry so the journal has context before the trade plays out.', href: '/dashboard/journal/new', label: 'Create Trade' },
+    { n: '2', title: 'Debrief the outcome', desc: 'Compare plan vs execution, grade the trade, and record what actually happened.', href: '/dashboard/journal', label: 'Open Journal' },
+    { n: '3', title: 'Turn leaks into rules', desc: 'Use insights to find repeated mistakes and convert them into rules you can track.', href: '/dashboard/journal/insights', label: 'View Insights' },
   ]
 
   return (
     <Shell>
       <div className="max-w-lg w-full">
-
-        {/* Success icon */}
         <div className="text-center mb-10">
           <div className="w-16 h-16 rounded-full border border-[#00e5a0]/20 bg-[#00e5a0]/[0.04] flex items-center justify-center mx-auto mb-6" style={{boxShadow:'0 0 40px rgba(0,229,160,.06)'}}>
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#00e5a0" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -82,14 +76,13 @@ export default function CompleteClientPage() {
           </div>
           <h1 className="text-2xl md:text-[28px] font-bold tracking-tight mb-2">You're in.</h1>
           <p className="text-[14px] text-white/35">
-            {plan === 'annual' ? 'Annual' : 'Monthly'} subscription active. Here's how to get started.
+            {plan === 'annual' ? 'Annual' : 'Monthly'} journal access {subActive ? 'confirmed' : 'is activating'}. Start with the loop below.
           </p>
         </div>
 
-        {/* Steps */}
         <div className="space-y-3 mb-10">
           {steps.map((s, i) => (
-            <div key={i} className="transition-all duration-500" style={{ opacity: step > i ? 1 : 0, transform: step > i ? 'translateY(0)' : 'translateY(12px)' }}>
+            <div key={i + '-' + s.title} className="transition-all duration-500" style={{ opacity: step > i ? 1 : 0, transform: step > i ? 'translateY(0)' : 'translateY(12px)' }}>
               <div className="flex gap-4 items-start bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-5 hover:border-white/[0.06] transition-colors">
                 <div className="w-7 h-7 rounded-full bg-[#00e5a0]/[0.06] border border-[#00e5a0]/10 flex items-center justify-center shrink-0 mt-0.5">
                   <span className="text-[11px] mono font-bold text-[#00e5a0]/50">{s.n}</span>
@@ -97,29 +90,25 @@ export default function CompleteClientPage() {
                 <div className="flex-1">
                   <div className="text-[14px] font-semibold text-white/75 mb-0.5">{s.title}</div>
                   <div className="text-[12px] text-white/30 leading-relaxed">{s.desc}</div>
-                  {s.href && (
-                    <Link href={s.href} className="inline-block mt-2 text-[11px] text-[#00e5a0]/50 mono tracking-wider hover:text-[#00e5a0] transition-colors">
-                      {s.label} →
-                    </Link>
-                  )}
+                  <Link href={s.href} className="inline-block mt-2 text-[11px] text-[#00e5a0]/50 mono tracking-wider hover:text-[#00e5a0] transition-colors">
+                    {s.label} →
+                  </Link>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Primary CTA */}
         <div className="text-center transition-all duration-500" style={{ opacity: step >= 3 ? 1 : 0, transform: step >= 3 ? 'translateY(0)' : 'translateY(12px)' }}>
-          <Link href="/dashboard/settings" className="inline-block px-10 py-3.5 bg-[#00e5a0] text-black text-[14px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors shadow-[0_0_30px_rgba(0,229,160,.08)]">
-            Connect Telegram
+          <Link href="/dashboard/journal/new" className="inline-block px-10 py-3.5 bg-[#00e5a0] text-black text-[14px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors shadow-[0_0_30px_rgba(0,229,160,.08)]">
+            Log First Trade
           </Link>
           <div className="mt-3">
-            <Link href="/dashboard" className="text-[11px] text-white/20 mono tracking-wider hover:text-white/35 transition-colors">
-              Skip to dashboard →
+            <Link href="/dashboard/journal" className="text-[11px] text-white/20 mono tracking-wider hover:text-white/35 transition-colors">
+              Skip to journal →
             </Link>
           </div>
         </div>
-
       </div>
     </Shell>
   )

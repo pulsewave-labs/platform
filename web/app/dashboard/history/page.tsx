@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation'
+import { permanentRedirect } from 'next/navigation'
 
 export default function HistoryPage() {
-  redirect('/dashboard')
+  permanentRedirect('/dashboard/journal/stats?from=history')
 }

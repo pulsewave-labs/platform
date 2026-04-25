@@ -11,12 +11,19 @@ const PLANS = {
   annual: { id: 'plan_KXHGlrE70uC9q', price: '$490', period: '/yr', label: 'Annual', save: 'Save $98' },
 }
 
+const JOURNAL_FEATURES = [
+  { t: 'Thesis-first trade journal', s: 'Log setup, emotion, risk, thesis, screenshots, and outcome.' },
+  { t: 'Journal Coach debriefs', s: 'Turn every logged trade into deterministic feedback and next steps.' },
+  { t: 'Leak detection engine', s: 'Find repeated mistakes by setup, session, emotion, timeframe, and rule breaks.' },
+  { t: 'Rules and improvement loop', s: 'Convert recurring leaks into trading rules you can actually follow.' },
+  { t: 'Performance analytics', s: 'Track P&L, win rate, expectancy, drawdown, streaks, and setup quality.' },
+  { t: 'Cancel anytime', s: 'No lock-in. Keep improving as long as the journal is useful.' },
+]
+
 export default function CheckoutClientPage() {
   var searchParams = useSearchParams()
   var initialPlan = searchParams.get('plan') === 'annual' ? 'annual' : 'monthly'
   var [selected, setSelected] = useState(initialPlan)
-  var [perf, setPerf] = useState(null)
-
   var [email, setEmail] = useState('')
   var [password, setPassword] = useState('')
   var [confirmPassword, setConfirmPassword] = useState('')
@@ -30,10 +37,6 @@ export default function CheckoutClientPage() {
   )
 
   useEffect(function() {
-    fetch('/api/performance').then(function(r) { return r.json() }).then(function(d) { if (d) setPerf(d) }).catch(function() {})
-  }, [])
-
-  useEffect(function() {
     supabase.auth.getUser().then(function(res) {
       if (res.data.user) {
         setAccountReady(true)
@@ -43,7 +46,6 @@ export default function CheckoutClientPage() {
   }, [])
 
   var plan = PLANS[selected]
-  var stats = perf ? (perf as any).stats : null
   var returnUrl = typeof window !== 'undefined' ? window.location.origin + '/checkout/complete' : ''
   var formValid = email.trim() && password.length >= 8 && password === confirmPassword
 
@@ -61,7 +63,7 @@ export default function CheckoutClientPage() {
     }
 
     setCreating(true)
-    supabase.auth.signUp({ email: email, password: password }).then(function(result) {
+    supabase.auth.signUp({ email: email.trim(), password: password }).then(function(result) {
       if (result.error) {
         setAccountError(result.error.message)
         setCreating(false)
@@ -72,7 +74,7 @@ export default function CheckoutClientPage() {
     })
   }
 
-  var inputClass = "w-full px-3.5 py-3 bg-[#111] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]"
+  var inputClass = 'w-full px-3.5 py-3 bg-[#111] border border-white/[0.08] rounded-lg text-white text-[14px] placeholder-white/20 focus:border-[#00e5a0]/30 focus:ring-1 focus:ring-[#00e5a0]/20 outline-none transition-colors min-h-[48px]'
 
   return (
     <div className="min-h-screen bg-[#000] text-white antialiased">
@@ -83,11 +85,9 @@ export default function CheckoutClientPage() {
         "@keyframes scan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}",
         "@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}",
         ".fu{animation:fadeUp .5s ease-out forwards}",
-        // Make Whop iframe never clip — full height, no internal scroll
         "iframe[title='Whop Embedded Checkout']{min-height:600px;overflow:visible!important}",
       ].join('\n') }} />
 
-      {/* Nav */}
       <nav className="border-b border-white/[0.04]">
         <div className="max-w-6xl mx-auto px-4 md:px-10 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
@@ -101,15 +101,18 @@ export default function CheckoutClientPage() {
       </nav>
 
       <div className="max-w-5xl mx-auto px-4 md:px-10 py-6 md:py-14">
-
-        {/* Header */}
         <div className="text-center mb-6 md:mb-10 fu">
-          <h1 className="text-xl md:text-[32px] font-bold tracking-tight leading-tight">
-            Start receiving signals.
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#00e5a0]/10 bg-[#00e5a0]/[0.04] px-3 py-1 text-[10px] mono tracking-[.18em] text-[#00e5a0]/70 mb-4">
+            PULSEWAVE JOURNAL
+          </div>
+          <h1 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
+            Start journaling like a serious trader.
           </h1>
+          <p className="max-w-2xl mx-auto text-[14px] md:text-[15px] text-white/40 leading-relaxed">
+            Log every trade, debrief the outcome, spot the leaks, and build rules from your own data.
+          </p>
         </div>
 
-        {/* Plan selector */}
         <div className="max-w-md mx-auto mb-6 md:mb-10 fu" style={{animationDelay:'.1s'}}>
           <div className="flex gap-2 p-1 bg-white/[0.02] border border-white/[0.04] rounded-xl">
             {(['monthly', 'annual'] as const).map(function(p) {
@@ -135,11 +138,7 @@ export default function CheckoutClientPage() {
         </div>
 
         <div className="grid md:grid-cols-[1.1fr_1fr] gap-6 md:gap-12 items-start">
-
-          {/* LEFT: Account + Payment (primary on mobile) */}
           <div className="fu order-1" style={{animationDelay:'.2s'}}>
-
-            {/* Step 1: Account */}
             <div className={'bg-[#0a0a0a] border border-white/[0.06] rounded-xl overflow-hidden mb-4 transition-all ' + (accountReady ? 'border-[#00e5a0]/15' : '')}>
               <div className="px-4 md:px-5 py-3 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -174,7 +173,6 @@ export default function CheckoutClientPage() {
                     className="w-full py-3 bg-[#00e5a0] text-black text-[14px] font-bold rounded-lg hover:bg-[#00cc8e] transition-colors disabled:opacity-30 disabled:cursor-not-allowed min-h-[48px]">
                     {creating ? 'Creating...' : 'Continue to Payment'}
                   </button>
-
                   <p className="text-center text-[11px] text-white/20">
                     Already have an account?{' '}
                     <Link href="/auth/login" className="text-[#00e5a0]/50 hover:text-[#00e5a0] transition-colors">Sign in</Link>
@@ -187,7 +185,6 @@ export default function CheckoutClientPage() {
               )}
             </div>
 
-            {/* Step 2: Payment */}
             <div className={'bg-[#0a0a0a] border border-white/[0.06] rounded-xl overflow-hidden transition-all ' + (accountReady ? 'opacity-100' : 'opacity-30 pointer-events-none')}>
               <div className="px-4 md:px-5 py-3 border-b border-white/[0.04] flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -218,7 +215,7 @@ export default function CheckoutClientPage() {
                       </div>
                     }
                     onComplete={function(planId, receiptId) {
-                      window.location.href = '/checkout/complete?status=success&plan=' + selected + '&receipt=' + receiptId
+                      window.location.href = '/checkout/complete?status=success&plan=' + selected + '&receipt=' + encodeURIComponent(receiptId)
                     }}
                   />
                 </div>
@@ -230,10 +227,7 @@ export default function CheckoutClientPage() {
             </div>
 
             <div className="flex items-center justify-center gap-4 mt-4 text-[10px] text-white/15 mono">
-              <span className="flex items-center gap-1">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                SSL encrypted
-              </span>
+              <span className="flex items-center gap-1"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> SSL encrypted</span>
               <span>Powered by Whop</span>
               <span>Cancel anytime</span>
             </div>
@@ -243,23 +237,13 @@ export default function CheckoutClientPage() {
             </p>
           </div>
 
-
-          {/* RIGHT: Order summary — hidden on mobile, shown on desktop */}
           <div className="hidden md:block fu order-2" style={{animationDelay:'.3s'}}>
-
             <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-6 mb-4">
               <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
               <div className="space-y-3">
-                {[
-                  { t: 'Real-time signals on 5 pairs', s: 'BTC, ETH, SOL, AVAX, XRP' },
-                  { t: 'Instant Telegram delivery', s: 'Under 60 seconds from detection' },
-                  { t: 'Complete trade levels', s: 'Entry, stop loss, take profit' },
-                  { t: 'Position sizing for your account', s: 'Risk calculated automatically' },
-                  { t: 'Full performance dashboard', s: 'Equity curve, trade history, stats' },
-                  { t: 'Cancel anytime', s: 'No lock-in, no questions asked' },
-                ].map(function(f, i) {
+                {JOURNAL_FEATURES.map(function(f, i) {
                   return (
-                    <div key={i} className="flex items-start gap-3">
+                    <div key={i + '-' + f.t} className="flex items-start gap-3">
                       <div className="w-4 h-4 rounded-full bg-[#00e5a0]/[0.06] border border-[#00e5a0]/[0.1] flex items-center justify-center shrink-0 mt-0.5">
                         <span className="text-[8px] text-[#00e5a0]/60 mono">✓</span>
                       </div>
@@ -273,68 +257,63 @@ export default function CheckoutClientPage() {
               </div>
             </div>
 
-            {stats && (
-              <div className="grid grid-cols-3 gap-px bg-black rounded-xl overflow-hidden mb-4">
-                {[
-                  { l: 'RETURN', v: '+' + stats.totalReturn + '%', c: '#00e5a0' },
-                  { l: 'PROFIT FACTOR', v: stats.profitFactor.toFixed(2), c: '#e0e0e0' },
-                  { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
-                ].map(function(s, i) {
-                  return (
-                    <div key={i} className="bg-[#0a0a0a] px-4 py-3 text-center">
-                      <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-1">{s.l}</div>
-                      <div className="text-[16px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-full bg-[#00e5a0]/[0.06] flex items-center justify-center">
-                  <span className="text-[12px] mono text-[#00e5a0]/50 font-bold">P</span>
-                </div>
-                <div>
-                  <div className="text-[12px] text-white/50 font-medium">PulseWave Engine</div>
-                  <div className="text-[10px] text-white/20 mono">Verified track record</div>
-                </div>
-              </div>
-              <p className="text-[13px] text-white/35 leading-relaxed">
-                {stats ? stats.totalTrades + ' trades over ' + stats.totalMonths + ' months. ' + stats.profitableMonths + ' profitable months. $10K turned into $' + Math.round(stats.finalBalance).toLocaleString() + '. Every trade published.' : 'Loading verified stats...'}
-              </p>
-              <Link href="/performance" className="inline-block mt-2 text-[11px] text-[#00e5a0]/40 mono tracking-wider hover:text-[#00e5a0]/60 transition-colors">
-                AUDIT EVERY TRADE →
-              </Link>
-            </div>
-
-          </div>
-        </div>
-
-        {/* Mobile-only: compact proof strip below checkout */}
-        <div className="md:hidden mt-6 fu" style={{animationDelay:'.3s'}}>
-          {stats && (
-            <div className="grid grid-cols-3 gap-px bg-black rounded-xl overflow-hidden">
+            <div className="grid grid-cols-3 gap-px bg-black rounded-xl overflow-hidden mb-4">
               {[
-                { l: 'RETURN', v: '+' + stats.totalReturn + '%', c: '#00e5a0' },
-                { l: 'PROFIT FACTOR', v: stats.profitFactor.toFixed(2), c: '#e0e0e0' },
-                { l: 'TRADES', v: stats.totalTrades.toString(), c: '#e0e0e0' },
+                { l: 'LOOP', v: 'PLAN', c: '#e0e0e0' },
+                { l: 'DEBRIEF', v: 'REVIEW', c: '#00e5a0' },
+                { l: 'IMPROVE', v: 'RULES', c: '#e0e0e0' },
               ].map(function(s, i) {
                 return (
-                  <div key={i} className="bg-[#0a0a0a] px-3 py-2.5 text-center">
-                    <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-0.5">{s.l}</div>
-                    <div className="text-[15px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
+                  <div key={i + '-' + s.l} className="bg-[#0a0a0a] px-4 py-3 text-center">
+                    <div className="text-[9px] text-[#555] mono tracking-[.15em] mb-1">{s.l}</div>
+                    <div className="text-[14px] font-bold mono" style={{ color: s.c }}>{s.v}</div>
                   </div>
                 )
               })}
             </div>
-          )}
+
+            <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-[#00e5a0]/[0.06] flex items-center justify-center">
+                  <span className="text-[12px] mono text-[#00e5a0]/50 font-bold">J</span>
+                </div>
+                <div>
+                  <div className="text-[12px] text-white/50 font-medium">PulseWave Journal</div>
+                  <div className="text-[10px] text-white/20 mono">Built for traders who review</div>
+                </div>
+              </div>
+              <p className="text-[13px] text-white/35 leading-relaxed">
+                The product gets better as your trade history grows: cleaner logs, stronger debriefs, better leak detection, and rules built from your actual behavior.
+              </p>
+              <Link href="/" className="inline-block mt-2 text-[11px] text-[#00e5a0]/40 mono tracking-wider hover:text-[#00e5a0]/60 transition-colors">
+                SEE PRODUCT PREVIEW →
+              </Link>
+            </div>
+          </div>
         </div>
 
+        <div className="md:hidden mt-6 fu" style={{animationDelay:'.3s'}}>
+          <div className="bg-[#0a0a0a] border border-white/[0.06] rounded-xl p-5">
+            <div className="text-[11px] text-white/35 mono tracking-[.2em] mb-4">WHAT YOU GET</div>
+            <div className="space-y-3">
+              {JOURNAL_FEATURES.slice(0, 4).map(function(f, i) {
+                return (
+                  <div key={i + '-' + f.t} className="flex items-start gap-3">
+                    <span className="text-[10px] text-[#00e5a0]/60 mono mt-0.5">✓</span>
+                    <div>
+                      <div className="text-[13px] text-white/75">{f.t}</div>
+                      <div className="text-[11px] text-white/35">{f.s}</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="text-center py-6 px-4">
-        <p className="text-[9px] text-white/15 leading-relaxed max-w-lg mx-auto">For educational and research purposes only. Not financial advice. Past performance is not indicative of future results. Trading with leverage involves substantial risk. <a href="/disclaimer" className="underline">Full disclaimer</a>.</p>
+        <p className="text-[9px] text-white/15 leading-relaxed max-w-lg mx-auto">For educational and journaling purposes only. Not financial advice. Trading involves substantial risk. <a href="/disclaimer" className="underline">Full disclaimer</a>.</p>
       </div>
     </div>
   )

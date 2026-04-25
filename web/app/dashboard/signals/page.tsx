@@ -1,7 +1,7 @@
 export var dynamic = 'force-dynamic'
 
-import SignalsClientPage from './client-page'
+import { permanentRedirect } from 'next/navigation'
 
 export default function Page() {
-  return <SignalsClientPage />
+  permanentRedirect('/dashboard/journal/new?from=signals')
 }
