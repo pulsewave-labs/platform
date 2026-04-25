@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 
 export default function SettingsClientPage() {
-  var [telegramEnabled, setTelegramEnabled] = useState(true)
+  var [journalReminders, setJournalReminders] = useState(true)
   var [telegramLinked, setTelegramLinked] = useState(false)
   var [telegramLinkedAt, setTelegramLinkedAt] = useState('')
   var [linkLoading, setLinkLoading] = useState(false)
@@ -163,7 +163,7 @@ export default function SettingsClientPage() {
       </section>
 
       <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">TELEGRAM</div>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">INTEGRATIONS</div>
         <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] px-4 py-3">
           {checkingLink ? (
             <div className="text-[14px] text-[#777] mono">Checking...</div>
@@ -183,7 +183,7 @@ export default function SettingsClientPage() {
           ) : deepLink ? (
             <div>
               <div className="text-sm text-[#ccc] font-medium mb-2">Almost there!</div>
-              <div className="text-[14px] text-[#666] mb-3">Click the button below to open the PulseWave bot and link your account:</div>
+              <div className="text-[14px] text-[#666] mb-3">Open the PulseWave bot to link your account for optional journal reminders and delivery features:</div>
               <a href={deepLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center py-3 bg-[#0088cc] hover:bg-[#0099dd] text-white text-sm font-medium rounded-lg transition-colors">Open in Telegram</a>
               <div className="text-[13px] text-[#666] mono mt-2 text-center">Then come back here, it updates automatically</div>
               <button
@@ -195,8 +195,8 @@ export default function SettingsClientPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <div className="text-sm text-[#ccc] font-medium">Telegram Alerts</div>
-                  <div className="text-[13px] text-[#777] mono">Get instant signal notifications</div>
+                  <div className="text-sm text-[#ccc] font-medium">Telegram Connection</div>
+                  <div className="text-[13px] text-[#777] mono">Optional account link for journal reminders</div>
                 </div>
               </div>
               <button onClick={handleConnectTelegram} disabled={linkLoading} className="mt-2 w-full py-2 bg-[#00e5a0] hover:bg-[#00cc8e] text-black text-sm font-semibold rounded-lg transition-colors disabled:opacity-50">
@@ -208,12 +208,12 @@ export default function SettingsClientPage() {
       </section>
 
       <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">EMAIL SIGNALS</div>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">EMAIL</div>
         <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
-              <div className="text-sm text-[#ccc] font-medium">Email Delivery</div>
-              <div className="text-[13px] text-[#777] mono">Receive signals at {userEmail || 'your email'}</div>
+              <div className="text-sm text-[#ccc] font-medium">Journal Emails</div>
+              <div className="text-[13px] text-[#777] mono">Receive product updates and journal reminders at {userEmail || 'your email'}</div>
             </div>
             <button
               onClick={handleToggleEmailSignals}
@@ -224,7 +224,7 @@ export default function SettingsClientPage() {
             </button>
           </div>
           <div className="border-t border-[#141414] px-4 py-2">
-            <div className="text-[12px] text-[#555] mono">Signals include entry, stop loss, take profit, and position sizing. {!telegramLinked && 'Connect Telegram above for faster delivery.'}</div>
+            <div className="text-[12px] text-[#555] mono">Use this for journal nudges, account updates, and product education. {!telegramLinked && 'Connect Telegram above if you want optional chat delivery.'}</div>
           </div>
         </div>
       </section>
@@ -234,14 +234,14 @@ export default function SettingsClientPage() {
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
             <div>
-              <div className="text-sm text-[#ccc] font-medium">Signal Alerts</div>
-              <div className="text-[13px] text-[#777] mono">New signal notifications</div>
+              <div className="text-sm text-[#ccc] font-medium">Journal Reminders</div>
+              <div className="text-[13px] text-[#777] mono">Nudges to debrief trades and review rules</div>
             </div>
             <button
-              onClick={function() { setTelegramEnabled(!telegramEnabled) }}
-              className={'w-9 h-5 rounded-full transition-all duration-200 relative ' + (telegramEnabled ? 'bg-[#00e5a0]' : 'bg-[#222]')}
+              onClick={function() { setJournalReminders(!journalReminders) }}
+              className={'w-9 h-5 rounded-full transition-all duration-200 relative ' + (journalReminders ? 'bg-[#00e5a0]' : 'bg-[#222]')}
             >
-              <span className={'absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ' + (telegramEnabled ? 'left-[18px] bg-white' : 'left-0.5 bg-[#555]')}></span>
+              <span className={'absolute top-0.5 w-4 h-4 rounded-full transition-all duration-200 ' + (journalReminders ? 'left-[18px] bg-white' : 'left-0.5 bg-[#555]')}></span>
             </button>
           </div>
         </div>

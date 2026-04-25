@@ -17,7 +17,7 @@ export default function TermsPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">1. Agreement to Terms</h2>
             <p className="mb-3">
-              By accessing or using any services provided by PulseWave Labs ("Company," "we," "us," "our"), including our website, trading signal platform, Telegram bot, APIs, and all related services (collectively, the "Service"), you agree to be bound by these Terms of Service ("Terms").
+              By accessing or using any services provided by PulseWave Labs ("Company," "we," "us," "our"), including our website, trading journal platform, analytics tools, integrations, APIs, and all related services (collectively, the "Service"), you agree to be bound by these Terms of Service ("Terms").
             </p>
             <p>
               If you do not agree to these Terms, you must not access or use the Service. You represent that you are at least 18 years of age, have the legal capacity to enter into binding agreements, and are not prohibited from using the Service under any applicable law.
@@ -27,16 +27,16 @@ export default function TermsPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">2. Description of Service</h2>
             <p className="mb-3">
-              PulseWave Labs provides an automated cryptocurrency trading signal service. Our Service includes:
+              PulseWave Labs provides a trading journal, analytics, and trader education platform. Our Service includes:
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
-              <li>Algorithmic trading signals delivered via Telegram and our web platform</li>
-              <li>Historical trade performance data and analytics</li>
-              <li>Signal dashboards displaying active and past signals</li>
-              <li>Position sizing guidance and risk management information</li>
+              <li>Trade journaling, debrief workflows, and performance analytics</li>
+              <li>Journal insights, leak detection, and rules-management tools</li>
+              <li>Dashboard views for logged trades, debriefs, and trading patterns</li>
+              <li>Educational risk-management and process-improvement information</li>
             </ul>
             <p>
-              <strong className="text-white">Our Service provides information and signals only. We do not execute trades on your behalf, manage your funds, or have access to your exchange accounts.</strong> All trading decisions and execution are your sole responsibility. Our Service does not constitute investment advice — please refer to our Risk Disclaimer for full details.
+              <strong className="text-white">Our Service provides journaling, analytics, educational information, and workflow tools only. We do not execute trades on your behalf, manage your funds, or have access to your exchange accounts.</strong> All trading decisions and execution are your sole responsibility. Our Service does not constitute investment advice — please refer to our Risk Disclaimer for full details.
             </p>
           </section>
 
@@ -77,10 +77,10 @@ export default function TermsPage() {
               <li>You are responsible for all activity that occurs under your account</li>
               <li>You must notify us immediately of any unauthorized access</li>
               <li>One account per person — accounts are non-transferable</li>
-              <li>You may not share, redistribute, resell, or rebroadcast signals to any third party</li>
+              <li>You may not share, redistribute, resell, or commercially exploit paid content, analytics, or platform access</li>
             </ul>
             <p>
-              We reserve the right to suspend or terminate accounts that violate these Terms, redistribute signals, or engage in any abusive behavior, with or without notice and without refund.
+              We reserve the right to suspend or terminate accounts that violate these Terms, misuse paid platform access, or engage in any abusive behavior, with or without notice and without refund.
             </p>
           </section>
 
@@ -88,7 +88,7 @@ export default function TermsPage() {
             <h2 className="text-[18px] font-bold mb-3 text-white">5. Prohibited Uses</h2>
             <p className="mb-3">You agree not to:</p>
             <ul className="list-disc list-inside space-y-1.5 text-white/55">
-              <li>Redistribute, resell, or commercially exploit our signals or content</li>
+              <li>Redistribute, resell, or commercially exploit our paid content, analytics, or platform access</li>
               <li>Reverse engineer, decompile, or attempt to extract our algorithms or source code</li>
               <li>Use automated systems (bots, scrapers) to access our platform without authorization</li>
               <li>Circumvent or disable any security features of our platform</li>
@@ -100,18 +100,18 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-[18px] font-bold mb-3 text-white">6. Signal Delivery</h2>
+            <h2 className="text-[18px] font-bold mb-3 text-white">6. Platform Availability and Educational Content</h2>
             <p className="mb-3">
-              We deliver signals primarily through Telegram and our web dashboard. While we make commercially reasonable efforts to deliver signals promptly and accurately:
+              We provide access to journal workflows, analytics, educational content, and optional integrations through the web dashboard and related services. While we make commercially reasonable efforts to keep the Service available and accurate:
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
-              <li>We do not guarantee uninterrupted delivery of signals</li>
-              <li>Delivery may be delayed or prevented by factors outside our control (Telegram outages, internet issues, exchange downtime)</li>
-              <li>Signal parameters (entry, stop loss, take profit) are targets — actual execution prices will vary</li>
-              <li>We may pause, modify, or discontinue signal delivery at any time for maintenance, strategy adjustments, or market conditions</li>
+              <li>We do not guarantee uninterrupted access to the Service</li>
+              <li>Access, notifications, or integrations may be delayed or prevented by factors outside our control, including internet outages, third-party provider issues, or exchange downtime</li>
+              <li>Analytics, coach notes, and educational materials are informational and may be incomplete, delayed, or inaccurate</li>
+              <li>We may pause, modify, or discontinue features at any time for maintenance, product changes, or business reasons</li>
             </ul>
             <p>
-              We are not liable for any losses resulting from delayed, missed, or failed signal delivery, regardless of the cause.
+              We are not liable for any losses resulting from delayed access, missed notifications, incomplete analytics, or reliance on educational content, regardless of the cause.
             </p>
           </section>
 
@@ -131,10 +131,10 @@ export default function TermsPage() {
               <strong className="text-white">TO THE MAXIMUM EXTENT PERMITTED BY LAW, PULSEWAVE LABS AND ITS OFFICERS, DIRECTORS, EMPLOYEES, AGENTS, AND AFFILIATES SHALL NOT BE LIABLE FOR:</strong>
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
-              <li>Any trading losses, regardless of whether you followed our signals</li>
+              <li>Any trading losses, regardless of whether you used our journal, analytics, educational content, or integrations</li>
               <li>Any indirect, incidental, special, consequential, or punitive damages</li>
               <li>Loss of profits, revenue, data, goodwill, or other intangible losses</li>
-              <li>Damages arising from interrupted or delayed signal delivery</li>
+              <li>Damages arising from interrupted platform access, delayed notifications, or unavailable integrations</li>
               <li>Damages arising from unauthorized access to your account</li>
               <li>Any third-party claims related to your trading activity</li>
             </ul>

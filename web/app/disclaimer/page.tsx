@@ -18,18 +18,18 @@ export default function DisclaimerPage() {
             <h2 className="text-[18px] font-bold mb-3 text-white">Trading Risk Disclosure</h2>
             <p className="mb-3">
               Trading cryptocurrencies, forex, and other financial instruments involves substantial risk of loss and is not suitable for all investors.
-              The use of leverage (including the 20× leverage referenced on this platform) significantly amplifies both potential gains and potential losses.
-              You may lose more than your initial investment. You should carefully consider your financial situation, risk tolerance, and investment objectives before using any trading signals or tools.
+              The use of leverage significantly amplifies both potential gains and potential losses.
+              You may lose more than your initial investment. You should carefully consider your financial situation, risk tolerance, and investment objectives before using any trading tools, analytics, or educational content.
             </p>
             <p>
-              <strong className="text-white">There is no guarantee that any trading strategy, system, or signal service — including PulseWave — will be profitable.</strong> Past performance, whether actual or indicated by historical tests, simulations, or verified track records, is not indicative of future results. Market conditions change constantly, and strategies that performed well historically may underperform or fail entirely in the future.
+              <strong className="text-white">There is no guarantee that any trading strategy, journal process, analytics system, or educational framework — including PulseWave — will be profitable.</strong> Past performance, whether actual or indicated by historical tests, simulations, or verified track records, is not indicative of future results. Market conditions change constantly, and strategies that performed well historically may underperform or fail entirely in the future.
             </p>
           </section>
 
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">Not Investment Advice</h2>
             <p className="mb-3">
-              The signals, analysis, tools, performance data, and all content provided by PulseWave Labs ("we," "us," "our") are for <strong className="text-white">informational and educational purposes only</strong> and do not constitute investment advice, financial advice, trading advice, or any other form of professional advice.
+              The journal workflows, analysis, tools, performance data, and all content provided by PulseWave Labs ("we," "us," "our") are for <strong className="text-white">informational and educational purposes only</strong> and do not constitute investment advice, financial advice, trading advice, or any other form of professional advice.
             </p>
             <p className="mb-3">
               <strong className="text-white">PulseWave Labs is not a registered investment advisor, broker-dealer, financial planner, or commodity trading advisor.</strong> We are not registered with the SEC, CFTC, NFA, FINRA, or any state or international securities regulatory authority. We do not provide personalized investment recommendations.
@@ -42,7 +42,7 @@ export default function DisclaimerPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">Performance Results & Limitations</h2>
             <p className="mb-3">
-              Performance statistics, trade histories, equity curves, and results displayed on this platform are based on a combination of backtested (simulated) results and/or verified historical signals. These results have significant inherent limitations:
+              Performance statistics, trade histories, equity curves, and analytics displayed on this platform are based on user-entered journal data, imported records, simulations, or historical data where applicable. These results have significant inherent limitations:
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li>Backtested results are hypothetical and designed with the benefit of hindsight</li>
@@ -50,7 +50,7 @@ export default function DisclaimerPage() {
               <li>Simulated results assume perfect execution timing, which is not achievable in live markets</li>
               <li>They cannot account for the psychological and emotional pressures of trading real money</li>
               <li>Market microstructure, fees, and spreads may differ from assumptions used in testing</li>
-              <li>Strategy performance can degrade as more participants follow the same signals</li>
+              <li>Strategy performance can degrade as market conditions change or execution quality changes</li>
               <li>Cryptocurrency markets are highly volatile and subject to manipulation, regulatory changes, and black swan events</li>
             </ul>
             <p>
@@ -61,7 +61,7 @@ export default function DisclaimerPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">Leveraged Trading Risks</h2>
             <p className="mb-3">
-              Our signals reference trading with leverage (up to 20×). Leveraged trading carries extreme risk:
+              Leveraged trading carries extreme risk:
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li>A 5% adverse move with 20× leverage can result in a 100% loss of your margin</li>
@@ -75,18 +75,18 @@ export default function DisclaimerPage() {
           </section>
 
           <section>
-            <h2 className="text-[18px] font-bold mb-3 text-white">Signal Delivery & Execution</h2>
+            <h2 className="text-[18px] font-bold mb-3 text-white">Platform Availability & Execution</h2>
             <p className="mb-3">
-              While we strive to deliver signals promptly, we cannot guarantee:
+              While we strive to keep the platform, analytics, reminders, and optional integrations available, we cannot guarantee:
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
-              <li>Uninterrupted signal delivery — Telegram, our servers, or your internet connection may experience outages</li>
-              <li>That you will be able to execute trades at the exact entry, stop loss, or take profit prices shown</li>
-              <li>That signals will be delivered within any specific timeframe</li>
-              <li>That exchange APIs, order books, or trading infrastructure will be available when signals fire</li>
+              <li>Uninterrupted platform access or notification delivery — third-party providers, our servers, or your internet connection may experience outages</li>
+              <li>That your journal entries, analytics, or educational references will match live market execution conditions</li>
+              <li>That reminders, imports, or integrations will complete within any specific timeframe</li>
+              <li>That exchange APIs, order books, or trading infrastructure will be available when you choose to trade</li>
             </ul>
             <p>
-              You are solely responsible for executing trades based on signals received. We are not responsible for missed signals, delayed execution, or any losses resulting from technical issues on any platform.
+              You are solely responsible for deciding whether, when, and how to execute trades. We are not responsible for missed reminders, delayed execution, incomplete analytics, or any losses resulting from technical issues on any platform.
             </p>
           </section>
 
@@ -97,10 +97,10 @@ export default function DisclaimerPage() {
             </p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li>Any specific trading results, returns, or profits</li>
-              <li>The accuracy, completeness, or timeliness of any signal or analysis</li>
+              <li>The accuracy, completeness, or timeliness of any journal analysis, coach note, reminder, or educational content</li>
               <li>Continuous, uninterrupted access to our platform or services</li>
               <li>That our platform will be error-free</li>
-              <li>The suitability of our signals for your specific financial situation</li>
+              <li>The suitability of our analytics, tools, or educational content for your specific financial situation</li>
             </ul>
           </section>
 
@@ -113,7 +113,7 @@ export default function DisclaimerPage() {
               <li>Fully understand the risks involved in cryptocurrency and leveraged trading</li>
               <li>Only trade with money you can afford to lose without impacting your financial obligations</li>
               <li>Implement your own risk management beyond what we suggest</li>
-              <li>Verify all signal information independently before executing trades</li>
+              <li>Verify all market information independently before executing trades</li>
               <li>Consult with a licensed financial advisor</li>
               <li>Comply with all applicable laws and tax obligations in your jurisdiction</li>
             </ul>
@@ -122,7 +122,7 @@ export default function DisclaimerPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">Third-Party Services</h2>
             <p>
-              Our platform interacts with third-party services including cryptocurrency exchanges (e.g., Bitget), messaging platforms (Telegram), and data providers (Binance, CoinGecko). We are not affiliated with, endorsed by, or responsible for these third-party services. Their availability, accuracy, and terms of service are beyond our control.
+              Our platform interacts with third-party services including cryptocurrency exchanges, messaging platforms, payment processors, infrastructure providers, and market-data providers. We are not affiliated with, endorsed by, or responsible for these third-party services. Their availability, accuracy, and terms of service are beyond our control.
             </p>
           </section>
 

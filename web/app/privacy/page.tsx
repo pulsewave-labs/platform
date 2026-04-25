@@ -17,7 +17,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-[18px] font-bold mb-3 text-white">1. Who We Are</h2>
             <p>
-              PulseWave Labs ("we," "us," "our") operates the PulseWave trading signal platform. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our website, platform, Telegram bot, and related services (the "Service"). By using the Service, you consent to the practices described in this policy.
+              PulseWave Labs ("we," "us," "our") operates the PulseWave trading journal and analytics platform. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our website, platform, optional integrations, and related services (the "Service"). By using the Service, you consent to the practices described in this policy.
             </p>
           </section>
 
@@ -27,7 +27,7 @@ export default function PrivacyPage() {
             <p className="font-semibold text-white mb-2">Information You Provide</p>
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li><strong className="text-white/70">Account registration:</strong> Email address, password (hashed, never stored in plaintext)</li>
-              <li><strong className="text-white/70">Telegram linking:</strong> Telegram user ID and chat ID (when you connect via our bot)</li>
+              <li><strong className="text-white/70">Optional integration linking:</strong> third-party user IDs or chat IDs when you connect optional delivery integrations</li>
               <li><strong className="text-white/70">Payment information:</strong> Processed by Whop — we do not store credit card numbers, CVVs, or full card details</li>
               <li><strong className="text-white/70">Communications:</strong> Any messages you send to our support</li>
             </ul>
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
             <h2 className="text-[18px] font-bold mb-3 text-white">3. How We Use Your Information</h2>
             <ul className="list-disc list-inside space-y-1.5 text-white/55">
               <li>Provide, operate, and maintain the Service</li>
-              <li>Deliver trading signals to your Telegram account</li>
+              <li>Provide journal workflows, analytics, reminders, and optional integration delivery</li>
               <li>Process subscription payments</li>
               <li>Send account-related communications (billing, security, service updates)</li>
               <li>Respond to support requests</li>
@@ -74,9 +74,9 @@ export default function PrivacyPage() {
             <ul className="list-disc list-inside space-y-1.5 mb-3 text-white/55">
               <li><strong className="text-white/70">Supabase:</strong> Database hosting and authentication</li>
               <li><strong className="text-white/70">Vercel:</strong> Website hosting and deployment</li>
-              <li><strong className="text-white/70">Railway:</strong> Signal engine hosting</li>
+              <li><strong className="text-white/70">Infrastructure providers:</strong> Background jobs, analytics, and integration hosting</li>
               <li><strong className="text-white/70">Whop:</strong> Payment processing and subscription management</li>
-              <li><strong className="text-white/70">Telegram:</strong> Signal delivery</li>
+              <li><strong className="text-white/70">Optional integrations:</strong> Reminder and notification delivery when enabled</li>
             </ul>
             <p className="mb-3">These providers process data solely on our behalf and are contractually bound to protect it.</p>
 
