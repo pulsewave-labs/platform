@@ -1,10 +1,12 @@
-import PerformanceClientPage from './client-page'
+import type { Metadata } from 'next'
+import { permanentRedirect } from 'next/navigation'
 
-export const metadata = {
-  title: 'Performance - PulseWave Signals | $10K → $218K in 2 Years',
-  description: 'Complete trading performance record. View all 624 verified trades that turned $10K into $218K. Transparent results from Feb 2024 - Feb 2026.',
+export const metadata: Metadata = {
+  title: 'PulseWave Journal — Performance Analytics for Traders',
+  description: 'PulseWave is now a trading journal command center for P&L analytics, leak detection, debriefs, and rule building.',
+  alternates: { canonical: '/' },
 }
 
 export default function PerformancePage() {
-  return <PerformanceClientPage />
+  permanentRedirect('/?from=performance')
 }

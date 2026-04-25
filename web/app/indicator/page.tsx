@@ -1,10 +1,12 @@
-import IndicatorClient from './client-page'
+import type { Metadata } from 'next'
+import { permanentRedirect } from 'next/navigation'
 
-export const metadata = {
-  title: 'PulseWave Indicator — Support & Resistance Made Stupidly Simple',
-  description: 'PulseWave automatically draws exact support and resistance levels on your chart. Green zones = buy, red zones = sell. No analysis. No guesswork. $49.',
+export const metadata: Metadata = {
+  title: 'PulseWave Journal — Trading Journal & Leak Detection',
+  description: 'PulseWave is now focused on AI-assisted trade journaling: log trades, spot leaks, and build rules from your own data.',
+  alternates: { canonical: '/' },
 }
 
-export default function Page() {
-  return <IndicatorClient />
+export default function IndicatorPage() {
+  permanentRedirect('/?from=indicator')
 }

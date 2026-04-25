@@ -1,21 +1,17 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
-import PlaybookOptIn from './client-page'
+import { permanentRedirect } from 'next/navigation'
 
 export const metadata: Metadata = {
-  title: 'The 5-Pair Playbook — Free Download | PulseWave Labs',
-  description: 'The exact framework that turned $10K into $218K trading 5 crypto pairs. 624 trades, full transparency, including the losses.',
+  title: 'PulseWave Journal — Build Your Trading Playbook',
+  description: 'PulseWave Journal helps traders turn logged trades into a practical playbook: review decisions, find leaks, and write rules.',
   openGraph: {
-    title: 'The 5-Pair Crypto Framework That Turned $10K Into $218K',
-    description: 'Free playbook — the exact pairs, rules, and position sizing we use. Including the losses.',
-    url: 'https://www.pulsewavelabs.io/playbook',
+    title: 'PulseWave Journal — Build Your Trading Playbook',
+    description: 'Log trades, spot leaks, and build rules from your own data.',
+    url: 'https://www.pulsewavelabs.io/',
   },
+  alternates: { canonical: '/' },
 }
 
 export default function PlaybookPage() {
-  return (
-    <Suspense>
-      <PlaybookOptIn />
-    </Suspense>
-  )
+  permanentRedirect('/?from=playbook')
 }
