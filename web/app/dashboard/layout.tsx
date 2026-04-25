@@ -7,12 +7,23 @@ import { ErrorBoundary } from '../../components/error-boundary'
 import { useEffect, useState } from 'react'
 
 const tabs = [
-  { label: 'Overview', href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0h4' },
-  { label: 'Signals', href: '/dashboard/signals', icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-  { label: 'Intel', href: '/dashboard/intelligence', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
   { label: 'Journal', href: '/dashboard/journal', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4' },
+  { label: 'New Trade', href: '/dashboard/journal/new', icon: 'M12 4v16m8-8H4' },
+  { label: 'Insights', href: '/dashboard/journal/insights', icon: 'M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z' },
+  { label: 'Stats', href: '/dashboard/journal/stats', icon: 'M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z' },
   { label: 'Settings', href: '/dashboard/settings', icon: 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.066 2.573c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.573 1.066c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.066-2.573c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z' },
 ]
+
+const journalChildTabs = new Set(['/dashboard/journal/new', '/dashboard/journal/insights', '/dashboard/journal/stats'])
+
+function isActiveTab(pathname: string, href: string) {
+  if (pathname === href) return true
+  if (href === '/dashboard/journal') {
+    if (journalChildTabs.has(pathname)) return false
+    return /^\/dashboard\/journal\/[^/]+$/.test(pathname)
+  }
+  return pathname.startsWith(href + '/')
+}
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -45,9 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="w-16 h-16 rounded-full border border-[#ff4d4d]/15 bg-[#ff4d4d]/[0.03] flex items-center justify-center mx-auto mb-6">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ff4d4d" strokeWidth="2" strokeLinecap="round"><path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </div>
-            <h1 className="text-xl font-bold mb-2">Subscription Required</h1>
-            <p className="text-sm text-white/40 mb-4">Your subscription is inactive. Redirecting to checkout...</p>
-            <a href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-6 py-2.5 bg-[#00e5a0] text-black text-sm font-bold rounded-lg">Subscribe Now</a>
+            <h1 className="text-xl font-bold mb-2">Journal Access Required</h1>
+            <p className="text-sm text-white/40 mb-4">Your access is inactive. Redirecting to checkout...</p>
+            <a href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-6 py-2.5 bg-[#00e5a0] text-black text-sm font-bold rounded-lg">Restore Access</a>
           </div>
         </body>
       </html>
@@ -81,7 +92,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <nav className="hidden md:flex items-center gap-1">
               {tabs.map(function(tab) {
-                var active = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href))
+                var active = isActiveTab(pathname, tab.href)
                 return (
                   <Link key={tab.href} href={tab.href}
                     className={'relative px-3 py-1.5 text-[11px] font-medium tracking-wider transition-all duration-200 rounded-md ' + (active ? 'text-white bg-white/[0.04]' : 'text-[#666] hover:text-[#999] hover:bg-white/[0.02]')}
@@ -118,21 +129,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Status bar */}
         <div className="hidden md:flex fixed bottom-0 left-0 right-0 h-7 bg-[#0c0c0c] border-t border-white/[0.03] items-center justify-between px-6 text-[9px] mono text-[#555] z-50">
           <div className="flex items-center gap-4">
-            <span>PULSEWAVE SIGNALS v1.0</span>
+            <span>PULSEWAVE JOURNAL v1.0</span>
             <span className="text-white/[0.04]">|</span>
-            <span>5 PAIRS · MARKET STRUCTURE</span>
+            <span>LOG · DEBRIEF · IMPROVE</span>
           </div>
           <div className="flex items-center gap-4">
-            <span>10% RISK · 20x LEV</span>
+            <span>THESIS-FIRST JOURNALING</span>
             <span className="text-white/[0.04]">|</span>
-            <span>BITGET USDT-M</span>
+            <span>RULES ENGINE</span>
           </div>
         </div>
 
         {/* Mobile bottom nav */}
         <nav className="fixed bottom-0 left-0 right-0 border-t border-white/[0.04] bg-[#0a0a0a]/95 backdrop-blur-sm flex items-center justify-around md:hidden z-50 pb-[env(safe-area-inset-bottom)]" style={{ height: 'calc(56px + env(safe-area-inset-bottom, 0px))' }}>
           {tabs.map(function(tab) {
-            var active = pathname === tab.href || (tab.href !== '/dashboard' && pathname.startsWith(tab.href))
+            var active = isActiveTab(pathname, tab.href)
             return (
               <Link key={tab.href} href={tab.href}
                 className={'flex flex-col items-center justify-center flex-1 h-full transition-colors gap-1 ' + (active ? 'text-[#00e5a0]' : 'text-[#555]')}

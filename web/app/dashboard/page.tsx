@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
-import ClientPage from './client-page'
+import { permanentRedirect } from 'next/navigation'
 
 export default function Page() {
-  return <ClientPage />
+  permanentRedirect('/dashboard/journal')
 }
