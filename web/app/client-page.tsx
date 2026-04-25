@@ -1,975 +1,350 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 
-function useCountUp(end: number, decimals = 0, duration = 2200) {
-  const [value, setValue] = useState(0)
-  const ref = useRef<HTMLDivElement>(null)
-  const animated = useRef(false)
-  useEffect(() => {
-    if (end > 0 && !animated.current) {
-      animated.current = true
-      var s = 0
-      var step = function(t: number) { if (!s) s = t; var p = Math.min((t - s) / duration, 1); setValue(p * p * (3 - 2 * p) * end); if (p < 1) requestAnimationFrame(step); }
-      requestAnimationFrame(step)
-    }
-  }, [end, duration])
-  return { display: decimals > 0 ? value.toFixed(decimals) : Math.floor(value).toLocaleString(), ref }
+const features = [
+  {
+    eyebrow: 'LOG',
+    title: 'Capture the full trade, not just the P&L',
+    body: 'Entry, exit, stop, target, size, thesis, setup, timeframe, session, screenshots, emotion, and post-trade notes in one clean flow.',
+  },
+  {
+    eyebrow: 'REVIEW',
+    title: 'AI reviews that sound like a trading coach',
+    body: 'Turn raw trade data into plain-English feedback: what worked, what failed, what rule was broken, and what to do next time.',
+  },
+  {
+    eyebrow: 'DETECT',
+    title: 'Find the leaks your memory hides',
+    body: 'See when FOMO, revenge trades, weak setups, bad sessions, and broken rules are quietly dragging down your expectancy.',
+  },
+  {
+    eyebrow: 'IMPROVE',
+    title: 'Build rules from evidence',
+    body: 'Convert repeated mistakes into rules, then track whether following those rules actually changes your results.',
+  },
+]
+
+const metrics = [
+  { label: 'Win Rate', value: '42%', sub: 'but +0.38R expectancy' },
+  { label: 'Best Setup', value: '4H Rejection', sub: '+1.21R avg' },
+  { label: 'Main Leak', value: 'FOMO Longs', sub: '-0.74R avg' },
+  { label: 'Rules Followed', value: '68%', sub: '+$1,240 impact' },
+]
+
+const reviewItems = [
+  ['Primary mistake', 'Entered before confirmation after two missed moves.'],
+  ['What worked', 'Stop was defined before entry and position size stayed inside risk limit.'],
+  ['What to repeat', 'Keep the 4H rejection setup. It is your best-performing playbook.'],
+  ['Rule suggestion', 'No NY-session long unless setup grade is A and stop is placed first.'],
+]
+
+const leaks = [
+  { name: 'FOMO trades', stat: '-0.74R', tone: 'bad' },
+  { name: 'Rules followed', stat: '+0.51R', tone: 'good' },
+  { name: 'London session', stat: '+0.82R', tone: 'good' },
+  { name: 'No thesis logged', stat: '-1.08R', tone: 'bad' },
+]
+
+function PulseLogo() {
+  return (
+    <div className="flex items-center gap-3">
+      <div className="relative h-8 w-8 rounded-xl border border-[#00e5a0]/30 bg-[#00e5a0]/10 shadow-[0_0_35px_rgba(0,229,160,0.18)]">
+        <div className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00e5a0] shadow-[0_0_22px_rgba(0,229,160,0.65)]" />
+      </div>
+      <div>
+        <p className="text-sm font-bold tracking-tight text-white">PulseWave</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-white/35">Journal</p>
+      </div>
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#00e5a0]/15 bg-[#00e5a0]/5 px-3 py-1 font-mono text-[10px] uppercase tracking-[0.24em] text-[#00e5a0]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#00e5a0] shadow-[0_0_12px_rgba(0,229,160,0.8)]" />
+      {children}
+    </div>
+  )
+}
+
+function JournalPreview() {
+  return (
+    <div className="relative mx-auto max-w-5xl overflow-hidden rounded-3xl border border-white/[0.08] bg-[#08090c] shadow-2xl shadow-black/40">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(0,229,160,0.14),transparent_34%),radial-gradient(circle_at_85%_20%,rgba(59,130,246,0.10),transparent_30%)]" />
+      <div className="relative border-b border-white/[0.06] px-5 py-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/35">Product preview · sample data</p>
+            <h3 className="mt-1 text-lg font-semibold text-white">AI Journal Overview</h3>
+          </div>
+          <div className="hidden items-center gap-2 rounded-full border border-[#00e5a0]/20 bg-[#00e5a0]/10 px-3 py-1.5 font-mono text-[10px] text-[#00e5a0] sm:flex">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#00e5a0]" />
+            LIVE REVIEW
+          </div>
+        </div>
+      </div>
+
+      <div className="relative grid gap-px bg-white/[0.05] lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="bg-[#08090c]/95 p-4 sm:p-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {metrics.map((m) => (
+              <div key={m.label} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">{m.label}</p>
+                <p className="mt-2 font-mono text-xl font-bold text-white">{m.value}</p>
+                <p className="mt-1 text-xs text-white/40">{m.sub}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-5 overflow-hidden rounded-2xl border border-white/[0.06]">
+            <div className="grid grid-cols-12 border-b border-white/[0.06] bg-white/[0.025] px-4 py-3 font-mono text-[10px] uppercase tracking-[0.16em] text-white/35">
+              <div className="col-span-3">Pair</div>
+              <div className="col-span-2 text-right">R</div>
+              <div className="col-span-3 text-right">Setup</div>
+              <div className="col-span-4 text-right">AI Flag</div>
+            </div>
+            {[
+              ['BTC/USDT', '+2.1R', '4H rejection', 'repeat'],
+              ['ETH/USDT', '-1.0R', 'FOMO long', 'leak'],
+              ['SOL/USDT', '+0.7R', 'range reclaim', 'clean'],
+              ['BTC/USDT', '-0.6R', 'no thesis', 'review'],
+            ].map((row) => (
+              <div key={row.join('-')} className="grid grid-cols-12 items-center border-b border-white/[0.04] px-4 py-3 text-sm last:border-b-0">
+                <div className="col-span-3 font-medium text-white">{row[0]}</div>
+                <div className={`col-span-2 text-right font-mono ${row[1].startsWith('+') ? 'text-[#00e5a0]' : 'text-[#ff4976]'}`}>{row[1]}</div>
+                <div className="col-span-3 text-right text-white/55">{row[2]}</div>
+                <div className="col-span-4 text-right">
+                  <span className={`rounded-full px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] ${row[3] === 'leak' ? 'bg-[#ff4976]/10 text-[#ff4976]' : row[3] === 'repeat' ? 'bg-[#00e5a0]/10 text-[#00e5a0]' : 'bg-white/[0.05] text-white/45'}`}>{row[3]}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-[#06070a]/95 p-4 sm:p-6">
+          <div className="rounded-2xl border border-[#00e5a0]/15 bg-[#00e5a0]/[0.035] p-5">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#00e5a0]">AI Debrief</p>
+                <h4 className="mt-1 font-semibold text-white">Trade #184 Review</h4>
+              </div>
+              <div className="rounded-lg border border-[#00e5a0]/20 bg-black/20 px-2.5 py-1 font-mono text-sm font-bold text-[#00e5a0]">B-</div>
+            </div>
+            <div className="space-y-3">
+              {reviewItems.map(([label, body]) => (
+                <div key={label} className="rounded-xl border border-white/[0.06] bg-black/20 p-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/35">{label}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/70">{body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 export default function LandingClientPage() {
-  const [trades, setTrades] = useState<any[]>([])
-  const [perf, setPerf] = useState<any>(null)
-  const [scrolled, setScrolled] = useState(false)
-  const [menu, setMenu] = useState(false)
-  const [time, setTime] = useState('')
-  const [openFaq, setOpenFaq] = useState<number|null>(null)
+  const [menuOpen, setMenuOpen] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/performance').then(r => r.json()).then(d => { if (d?.trades) setTrades(d.trades); if (d) setPerf(d) }).catch(() => {})
-    const fn = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', fn, { passive: true })
-    const tick = () => setTime(new Date().toISOString().replace('T', ' ').slice(0, 19) + ' UTC')
-    tick(); const iv = setInterval(tick, 1000)
-    return () => { window.removeEventListener('scroll', fn); clearInterval(iv) }
-  }, [])
-
-  const scrollTo = (id: string) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); setMenu(false) }
-
-  // Compute all stats from API data
-  const allTrades = perf?.trades || []
-  const totalTrades = allTrades.length
-  const totalProfit = allTrades.reduce((s:number,t:any)=>s+Number(t.pnl||0),0)
-  const finalBalance = 10000 + totalProfit
-  const wins = allTrades.filter((t:any)=>t.pnl>0)
-  const losses = allTrades.filter((t:any)=>t.pnl<0)
-  const winRate = totalTrades > 0 ? (wins.length/totalTrades*100) : 0
-  const grossProfit = wins.reduce((s:number,t:any)=>s+Number(t.pnl),0)
-  const grossLoss = Math.abs(losses.reduce((s:number,t:any)=>s+Number(t.pnl),0))
-  const profitFactor = grossLoss > 0 ? grossProfit/grossLoss : 0
-  const mo = perf?.monthly || []
-  const greenMonths = mo.filter((m:any)=>m.pnl>0).length
-  const redMonths = mo.filter((m:any)=>m.pnl<=0).length
-  const totalMonths = mo.length
-  const winMonthPct = totalMonths > 0 ? (greenMonths/totalMonths*100) : 0
-  const avgMonthly = totalMonths > 0 ? totalProfit/totalMonths : 0
-  const avgWinTrade = wins.length > 0 ? grossProfit/wins.length : 0
-  const avgPerMonth = totalMonths > 0 ? totalTrades/totalMonths : 0
-
-  // Pair stats from trades
-  const pairStats:{[k:string]:{pnl:number,n:number}} = {}
-  allTrades.forEach((t:any)=>{const p=(t.pair||'').replace('/USDT','');if(!pairStats[p])pairStats[p]={pnl:0,n:0};pairStats[p].pnl+=Number(t.pnl||0);pairStats[p].n++})
-  const pairList = Object.entries(pairStats).map(([p,v])=>({p,...v})).sort((a,b)=>b.pnl-a.pnl)
-
-  const dataReady = allTrades.length > 0
-  const equity = useCountUp(dataReady ? Math.round(finalBalance) : 0, 0, 2500)
-  const tradeCountUp = useCountUp(dataReady ? totalTrades : 0, 0, 2000)
-  const pfUp = useCountUp(dataReady ? profitFactor : 0, 2, 2000)
-  const winMoUp = useCountUp(dataReady ? Math.round(winMonthPct) : 0, 0, 2000)
-
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-  const fmtK = (n:number) => n>=1000?'$'+Math.round(n).toLocaleString():n>=0?'$'+Math.round(n).toLocaleString():'-$'+Math.abs(Math.round(n)).toLocaleString()
-  const fmtKShort = (n:number) => Math.abs(n)>=1000?(n>0?'+':'')+('$'+(n/1000).toFixed(0)+'K'):(n>0?'+':'')+('$'+Math.round(n))
+  const nav = [
+    { label: 'Product', href: '#product' },
+    { label: 'AI Review', href: '#ai-review' },
+    { label: 'Insights', href: '#insights' },
+  ]
 
   return (
-    <div className="min-h-screen bg-[#08080a] text-[#c8c8c8] overflow-x-hidden antialiased">
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-      <style dangerouslySetInnerHTML={{ __html: `
-        body{font-family:'Inter',-apple-system,sans-serif}
-        .mono{font-family:'JetBrains Mono',monospace}
-        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .fu{animation:fadeUp .7s ease-out forwards}.fu1{animation:fadeUp .7s ease-out .1s forwards;opacity:0}.fu2{animation:fadeUp .7s ease-out .2s forwards;opacity:0}.fu3{animation:fadeUp .7s ease-out .3s forwards;opacity:0}.fu4{animation:fadeUp .7s ease-out .4s forwards;opacity:0}
-        @keyframes pd{0%,100%{opacity:.35}50%{opacity:1}}.pd{animation:pd 2s ease-in-out infinite}
-        .glow{text-shadow:0 0 60px rgba(0,229,160,.15)}
-        .t{background:#0a0a0c;border:1px solid rgba(255,255,255,.04);border-radius:10px;overflow:hidden}
-        .t-visible{background:#0a0a0c;border:1px solid rgba(255,255,255,.04);border-radius:10px}
-        .th{border-bottom:1px solid rgba(255,255,255,.04);padding:8px 14px;display:flex;align-items:center;gap:7px}
-        .grid-bg{background-image:linear-gradient(rgba(255,255,255,.007) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.007) 1px,transparent 1px);background-size:50px 50px}
-        .lift{transition:all .3s cubic-bezier(.25,.1,.25,1)}.lift:hover{transform:translateY(-2px);border-color:rgba(255,255,255,.08)}
-        .divider{height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.04) 50%,transparent)}
-      `}} />
+    <main className="min-h-screen overflow-hidden bg-[#05060a] text-white">
+      <div className="pointer-events-none fixed inset-0 bg-[linear-gradient(rgba(255,255,255,0.018)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.018)_1px,transparent_1px)] bg-[size:64px_64px] opacity-60" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(0,229,160,0.16),transparent_35%),radial-gradient(circle_at_10%_20%,rgba(59,130,246,0.10),transparent_28%),radial-gradient(circle_at_90%_10%,rgba(0,229,160,0.08),transparent_28%)]" />
 
-      {/* NAV */}
-      <nav className={'fixed top-0 left-0 right-0 z-50 transition-all duration-300 '+(scrolled?'bg-[#08080a]/90 backdrop-blur-xl border-b border-white/[0.04]':'')}>
-        <div className="max-w-7xl mx-auto px-6 md:px-10 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/logo.webp" alt="PulseWave" className="h-7" />
+      <nav className="relative z-20 border-b border-white/[0.06] bg-[#05060a]/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+          <PulseLogo />
+          <div className="hidden items-center gap-8 md:flex">
+            {nav.map((item) => (
+              <a key={item.href} href={item.href} className="text-sm text-white/60 transition hover:text-white">
+                {item.label}
+              </a>
+            ))}
+            <Link href="/auth/login" className="text-sm text-white/60 transition hover:text-white">
+              Log in
+            </Link>
+            <Link href="/auth/signup" className="rounded-xl bg-[#00e5a0] px-4 py-2 text-sm font-bold text-black transition hover:bg-[#00c98c]">
+              Start Journaling
+            </Link>
           </div>
-          <div className="hidden md:flex items-center gap-7">
-            <button onClick={()=>scrollTo('proof')} className="text-[14px] text-white/55 hover:text-white/85 transition-colors">Performance</button>
-            <button onClick={()=>scrollTo('how')} className="text-[14px] text-white/55 hover:text-white/85 transition-colors">How It Works</button>
-            <button onClick={()=>scrollTo('pricing')} className="text-[14px] text-white/55 hover:text-white/85 transition-colors">Pricing</button>
-            <Link href="/auth/login" className="text-[14px] text-white/55 hover:text-white/85 transition-colors">Log In</Link>
-            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="text-[14px] px-5 py-2 bg-[#00e5a0] text-black rounded font-bold tracking-wide hover:bg-[#00cc8e] transition-colors">GET ACCESS</Link>
-          </div>
-          <button className="md:hidden text-white/65" onClick={()=>setMenu(!menu)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={menu?"M18 6L6 18M6 6l12 12":"M4 8h16M4 16h16"}/></svg>
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={menuOpen}
+            className="rounded-lg border border-white/[0.08] px-3 py-2 text-sm text-white/70 md:hidden"
+          >
+            Menu
           </button>
         </div>
-        {menu&&<div className="md:hidden px-6 pb-4 space-y-3 border-t border-white/5 mt-1 bg-[#08080a]">
-          <button onClick={()=>scrollTo('proof')} className="block text-white/55 text-[14px]">Performance</button>
-          <button onClick={()=>scrollTo('how')} className="block text-white/55 text-[14px]">How It Works</button>
-          <button onClick={()=>scrollTo('pricing')} className="block text-white/55 text-[14px]">Pricing</button>
-          <Link href="/auth/login" className="block text-white/55 text-[14px]">Log In</Link>
-          <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="inline-block px-5 py-2 bg-[#00e5a0] text-black rounded font-bold text-[14px]">GET ACCESS</Link>
-        </div>}
+        {menuOpen && (
+          <div className="border-t border-white/[0.06] bg-[#05060a] px-5 py-4 md:hidden">
+            <div className="flex flex-col gap-3">
+              {nav.map((item) => (
+                <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)} className="text-sm text-white/65">
+                  {item.label}
+                </a>
+              ))}
+              <Link href="/auth/login" className="text-sm text-white/65">Log in</Link>
+              <Link href="/auth/signup" className="rounded-xl bg-[#00e5a0] px-4 py-2 text-center text-sm font-bold text-black">
+                Start Journaling
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
-
-      {/* ════════ 1. HERO ════════ */}
-      <section className="min-h-[100svh] flex flex-col items-center justify-center px-5 md:px-10 pt-16 pb-[15px] md:pb-0 relative grid-bg">
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.03) 0%,transparent 65%)'}}/>
-
-        <div className="w-full max-w-4xl mx-auto relative z-10">
-          <p className="fu text-[15px] text-white/40 mb-5 leading-relaxed max-w-lg">
-            Tired of staring at charts, second-guessing every trade, and still losing money?
-          </p>
-
-          <h1 className="fu1 text-[clamp(2rem,6vw,3.5rem)] font-extrabold leading-[1.08] tracking-tight mb-6">
-            Crypto signals that tell you<br/>exactly <span className="text-[#00e5a0] glow">when to buy and sell.</span>
-          </h1>
-          <p className="fu2 text-[16px] text-white/85 leading-relaxed max-w-xl mb-4">
-            Our engine scans 5 pairs around the clock. When it spots a setup, you get the exact entry, stop loss, and take profit — straight to your phone. Copy it. Place it. Done.
-          </p>
-          <p className="fu2 text-[14px] text-white/50 max-w-md mb-10 leading-relaxed">
-            {totalTrades} verified trades. {Math.round(winMonthPct)}% profitable months. Every win and every loss published. Check for yourself.
-          </p>
-
-          <div className="fu3 flex flex-col sm:flex-row gap-3 mb-16 max-w-md">
-            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="px-8 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[14px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_30px_rgba(0,229,160,.1)]">
-              Get started now
-            </Link>
-            <Link href="/performance" className="px-8 py-4 rounded-lg text-[14px] font-semibold text-white/55 border border-white/[0.06] hover:border-white/[0.12] hover:text-white/85 transition-all text-center">
-              See every trade we've made
-            </Link>
-          </div>
-
-          {/* Stats bar wrapper — refs for countUp observers */}
-          <div ref={equity.ref} style={{minHeight:'1px'}}><span ref={tradeCountUp.ref}></span><span ref={pfUp.ref}></span><span ref={winMoUp.ref}></span></div>
-
-          {/* Stats bar — desktop */}
-          <div className="fu4 t hidden md:block">
-            <div className="grid grid-cols-4 gap-px">
-              {[
-                { label:'STARTING BALANCE', val:'$10K → $'+Math.round(Number(equity.display.replace(/,/g,''))/1000)+'K', c:'#00e5a0' },
-                { label:'TOTAL TRADES', val:tradeCountUp.display, c:'#e0e0e0' },
-                { label:'PROFIT FACTOR', val:pfUp.display, c:'#e0e0e0' },
-                { label:'PROFITABLE MONTHS', val:winMoUp.display+'%', c:'#e0e0e0' },
-              ].map(function(s,i) { return (
-                <div key={i} className="px-5 py-4 border-r border-white/[0.02] last:border-r-0">
-                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">{s.label}</div>
-                  <div className="text-[24px] font-bold mono" style={{color:s.c}}>{s.val}</div>
-                </div>
-              )})}
+      <section className="relative z-10 px-5 pb-16 pt-16 sm:px-8 sm:pb-24 sm:pt-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.03] px-4 py-2 font-mono text-[10px] uppercase tracking-[0.24em] text-white/45">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#00e5a0] shadow-[0_0_16px_rgba(0,229,160,0.9)]" />
+              AI Trading Journal
+            </div>
+            <h1 className="text-balance text-5xl font-black tracking-[-0.025em] text-white sm:text-7xl lg:text-8xl" style={{ wordSpacing: '0.04em' }}>
+              Your trading journal should tell you why you keep losing.
+            </h1>
+            <p className="mx-auto mt-6 max-w-2xl text-pretty text-lg leading-8 text-white/58 sm:text-xl">
+              PulseWave turns every trade into patterns, rules, and AI feedback — so every entry becomes data you can actually improve from.
+            </p>
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <Link href="/auth/signup" className="w-full rounded-2xl bg-[#00e5a0] px-7 py-4 text-center text-sm font-black text-black shadow-[0_0_40px_rgba(0,229,160,0.22)] transition hover:bg-[#00c98c] sm:w-auto">
+                Start Journaling
+              </Link>
+              <a href="#product" className="w-full rounded-2xl border border-white/[0.1] bg-white/[0.03] px-7 py-4 text-center text-sm font-bold text-white/80 transition hover:border-white/[0.18] hover:bg-white/[0.06] sm:w-auto">
+                View Journal Demo
+              </a>
             </div>
           </div>
 
-          {/* Stats bar — mobile */}
-          <div className="fu4 md:hidden">
-            <div className="t mb-3">
-              <div className="flex items-center justify-between px-5 py-4">
-                <div>
-                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">BALANCE</div>
-                  <div className="text-[28px] font-bold mono text-[#00e5a0]">$10K → ${Math.round(Number(equity.display.replace(/,/g,''))/1000)}K</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-[11px] text-white/35 mono tracking-[.12em] mb-1">RETURN</div>
-                  <div className="text-[22px] font-bold mono text-[#00e5a0]">+{totalProfit > 0 ? Math.round(totalProfit/100) : 0}%</div>
-                </div>
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { label:'TRADES', ref:tradeCountUp.ref, val:tradeCountUp.display, c:'#e0e0e0' },
-                { label:'PROFIT FACTOR', ref:pfUp.ref, val:pfUp.display, c:'#e0e0e0' },
-                { label:'WIN MONTHS', ref:winMoUp.ref, val:winMoUp.display+'%', c:'#e0e0e0' },
-              ].map(function(s,i) { return (
-                <div key={i} ref={s.ref} className="t px-4 py-3 text-center">
-                  <div className="text-[10px] text-white/30 mono tracking-[.12em] mb-1">{s.label}</div>
-                  <div className="text-[20px] font-bold mono" style={{color:s.c}}>{s.val}</div>
-                </div>
-              )})}
-            </div>
-          </div>
-
-          {/* Trust strip */}
-          <div className="fu4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-6 text-[13px] md:text-[16px] text-white/55">
-            <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>No hidden fees</span>
-            <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>Cancel anytime</span>
-            <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>All trades public</span>
-            <span className="flex items-center gap-1.5"><span className="w-1 h-1 rounded-full bg-[#00e5a0]/30"></span>Telegram delivery</span>
+          <div className="mt-14 sm:mt-20">
+            <JournalPreview />
           </div>
         </div>
       </section>
 
-
-      {/* ═══ divider ═══ */}
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 2. PROBLEM AGITATION ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
-              Sound familiar?
-            </h2>
-            <p className="text-[15px] text-white/40 max-w-lg mx-auto leading-relaxed">
-              Be honest with yourself. How many of these have you lived through?
+      <section id="product" className="relative z-10 border-y border-white/[0.06] bg-white/[0.015] px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-2xl">
+            <SectionLabel>What it does</SectionLabel>
+            <h2 className="text-3xl font-black tracking-[-0.02em] text-white sm:text-5xl">Not another spreadsheet. A feedback loop.</h2>
+            <p className="mt-4 text-lg leading-8 text-white/55">
+              Most traders log trades after the damage is done — then never look at them again. PulseWave is built to extract signal from your own behavior.
             </p>
           </div>
 
-          <div className="space-y-3 mb-12">
-            {[
-              { title:'You watch the charts for hours... then miss the move anyway.', desc:'You had the right idea. You just couldn\'t pull the trigger in time. Or worse, you pulled it too early and watched it reverse.'},
-              { title:'You followed a "signal group" that only showed you the wins.', desc:'Screenshots of 10x trades. Lamborghini photos. Then you subscribed and lost 40% in the first month. They stopped replying to your DMs.'},
-              { title:'You know you should use stop losses... but you don\'t.', desc:'You move them. You widen them. You remove them entirely because "it\'ll come back." It didn\'t come back. And now you\'re starting over.'},
-            ].map((p,i)=>(
-              <div key={i} className="border border-white/[0.04] rounded-xl p-6 md:p-7 hover:border-white/[0.06] transition-colors">
-                <h3 className="text-[16px] font-bold text-white/85 mb-2 leading-snug">{p.title}</h3>
-                <p className="text-[14px] text-white/40 leading-relaxed">{p.desc}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="bg-white/[0.02] border border-white/[0.04] rounded-xl p-6 md:p-8 text-center">
-            <p className="text-[15px] text-white/55 leading-relaxed max-w-xl mx-auto mb-2">
-              The problem isn't you. It's that you're trying to do everything yourself — find the setup, time the entry, manage the risk, control your emotions — all at once.
-            </p>
-            <p className="text-[15px] text-white/70 leading-relaxed max-w-xl mx-auto">
-              <strong className="text-white/90">What if you just got a notification that said: buy here, stop here, target here?</strong>
-            </p>
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 3. MECHANISM ════════ */}
-      <section id="how" className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">HOW IT WORKS</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-4">
-              Think of it like a security camera<br className="hidden md:block"/> for 5 crypto markets.
-            </h2>
-            <p className="text-[14px] text-white/45 max-w-xl mx-auto leading-relaxed">
-              You wouldn't watch 5 security feeds 24/7 with your own eyes. You'd set up motion detection and let it alert you. That's what this is — except instead of motion, it detects the same price structures that institutional traders act on. When it spots one, your phone buzzes.
-            </p>
-          </div>
-
-          <div className="relative">
-            {/* Connector line. desktop only */}
-            <div className="hidden md:block absolute top-[52px] left-[16.66%] right-[16.66%] h-px bg-gradient-to-r from-[#00e5a0]/10 via-[#00e5a0]/20 to-[#00e5a0]/10 z-0"></div>
-
-            <div className="grid md:grid-cols-3 gap-6 relative z-10">
-              {[
-                {n:'1',t:'The engine watches',sub:'So you don\'t have to.',d:'BTC, ETH, SOL, AVAX, XRP — all monitored around the clock. Like having a trader with perfect discipline who never sleeps, never gets emotional, and never chases a pump.', accent:'from-[#00e5a0]/20 to-[#00e5a0]/5'},
-                {n:'2',t:'Your phone buzzes',sub:'Under 60 seconds.',d:'You get one notification with everything: entry price, stop loss, take profit, and the exact position size for your account. No interpretation needed. No chart reading. Just numbers.', accent:'from-[#00e5a0]/15 to-[#00e5a0]/5'},
-                {n:'3',t:'You copy 5 numbers',sub:'That\'s it.',d:'Open your exchange, paste them in, and go back to whatever you were doing. The hard part — finding the trade, sizing the risk, controlling your emotions — is already done.', accent:'from-[#00e5a0]/10 to-[#00e5a0]/5'},
-              ].map((s,i)=>(
-                <div key={i} className="relative group">
-                  <div className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-7 hover:border-[#00e5a0]/[0.08] transition-all duration-300">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-b from-[#00e5a0]/[0.08] to-transparent border border-[#00e5a0]/[0.12] flex items-center justify-center mb-5">
-                      <span className="text-[14px] mono font-bold text-[#00e5a0]/60">{s.n}</span>
-                    </div>
-                    <h3 className="text-[18px] font-bold text-white/90 mb-0.5">{s.t}</h3>
-                    <p className="text-[14px] text-[#00e5a0]/60 mono mb-3">{s.sub}</p>
-                    <p className="text-[14px] text-white/45 leading-relaxed">{s.d}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 3.5 OBJECTION SURFACING ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight mb-4">
-            Here's what you're probably thinking.
-          </h2>
-          <p className="text-[14px] text-white/35 mb-10 max-w-lg mx-auto">And you'd be smart to think it. Let's get it out in the open.</p>
-
-          <div className="space-y-4 text-left">
-            {[
-              { objection:'"Only 40% of trades win? That sounds terrible."', answer:'It does — until you do the math. Our winners are 2-3× larger than our losers. That\'s a profit factor of '+profitFactor.toFixed(2)+', meaning for every $1 lost, $'+profitFactor.toFixed(2)+' comes back. Over '+totalTrades+' trades, $10K became $'+Math.round(finalBalance).toLocaleString()+'. Win rate is a vanity metric. Profit factor is what pays your rent.'},
-              { objection:'"How do I know the results are real?"', answer:'You don\'t have to trust us. Audit them yourself. Every single trade — all '+totalTrades+' of them — is published with timestamps, prices, and P&L. Including the '+redMonths+' red months. We\'re the only signal service that does this, and there\'s a reason most don\'t.'},
-              { objection:'"I\'ve been burned by signal groups before."', answer:'Of course you have. Most of them are scams. That\'s why we publish everything. No screenshots, no "trust me bro." Just raw data. If our numbers looked bad, we wouldn\'t show them. They don\'t look bad.'},
-            ].map((o,i)=>(
-              <div key={i} className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-6 md:p-7">
-                <p className="text-[15px] text-white/70 font-semibold italic mb-3">{o.objection}</p>
-                <p className="text-[14px] text-white/40 leading-relaxed">{o.answer}</p>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {features.map((feature) => (
+              <div key={feature.title} className="rounded-3xl border border-white/[0.07] bg-[#08090c]/80 p-6 transition hover:-translate-y-1 hover:border-[#00e5a0]/20 hover:bg-[#0a0c10]">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00e5a0]">{feature.eyebrow}</p>
+                <h3 className="mt-4 text-lg font-bold text-white">{feature.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-white/48">{feature.body}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 4. PROOF ════════ */}
-      <section id="proof" className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
-            <div>
-              <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">THE PROOF</p>
-              <h2 className="text-2xl md:text-[32px] font-bold tracking-tight leading-tight">
-                {totalTrades} trades. Every one public.
-              </h2>
-              <p className="text-[14px] text-white/55 mt-2">Not screenshots. Not highlights. The complete, unedited record.</p>
-            </div>
-            <Link href="/performance" className="text-[14px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors shrink-0">VIEW FULL LOG →</Link>
-          </div>
-
-          {/* Monthly returns grid */}
-          {perf?.monthly&&(()=>{
-            const byYear:{[y:string]:any[]}={}
-            perf.monthly.forEach((m:any)=>{const y=m.month.slice(0,4);if(!byYear[y])byYear[y]=[];byYear[y].push(m)})
-            const years=Object.keys(byYear).sort()
-            return(
-            <div className="t mb-5">
-              <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-                <span className="text-[14px] text-white/55 mono">MONTHLY P&L</span>
-                <span className="text-[14px] text-white/55 mono">{perf.monthly.length} months tracked</span>
-              </div>
-              <div className="p-5 space-y-4">
-                {years.map((year:string)=>{
-                  const yearTotal=byYear[year].reduce((s:number,x:any)=>s+x.pnl,0)
-                  return(
-                    <div key={year}>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-[14px] text-white/65 mono font-semibold">{year}</span>
-                        <span className={'text-[14px] mono font-bold '+(yearTotal>=0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{yearTotal>=0?'+':''}${(yearTotal/1000).toFixed(1)}K</span>
-                      </div>
-                      <div className="grid grid-cols-4 md:grid-cols-12 gap-1">
-                        {Array.from({length:12},(_,mi)=>{
-                          const monthKey=`${year}-${String(mi+1).padStart(2,'0')}`
-                          const md=byYear[year].find((x:any)=>x.month===monthKey)
-                          if(!md) return <div key={mi} className="rounded-md bg-white/[0.015] py-3 px-1 text-center"><div className="text-[14px] text-white/55 mono">{months[mi]}</div><div className="text-[14px] text-white/55 mono mt-0.5">—</div></div>
-                          const pnl=md.pnl, int=Math.min(Math.abs(pnl)/12000,1)
-                          const bg=pnl>0?`rgba(0,229,160,${.05+int*.25})`:`rgba(255,77,77,${.05+int*.25})`
-                          return(
-                            <div key={mi} className="rounded-md py-3 px-1 text-center" style={{background:bg}}>
-                              <div className="text-[14px] text-white/65 mono">{months[mi]}</div>
-                              <div className={'text-[16px] font-bold mono mt-0.5 '+(pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{pnl>0?'+':''}{(pnl/1000).toFixed(1)}k</div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-            )
-          })()}
-
-          {/* Key stats */}
-          <div className="grid grid-cols-2 gap-2 mb-5">
-            {perf?.monthly&&(()=>{
-              const m=perf.monthly, total=m.reduce((s:number,x:any)=>s+x.pnl,0), avg=total/m.length
-              const best=m.reduce((a:any,b:any)=>a.pnl>b.pnl?a:b,m[0]), worst=m.reduce((a:any,b:any)=>a.pnl<b.pnl?a:b,m[0])
-              return[
-                {l:'TOTAL PROFIT',v:'+$'+Math.round(total).toLocaleString(),c:'#00e5a0'},
-                {l:'MONTHLY AVG',v:'+$'+Math.round(avg).toLocaleString(),c:'#00e5a0'},
-                {l:'BEST MONTH',v:'+$'+Math.round(best.pnl).toLocaleString(),c:'#00e5a0'},
-                {l:'WORST MONTH',v:'-$'+Math.abs(Math.round(worst.pnl)).toLocaleString(),c:'#ff4d4d'},
-              ].map((s,i)=>(
-                <div key={i} className="t px-5 py-4">
-                  <div className="text-[14px] text-white/55 mono tracking-[.12em] mb-1">{s.l}</div>
-                  <div className="text-[24px] font-bold mono" style={{color:s.c}}>{s.v}</div>
-                </div>
-              ))
-            })()}
-          </div>
-
-          {/* Trade feed */}
-          <div className="t">
-            <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-              <span className="text-[14px] text-white/55 mono">RECENT TRADES</span>
-              <div className="flex items-center gap-3">
-                <span className="text-[14px] text-white/55 mono">2-day delay</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-[#00e5a0] pd"></span><span className="text-[14px] text-[#00e5a0]/60 mono">LIVE</span></span>
-              </div>
-            </div>
-            {/* Desktop */}
-            <div className="hidden md:block">
-              <div className="grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] text-[14px] text-white/55 mono tracking-[.1em] px-5 py-2 border-b border-white/[0.02]">
-                <div>DATE</div><div>PAIR</div><div>SIDE</div><div>ENTRY</div><div>EXIT</div><div className="text-right">P&L</div><div className="text-right">RESULT</div>
-              </div>
-              {trades.slice(0,8).map((t,i)=>(
-                <div key={'d'+i} className={'grid grid-cols-[90px_80px_60px_1fr_1fr_90px_60px] items-center px-5 py-3 border-b border-white/[0.015] hover:bg-white/[0.01] transition-colors '+(i%2===0?'bg-white/[0.003]':'')}>
-                  <div className="text-[14px] text-white/65 mono">{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-                  <div className="text-[14px] text-white/85 mono font-medium">{t.pair.replace('/USDT','')}</div>
-                  <div><span className={'text-[14px] mono font-bold '+(t.action==='LONG'?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.action}</span></div>
-                  <div className="text-[14px] text-white/55 mono">${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                  <div className="text-[14px] text-white/55 mono">${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</div>
-                  <div className={'text-[14px] mono font-medium text-right '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</div>
-                  <div className="text-right"><span className={'text-[14px] mono tracking-wider '+(t.exit_reason==='TP'?'text-[#00e5a0]/70':'text-[#ff4d4d]/70')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span></div>
-                </div>
-              ))}
-            </div>
-            {/* Mobile */}
-            <div className="md:hidden divide-y divide-white/[0.02]">
-              {trades.slice(0,8).map((t,i)=>(
-                <div key={'m'+i} className={'px-4 py-4 '+(i%2===0?'bg-white/[0.003]':'')}>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className={'text-[14px] mono font-bold px-2 py-0.5 rounded '+(t.action==='LONG'?'bg-[#00e5a0]/10 text-[#00e5a0]':'bg-[#ff4d4d]/10 text-[#ff4d4d]')}>{t.action}</span>
-                      <span className="text-[14px] text-white/85 mono font-medium">{t.pair.replace('/USDT','')}</span>
-                    </div>
-                    <span className={'text-[16px] mono font-bold '+(t.pnl>0?'text-[#00e5a0]':'text-[#ff4d4d]')}>{t.pnl>0?'+':''}${Number(t.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-[12px] mono text-white/40">
-                    <span>{new Date(t.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</span>
-                    <span>${Number(t.entry_price).toLocaleString(undefined,{maximumFractionDigits:2})} → ${Number(t.exit_price).toLocaleString(undefined,{maximumFractionDigits:2})}</span>
-                    <span className={'tracking-wider font-medium '+(t.exit_reason==='TP'?'text-[#00e5a0]/60':'text-[#ff4d4d]/75')}>{t.exit_reason==='TP'?'WIN':'LOSS'}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="px-5 py-3 text-center border-t border-white/[0.02]">
-              <Link href="/performance" className="text-[14px] text-white/65 mono tracking-wider hover:text-white/65 transition-colors">VERIFY ALL {totalTrades} TRADES →</Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 5. SIGNAL PREVIEW ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-[1fr_1.2fr] gap-8 md:gap-12 items-center">
+      <section id="ai-review" className="relative z-10 px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
           <div>
-            <p className="text-[12px] text-[#00e5a0]/60 mono tracking-[.15em] mb-2">WHAT YOU RECEIVE</p>
-            <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-4 leading-tight">
-              Not "buy BTC."<br/><span className="text-white/55">The full trade, calculated for you.</span>
-            </h2>
-            <p className="text-[14px] text-white/65 leading-relaxed mb-8">
-              Every signal comes with the exact entry, exit, and position size, calculated for YOUR account. No vague calls. No "I think it'll go up." Just math.
+            <SectionLabel>AI review</SectionLabel>
+            <h2 className="text-3xl font-black tracking-[-0.02em] text-white sm:text-5xl">Every trade becomes a case file.</h2>
+            <p className="mt-5 text-lg leading-8 text-white/55">
+              A good journal should not just store what happened. It should explain what mattered. PulseWave reviews your thesis, execution, emotion, setup, and result — then turns it into a clear next action.
             </p>
-            <div className="space-y-3">
-              {[
-                ['Exact entry, stop loss, and take profit','Every level defined before you enter.'],
-                ['Position size for your account','Risk is calculated, not guessed.'],
-                ['Risk:reward ratio on every trade','You always know what you\'re risking vs. gaining.'],
-                ['Instant Telegram delivery','Signals arrive in under 60 seconds.'],
-              ].map((f,i)=>(
-                <div key={i} className="flex items-start gap-3">
-                  <span className="text-[#00e5a0]/70 mono text-[16px] mt-1 shrink-0">→</span>
-                  <div>
-                    <div className="text-[14px] text-white/65 font-medium">{f[0]}</div>
-                    <div className="text-[14px] text-white/55 mt-0.5">{f[1]}</div>
-                  </div>
+            <div className="mt-8 space-y-3">
+              {['What should I repeat?', 'What mistake cost me?', 'What rule would prevent this?', 'Is this setup actually worth taking?'].map((q) => (
+                <div key={q} className="flex items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4">
+                  <div className="h-2 w-2 rounded-full bg-[#00e5a0]" />
+                  <p className="text-sm text-white/65">{q}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          {(()=>{
-            const win = trades.find((t:any) => t.pnl > 0) || null
-            if (!win) return <div className="t p-10 text-center text-white/55 mono text-[14px]">Loading latest trade...</div>
-            const ep = Number(win.entry_price), xp = Number(win.exit_price), sl = Number(win.stop_loss||0), tp = Number(win.take_profit||xp)
-            const isLong = win.action === 'LONG'
-            const riskPct = ep > 0 ? Math.abs((ep - sl) / ep * 100) : 0
-            const rewPct = ep > 0 ? Math.abs((tp - ep) / ep * 100) : 0
-            const rr = riskPct > 0 ? (rewPct / riskPct) : 0
-            const riskFrac = riskPct + rewPct > 0 ? riskPct / (riskPct + rewPct) * 100 : 30
-            const fmt = (n:number) => n >= 1000 ? '$'+n.toLocaleString(undefined,{maximumFractionDigits:0}) : n >= 1 ? '$'+n.toFixed(2) : '$'+n.toFixed(4)
-            const posSizes = [1000,10000,50000].map(acct => {
-              const risk = acct * 0.1
-              const posSize = sl > 0 && riskPct > 0 ? (risk / (riskPct/100)) : acct * 2
-              return { a: '$'+(acct/1000)+'K acct', s: '$'+(posSize/1000).toFixed(1)+'K', r: 'risk $'+risk.toLocaleString() }
-            })
-            return (
-          <div className="t">
-            <div className="px-5 py-3 border-b border-white/[0.03] flex items-center justify-between">
-              <span className="text-[14px] text-white/55 mono">LATEST WINNER</span>
-              <span className="text-[14px] text-[#00e5a0] mono font-bold">+${Number(win.pnl).toLocaleString(undefined,{maximumFractionDigits:0})}</span>
-            </div>
-            <div className="p-5 space-y-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className={'text-[16px] font-bold mono px-2 py-0.5 rounded '+(isLong?'text-black bg-[#00e5a0]':'text-black bg-[#ff4d4d]')}>{win.action}</span>
-                  <span className="text-xl font-bold mono">{win.pair}</span>
+          <div className="rounded-3xl border border-white/[0.08] bg-[#08090c] p-5 shadow-2xl shadow-black/35">
+            <div className="rounded-2xl border border-[#00e5a0]/15 bg-[#00e5a0]/[0.035] p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-[#00e5a0]">Weekly AI Debrief</p>
+                  <h3 className="mt-2 text-2xl font-bold tracking-tight text-white">Your biggest leak is not the strategy.</h3>
                 </div>
-                <span className="text-[14px] text-white/65 mono">{new Date(win.entry_time).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span>
+                <div className="rounded-xl border border-[#ff4976]/20 bg-[#ff4976]/10 px-3 py-2 font-mono text-sm font-bold text-[#ff4976]">LEAK</div>
               </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                {[{l:'ENTRY',v:fmt(ep),c:''},{l:'STOP LOSS',v:sl>0?fmt(sl):'—',c:'text-[#ff4d4d]'},{l:'TAKE PROFIT',v:fmt(tp),c:'text-[#00e5a0]'}].map((x,i)=>(
-                  <div key={i}><div className="text-[14px] text-white/55 mono tracking-wider mb-1.5">{x.l}</div><div className={'text-[14px] font-bold mono '+x.c}>{x.v}</div></div>
-                ))}
-              </div>
-
-              <div>
-                <div className="flex justify-between text-[14px] mono text-white/55 mb-1.5"><span>Risk {riskPct.toFixed(1)}%</span><span>Reward {rewPct.toFixed(1)}%</span></div>
-                <div className="h-2 rounded-full bg-white/[0.03] flex overflow-hidden"><div className="bg-[#ff4d4d]/25 rounded-l-full" style={{width:riskFrac+'%'}}></div><div className="bg-[#00e5a0]/25 rounded-r-full" style={{width:(100-riskFrac)+'%'}}></div></div>
-                <div className="text-right text-[16px] text-[#00e5a0]/70 mono mt-1 font-medium">{rr.toFixed(1)}:1 R:R</div>
-              </div>
-
-              <div className="border-t border-white/[0.03] pt-4">
-                <div className="text-[14px] text-white/55 mono tracking-wider mb-2.5">POSITION SIZE BY ACCOUNT</div>
-                <div className="grid grid-cols-3 gap-2 text-[16px] mono">
-                  {posSizes.map((r,i)=>(
-                    <div key={i} className="bg-white/[0.02] rounded-md px-3 py-3"><div className="text-white/65 text-[14px]">{r.a}</div><div className="text-white/85 font-medium mt-0.5">{r.s}</div><div className="text-white/55 text-[14px] mt-0.5">{r.r}</div></div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 pt-1">
-                <span className="text-[14px] mono text-[#00e5a0]/60 font-medium tracking-wider">RESULT: TP HIT</span>
-                <span className="text-[14px] mono text-white/55">|</span>
-                <span className="text-[14px] mono text-white/55">{win.exit_time ? new Date(win.exit_time).toLocaleDateString('en-US',{month:'short',day:'numeric'}) : ''}</span>
-              </div>
-            </div>
-          </div>
-            )
-          })()}
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 6. WHO THIS IS FOR ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Is this actually for you?</h2>
-            <p className="text-[14px] text-white/35 max-w-lg mx-auto">Honestly — maybe not. This isn't for everyone, and we'd rather you know that now than find out after you pay.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* NOT for you. listed first to disqualify */}
-            <div className="order-2 md:order-1 border border-white/[0.04] rounded-xl p-7 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#ff4d4d]/20 to-transparent"></div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-5 h-5 rounded-full border border-[#ff4d4d]/20 flex items-center justify-center">
-                  <span className="text-[#ff4d4d]/70 text-[12px] mono font-bold">X</span>
-                </div>
-                <span className="text-[13px] mono text-[#ff4d4d]/70 tracking-wider font-semibold">WALK AWAY IF</span>
-              </div>
-              <div className="space-y-4">
-                {[
-                  {t:'You want guaranteed profits', s:'Nobody can promise that. Anyone who does is lying.'},
-                  {t:'You expect overnight riches', s:'This is a system, not a lottery ticket. $100 won\'t become $100K.'},
-                  {t:'You can\'t stomach red days', s:'40% of trades lose. The edge is in the math, not the win streak.'},
-                  {t:'You want 50 signals a day', s:'We average ~1 per day. Quality over quantity. Always.'},
-                  {t:'You won\'t follow the rules', s:'Position sizing and risk management aren\'t optional.'},
-                ].map((item,i)=>(
-                  <div key={i}>
-                    <div className="text-[14px] text-white/60 font-medium">{item.t}</div>
-                    <div className="text-[13px] text-white/30 mt-0.5">{item.s}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* FOR you */}
-            <div className="order-1 md:order-2 bg-[#00e5a0]/[0.02] border border-[#00e5a0]/[0.08] rounded-xl p-7 relative overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-5 h-5 rounded-full border border-[#00e5a0]/20 flex items-center justify-center">
-                  <span className="text-[#00e5a0]/70 text-[12px] mono font-bold">✓</span>
-                </div>
-                <span className="text-[13px] mono text-[#00e5a0]/70 tracking-wider font-semibold">BUILT FOR YOU IF</span>
-              </div>
-              <div className="space-y-4">
-                {[
-                  {t:'You trade crypto but can\'t watch charts all day', s:'Signals fire to Telegram. Open the trade. Done.'},
-                  {t:'You\'ve lost money trying to trade on your own', s:'Remove the emotions. Follow a system that\'s been verified over 624 trades.'},
-                  {t:'You\'re sick of unverified "gurus"', s:'Every single trade is public. Wins and losses. No screenshots, raw data.'},
-                  {t:'You respect risk management', s:'10% risk per trade, hard stops, defined targets. No YOLO.'},
-                  {t:'You have $5K+ to trade with', s:'The math works best with proper capital. Not a micro-account play.'},
-                ].map((item,i)=>(
-                  <div key={i}>
-                    <div className="text-[14px] text-white/70 font-medium">{item.t}</div>
-                    <div className="text-[13px] text-white/35 mt-0.5">{item.s}</div>
-                  </div>
-                ))}
+              <p className="mt-5 leading-8 text-white/62">
+                You are profitable when your trade has a pre-written thesis. Trades without a thesis are averaging <span className="font-mono text-[#ff4976]">-1.08R</span>. Your best results come from 4H rejection setups during London session.
+              </p>
+              <div className="mt-6 rounded-2xl border border-white/[0.06] bg-black/25 p-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">Next rule</p>
+                <p className="mt-2 text-sm leading-7 text-white/75">No trade can be opened unless the thesis, invalidation, and target are written before entry.</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 7. PAIRS + SYSTEM ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-3">INFRASTRUCTURE</div>
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight">
-              5 pairs. 24/7 monitoring.<br className="hidden md:block"/> Built like a hedge fund. Priced like a subscription.
-            </h2>
-          </div>
-
-          {/* Pair cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mb-8">
-            {pairList.map((x,i)=>{
-              const maxPnl = Math.max(...pairList.map(p=>p.pnl))
-              const barW = maxPnl > 0 ? (x.pnl / maxPnl * 100) : 0
-              return (
-              <div key={i} className="bg-[#0a0a0c] border border-white/[0.04] rounded-xl p-5 hover:border-[#00e5a0]/[0.08] transition-all duration-300 group">
-                <div className="text-[18px] font-bold mono text-white/80 mb-0.5 group-hover:text-[#00e5a0] transition-colors">{x.p}</div>
-                <div className="text-[11px] mono text-white/30 mb-3">{x.n} trades</div>
-                <div className="text-[18px] font-bold mono text-[#00e5a0] mb-2">+${(x.pnl/1000).toFixed(1)}K</div>
-                <div className="h-1 rounded-full bg-white/[0.03]">
-                  <div className="h-full rounded-full bg-[#00e5a0]/30 transition-all duration-500" style={{width: barW+'%'}}></div>
-                </div>
-              </div>
-            )})}
-          </div>
-
-          {/* System specs. horizontal strip */}
-          <div className="grid grid-cols-3 md:grid-cols-5 gap-px bg-white/[0.02] rounded-xl overflow-hidden">
-            {[
-              {v:'24/7', l:'Monitoring', s:'Every candle close'},
-              {v:'< 60s', l:'Signal Delivery', s:'Detection → Telegram'},
-              {v:'10%', l:'Risk Per Trade', s:'Fixed. Every time.'},
-              {v:totalMonths>0?Math.floor(totalMonths/12)+'yr'+(totalMonths>=24?'s':''):'—', l:'Track Record', s:totalTrades+' verified trades'},
-              {v:'$0', l:'Hidden Fees', s:'What you see is it'},
-            ].map((s,i)=>(
-              <div key={i} className="bg-[#0a0a0c] px-5 py-5 text-center">
-                <div className="text-[22px] font-bold mono text-white/85 mb-1">{s.v}</div>
-                <div className="text-[12px] text-white/50 font-medium mb-0.5">{s.l}</div>
-                <div className="text-[11px] text-white/25 mono">{s.s}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 7.5 ACCOUNT SIMULATOR ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">
-              Find your account size.
-            </h2>
-            <p className="text-[14px] text-white/40 max-w-lg mx-auto">
-              Every subscriber gets the same signals. The difference is how much capital you put behind them. Here's what the verified track record looks like at your level.
-            </p>
-          </div>
-
-          {/* Desktop: 5-column grid */}
-          <div className="hidden md:block bg-[#0a0a0c] border border-white/[0.04] rounded-xl overflow-hidden">
-            <div className="grid grid-cols-5 gap-px bg-white/[0.02]">
-              {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-                var multiplier = acct / 10000
-                var tp = totalProfit * multiplier
-                var ma = avgMonthly * multiplier
-                var isBase = acct === 10000
-                return (
-                  <div key={acct} className={'p-5 text-center relative ' + (isBase ? 'bg-[#00e5a0]/[0.03]' : 'bg-[#0a0a0c]')}>
-                    {isBase && <div className="absolute top-0 left-0 right-0 h-px bg-[#00e5a0]/20"></div>}
-                    <div className={'text-[12px] mono mb-4 tracking-wider ' + (isBase ? 'text-[#00e5a0]/70 font-bold' : 'text-white/30')}>{isBase ? 'BASE' : ''}&nbsp;</div>
-                    <div className={'text-[16px] mono font-bold mb-4 ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
-                    <div className="text-[22px] mono font-bold text-[#00e5a0] mb-1">+${Math.round(tp).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/25 mb-3">total profit</div>
-                    <div className="h-px bg-white/[0.04] mb-3"></div>
-                    <div className="text-[14px] mono text-white/50 font-medium">${Math.round(ma).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/20">per month avg</div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Mobile: stacked rows */}
-          <div className="md:hidden space-y-2">
-            {[1000, 5000, 10000, 25000, 50000].map(function(acct) {
-              var multiplier = acct / 10000
-              var tp = totalProfit * multiplier
-              var ma = avgMonthly * multiplier
-              var isBase = acct === 10000
-              return (
-                <div key={acct} className={'flex items-center justify-between rounded-xl px-5 py-4 border ' + (isBase ? 'bg-[#00e5a0]/[0.03] border-[#00e5a0]/[0.12]' : 'bg-[#0a0a0c] border-white/[0.04]')}>
-                  <div className="flex items-center gap-3">
-                    <div className={'text-[18px] mono font-bold ' + (isBase ? 'text-[#00e5a0]' : 'text-white/50')}>${(acct/1000).toFixed(0)}K</div>
-                    {isBase && <span className="text-[10px] mono text-[#00e5a0]/60 tracking-wider font-bold bg-[#00e5a0]/[0.08] px-2 py-0.5 rounded">BASE</span>}
-                  </div>
-                  <div className="text-right">
-                    <div className="text-[18px] mono font-bold text-[#00e5a0]">+${Math.round(tp).toLocaleString()}</div>
-                    <div className="text-[11px] mono text-white/30">${Math.round(ma).toLocaleString()}/mo avg</div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-
-          <p className="text-[10px] text-white/15 text-center mt-4">Based on verified results. 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 8. PRICING ════════ */}
-      <section id="pricing" className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-3 leading-tight">
-              You just saw what the signals return.<br className="hidden md:block"/> Here's what they cost.
-            </h2>
-            <p className="text-[14px] text-white/50 max-w-lg mx-auto">
-              The average winning trade returns +${Math.round(avgWinTrade).toLocaleString()} on a $10K account. One signal that hits pays for the subscription. The rest is profit.
-            </p>
-          </div>
-
-          {/* Price comparison anchor */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="text-[12px] text-white/30 mono tracking-[.2em] mb-5 text-center">WHAT TRADERS TYPICALLY SPEND</div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                {n:'Trading Courses',v:'$500 – $5,000',s:'One-time purchase. No ongoing signals. You still trade alone.'},
-                {n:'Signal Groups',v:'$200 – $500/mo',s:'Unverified win rates. Cherry-picked screenshots. No transparency.'},
-                {n:'Algo Trading Bots',v:'$100 – $300/mo',s:'You configure. You manage. You debug. Breaks when markets shift.'},
-                {n:'Trading Indicators',v:'$30 – $100/mo',s:'Still requires you to interpret charts, find entries, and manage risk.'},
-              ].map((c,i)=>(
-                <div key={i} className="bg-white/[0.02] border border-white/[0.04] rounded-lg p-4 relative overflow-hidden group hover:border-white/[0.06] transition-colors">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-[#ff4d4d]/[0.02] rounded-bl-full"></div>
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-[14px] text-white/70 font-medium">{c.n}</span>
-                    <span className="text-[14px] mono font-bold text-[#ff4d4d]/75 text-right leading-none">{c.v}</span>
-                  </div>
-                  <p className="text-[13px] text-white/35 leading-relaxed">{c.s}</p>
-                  <div className="mt-3 h-px bg-gradient-to-r from-[#ff4d4d]/10 to-transparent"></div>
+      <section id="insights" className="relative z-10 border-y border-white/[0.06] bg-white/[0.015] px-5 py-20 sm:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.9fr] lg:items-center">
+          <div className="rounded-3xl border border-white/[0.08] bg-[#08090c] p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {leaks.map((leak) => (
+                <div key={leak.name} className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-5">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-white/35">{leak.name}</p>
+                  <p className={`mt-3 font-mono text-3xl font-black ${leak.tone === 'good' ? 'text-[#00e5a0]' : 'text-[#ff4976]'}`}>{leak.stat}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-5 text-center">
-              <div className="inline-flex items-center gap-2 bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08] rounded-full px-5 py-2">
-                <span className="text-[14px] text-white/50">PulseWave Signals</span>
-                <span className="text-[16px] mono font-bold text-[#00e5a0]">$49/mo</span>
-                <span className="text-[13px] text-white/30">· verified results, zero guesswork</span>
-              </div>
-            </div>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-            <div className="t lift">
-              <div className="p-7">
-                <div className="text-[14px] text-white/65 mono tracking-wider mb-4">MONTHLY</div>
-                <div className="flex items-baseline gap-1 mb-6">
-                  <span className="text-[36px] font-bold mono">$49</span>
-                  <span className="text-white/65 text-[14px]">/mo</span>
-                </div>
-                <div className="space-y-2.5 text-[14px] text-white/55 mb-8">
-                  {['Every signal, every pair','Instant Telegram alerts','Full performance dashboard','Position sizing calculator','Cancel anytime, no lock-in'].map((f,i)=>(
-                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
-                  ))}
-                </div>
-                <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="block w-full py-3 rounded-lg border border-white/[0.08] text-white/65 text-[16px] font-bold text-center hover:border-white/[0.15] hover:text-white/85 transition-all mono tracking-wide">GET STARTED</Link>
-              </div>
-            </div>
-
-            <div className="t-visible lift relative" style={{borderColor:'rgba(0,229,160,.12)'}}>
-              <div className="absolute -top-2.5 right-5 px-3 py-0.5 bg-[#00e5a0] text-black text-[14px] font-bold mono tracking-wider rounded-sm z-10">SAVE $98</div>
-              <div className="p-7">
-                <div className="text-[12px] text-[#00e5a0]/60 mono tracking-wider mb-4">ANNUAL</div>
-                <div className="flex items-baseline gap-1 mb-1">
-                  <span className="text-[36px] font-bold mono text-[#00e5a0]">$490</span>
-                  <span className="text-white/65 text-[14px]">/yr</span>
-                </div>
-                <div className="text-[14px] text-[#00e5a0]/50 mono mb-6">2 months free</div>
-                <div className="space-y-2.5 text-[14px] text-white/55 mb-8">
-                  {['Everything in monthly','Priority signal delivery','Advanced analytics','Direct support channel','Early access to new features'].map((f,i)=>(
-                    <div key={i} className="flex items-center gap-2.5"><span className="text-[#00e5a0]/60 mono text-[16px]">→</span>{f}</div>
-                  ))}
-                </div>
-                <Link href="https://whop.com/checkout/plan_KXHGlrE70uC9q" className="block w-full py-3 rounded-lg bg-[#00e5a0] text-black text-[16px] font-bold text-center hover:bg-[#00cc8e] transition-colors mono tracking-wide">GET STARTED</Link>
-              </div>
-            </div>
-          </div>
-
-          {/* ROI math */}
-          <div className="mt-10 max-w-2xl mx-auto">
-            <div className="relative bg-gradient-to-b from-[#00e5a0]/[0.03] to-transparent border border-[#00e5a0]/[0.08] rounded-xl p-8 overflow-hidden">
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00e5a0]/20 to-transparent"></div>
-
-              <div className="text-center mb-8">
-                <div className="text-[12px] text-[#00e5a0]/60 mono tracking-[.2em] mb-2">SIMPLE MATH</div>
-                <p className="text-[14px] text-white/40">What $49/mo looks like on a $10K account</p>
-              </div>
-
-              <div className="flex items-center justify-center gap-2 md:gap-5 mb-8 flex-wrap">
-                <div className="text-center px-3">
-                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">You pay</div>
-                  <div className="text-[22px] md:text-[28px] font-bold mono text-white/70">$49</div>
-                  <div className="text-[10px] md:text-[11px] text-white/25 mono">/month</div>
-                </div>
-
-                <div className="text-[18px] text-white/15 mono">→</div>
-
-                <div className="text-center px-3">
-                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">Avg return</div>
-                  <div className="text-[22px] md:text-[28px] font-bold mono text-[#00e5a0]">+${Math.round(avgMonthly).toLocaleString()}</div>
-                  <div className="text-[10px] md:text-[11px] text-[#00e5a0]/50 mono">/month</div>
-                </div>
-
-                <div className="text-[18px] text-white/15 mono">=</div>
-
-                <div className="text-center px-3">
-                  <div className="text-[12px] md:text-[13px] text-white/30 mono mb-1">ROI</div>
-                  <div className="text-[30px] md:text-[36px] font-bold mono text-[#00e5a0]">{avgMonthly>0?Math.round(avgMonthly/49)+'x':'—'}</div>
-                </div>
-              </div>
-
-              <div className="h-px bg-white/[0.04] mb-4"></div>
-              <p className="text-[10px] text-white/20 text-center">Based on verified results. $10K starting capital, 10% fixed risk, 20x leverage. Past performance does not guarantee future results.</p>
-            </div>
+          <div>
+            <SectionLabel>Leak detection</SectionLabel>
+            <h2 className="text-3xl font-black tracking-[-0.02em] text-white sm:text-5xl">Your edge is hiding in your own data.</h2>
+            <p className="mt-5 text-lg leading-8 text-white/55">
+              PulseWave compares your trades by setup, session, emotion, timeframe, rule adherence, and R-multiple — then surfaces the few patterns that actually matter.
+            </p>
           </div>
         </div>
       </section>
 
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ REVIEWS ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Don't take our word for it.</h2>
-            <p className="text-[14px] text-white/35 max-w-md mx-auto">Here's what actual subscribers say — including the parts about losing months.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {[
-              { name:'Marcus T.', since:'11 months', text:'I was mass-DM\'d by 6 different signal groups before I found PulseWave. The difference? They actually show every single trade. 11 months in, my account is up 74%. The losing streaks are real but the math works.', tag:'BTC/ETH trader' },
-              { name:'David R.', since:'8 months', text:'Former LuxAlgo subscriber. Paid $200/mo for indicators I couldn\'t understand. PulseWave just tells me: here\'s the entry, here\'s the stop, here\'s the target. Copy it. Done. My win rate is lower than I expected but my account doesn\'t care.', tag:'Switched from LuxAlgo' },
-              { name:'Priya S.', since:'6 months', text:'I work full time and don\'t have hours to stare at charts. Telegram pings me, I place the trade on Bitget in 30 seconds, and go back to work. Made back my subscription cost in the first week.', tag:'Part-time trader' },
-              { name:'James K.', since:'10 months', text:'The transparency is what sold me. I audited every trade on the performance page before subscribing. 40% win rate scared me at first, but the profit factor means winners are 2-3x larger than losers. Numbers don\'t lie.', tag:'$25K account' },
-              { name:'Sofia L.', since:'7 months', text:'I lost $12K following Twitter calls before this. No more guessing, no more "trust me bro." Every signal has a stop loss. Every trade is documented. Worst month I had was down $400. Best month was up $9K.', tag:'Crypto trader' },
-              { name:'Ryan M.', since:'9 months', text:'Showed my buddy the performance page and he said "that can\'t be real, nobody publishes their losses." That\'s exactly why I trust it. 3 red months out of 9 for me, still up 118% total.', tag:'SOL/AVAX focused' },
-              { name:'Angela W.', since:'6 months', text:'$49/mo felt expensive until I did the math. Averaging $4K-5K/mo on a $10K account. That\'s a 30x return on the subscription. I spend more on DoorDash.', tag:'$10K account' },
-              { name:'Tommy H.', since:'20 months', text:'Been here since nearly the start. The algo doesn\'t chase pumps, doesn\'t panic sell. It waits for structure breaks at key levels. Some weeks nothing happens. Then 3 signals hit in a day and you remember why you\'re here.', tag:'Day one subscriber' },
-            ].map(function(r, i) {
-              return (
-                <div key={i} className="t p-5 md:p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <div className="text-[14px] font-medium text-white/80">{r.name}</div>
-                      <div className="text-[11px] mono text-white/30">{r.tag}</div>
-                    </div>
-                    <div className="text-[11px] mono text-[#00e5a0]/50">{r.since}</div>
-                  </div>
-                  <p className="text-[13px] text-white/55 leading-relaxed">{r.text}</p>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 9. FAQ ════════ */}
-      <section className="py-14 md:py-24 px-5 md:px-10">
-        <div className="max-w-3xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-[36px] font-bold tracking-tight leading-tight mb-3">Still thinking it over?</h2>
-            <p className="text-[14px] text-white/35 max-w-md mx-auto">Good. You should be. Here are the questions smart traders ask before committing.</p>
-          </div>
-
-          <div className="space-y-3">
-            {[
-              {q:'Why is the win rate only '+Math.round(winRate)+'%?',a:'Because our winners are much larger than our losers. Profit factor of '+profitFactor.toFixed(2)+' means for every $1 lost, we make $'+profitFactor.toFixed(2)+' back. Over '+totalTrades+' trades, that turns $10K into $'+Math.round(finalBalance).toLocaleString()+'. Win rate is a vanity metric. profit factor is what matters.'},
-              {q:'How do I know the results are real?',a:'Every trade is published with timestamps, entry/exit prices, P&L, and running balance. Audit all '+totalTrades+' trades on our performance page. We show the losses too: '+redMonths+' red month'+(redMonths!==1?'s':'')+' out of '+totalMonths+'. Name one other signal service that does this.'},
-              {q:'I\'ve never traded before. Can I still use this?',a:'Yes. Each signal includes: pair, direction, entry price, stop loss, take profit, and position size for your account. If you can copy 5 numbers into Bitget (or any exchange), you can follow the signals. We\'re not teaching you to trade. we\'re giving you the trade.'},
-              {q:'What exchange do I need?',a:'We recommend Bitget for USDT-M futures, but signals work on any exchange that supports crypto futures: Bybit, OKX, Binance, etc. The levels are the same everywhere.'},
-              {q:'How many signals per month?',a:'Roughly '+Math.round(avgPerMonth)+' signals per month on average across all pairs. Quality over quantity, we only fire when the setup is there. Some weeks you\'ll get 8 signals, some weeks 2. The engine doesn\'t force trades.'},
-              {q:'Can I cancel anytime?',a:'Yes. Monthly subscribers cancel anytime, no questions asked. No lock-in, no cancellation fees. If the signals don\'t pay for themselves, you shouldn\'t be paying for them.'},
-            ].map((faq,i)=>(
-              <div key={i} className="border border-white/[0.04] rounded-xl p-6 hover:border-white/[0.06] transition-colors">
-                <h3 className="text-[15px] font-bold text-white/80 mb-2">{faq.q}</h3>
-                <p className="text-[14px] text-white/40 leading-relaxed">{faq.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-
-      <div className="divider mx-6 md:mx-10"></div>
-
-
-      {/* ════════ 10. FINAL CTA ════════ */}
-      <section className="py-20 md:py-32 px-5 md:px-10 relative overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none" style={{background:'radial-gradient(circle,rgba(0,229,160,.04) 0%,transparent 60%)'}}/>
-        <div className="max-w-2xl mx-auto text-center relative z-10">
-
-          <h2 className="text-2xl md:text-[32px] font-bold tracking-tight mb-5 leading-tight">
-            Here's the deal.
-          </h2>
-          <div className="text-[15px] text-white/50 max-w-lg mx-auto leading-relaxed space-y-4 mb-10">
-            <p>You've seen the {totalTrades} trades. You've seen the losses. You know this isn't a magic button — it's a system with a real edge, run by math, not emotions.</p>
-            <p>If this landed for you — if looking at the data made you think <em className="text-white/70">"this is different from the other stuff I've seen"</em> — then I'd like to invite you to try it.</p>
-            <p className="text-white/65"><strong className="text-white/85">$49/mo.</strong> Cancel anytime. Every trade public. If the signals don't pay for themselves, you shouldn't be paying for them.</p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto mb-4">
-            <Link href="https://whop.com/checkout/plan_kaL9L5TvxU8Bg" className="flex-1 py-4 bg-[#00e5a0] text-black rounded-lg font-bold text-[15px] hover:bg-[#00cc8e] transition-colors text-center shadow-[0_0_40px_rgba(0,229,160,.12)]">
-              Start receiving signals
+      <section className="relative z-10 px-5 py-24 sm:px-8">
+        <div className="mx-auto max-w-4xl rounded-[2rem] border border-[#00e5a0]/15 bg-[#00e5a0]/[0.045] p-8 text-center shadow-[0_0_80px_rgba(0,229,160,0.08)] sm:p-12">
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#00e5a0]">Clean data. Clear feedback. Better rules.</p>
+          <h2 className="mt-5 text-4xl font-black tracking-[-0.025em] text-white sm:text-6xl">Turn your next trade into a lesson.</h2>
+          <p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/55">
+            Start logging now. The first meaningful insight usually appears after a handful of honest trades.
+          </p>
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <Link href="/auth/signup" className="rounded-2xl bg-[#00e5a0] px-7 py-4 text-sm font-black text-black transition hover:bg-[#00c98c]">
+              Start Journaling
+            </Link>
+            <Link href="/auth/login" className="rounded-2xl border border-white/[0.1] bg-black/20 px-7 py-4 text-sm font-bold text-white/75 transition hover:bg-white/[0.05]">
+              Existing Member Login
             </Link>
           </div>
-          <Link href="/performance" className="text-[13px] text-white/35 mono tracking-wider hover:text-white/55 transition-colors">
-            OR AUDIT ALL {totalTrades} TRADES FIRST →
-          </Link>
         </div>
       </section>
 
-
-      {/* DISCLAIMER */}
-      <section className="py-8 px-5 md:px-10 border-t border-white/[0.02]">
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="text-[10px] text-white/20 leading-relaxed space-y-2">
-            <p>IMPORTANT DISCLAIMER: PulseWave Labs and its signals are for educational and research purposes only. Nothing on this site constitutes financial advice, investment advice, trading advice, or any other sort of advice. You should not treat any of the content as such. PulseWave Labs does not recommend that any cryptocurrency or financial instrument should be bought, sold, or held by you.</p>
-            <p>Trading cryptocurrencies with leverage carries a high level of risk and may not be suitable for all investors. You could lose substantially more than your initial investment. Past performance is not indicative of future results. All performance data shown is based on verified historical analysis and is not a guarantee of future returns.</p>
-            <p>PulseWave Labs is not a registered investment advisor, broker/dealer, or financial planner. All content is provided as-is with no warranty. You are solely responsible for your own investment decisions. Always do your own research and consult with a licensed financial professional before making any investment.</p>
-            <p><Link href="/disclaimer" className="underline hover:text-white/30 transition-colors">Full risk disclosure and disclaimer</Link></p>
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="py-8 px-6 md:px-10 border-t border-white/[0.02]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-3"><img src="/logo.webp" alt="PulseWave" className="h-4 opacity-20"/><span className="text-[11px] text-white/25">© 2026 PulseWave Labs</span></div>
-          <div className="flex gap-6 text-[11px] text-white/25">
-            <Link href="/performance" className="hover:text-white/40 transition-colors">Trades</Link>
-            <Link href="/privacy" className="hover:text-white/40 transition-colors">Privacy</Link>
-            <Link href="/terms" className="hover:text-white/40 transition-colors">Terms</Link>
-            <Link href="/disclaimer" className="hover:text-white/40 transition-colors">Disclaimer</Link>
+      <footer className="relative z-10 border-t border-white/[0.06] px-5 py-10 sm:px-8">
+        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-6 text-sm text-white/35 sm:flex-row sm:items-center">
+          <PulseLogo />
+          <div className="flex gap-5">
+            <Link href="/privacy" className="transition hover:text-white/60">Privacy</Link>
+            <Link href="/terms" className="transition hover:text-white/60">Terms</Link>
+            <Link href="/disclaimer" className="transition hover:text-white/60">Disclaimer</Link>
           </div>
         </div>
       </footer>
-    </div>
+    </main>
   )
 }
