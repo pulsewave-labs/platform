@@ -3,6 +3,13 @@ import { supabaseAdmin } from '../../../../lib/supabase/api'
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
 
+function escapeTelegramHtml(value: string | null | undefined): string {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 async function sendTelegramMessage(chat_id: string | number, text: string) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: 'POST',
@@ -71,7 +78,7 @@ export async function POST(request: NextRequest) {
 
       await sendTelegramMessage(
         chat_id,
-        `✅ <b>Account linked!</b>\n\nYour PulseWave account (<code>${profile.email}</code>) is now connected.\n\nYou'll receive real-time trading signals here. 🚀`
+        `✅ <b>Account linked!</b>\n\nYour PulseWave account (<code>${escapeTelegramHtml(profile.email)}</code>) is now connected.\n\nTelegram is now available for journal-related account notifications and product updates.`
       )
       return NextResponse.json({ ok: true })
     }
@@ -80,7 +87,7 @@ export async function POST(request: NextRequest) {
     if (text === '/start') {
       await sendTelegramMessage(
         chat_id,
-        `👋 <b>Welcome to PulseWave Signals!</b>\n\nTo receive signals, link your account:\n\n1. Go to your PulseWave dashboard\n2. Open Settings\n3. Click "Connect Telegram"\n4. Click the link it generates\n\nThat's it! You'll start receiving trading signals here.`
+        `👋 <b>Welcome to PulseWave Journal.</b>\n\nTo link Telegram as an optional account integration:\n\n1. Go to your PulseWave dashboard\n2. Open Settings\n3. Click "Connect Telegram"\n4. Click the link it generates\n\nThat's it — your Telegram account will be connected to PulseWave.`
       )
       return NextResponse.json({ ok: true })
     }
@@ -98,7 +105,7 @@ export async function POST(request: NextRequest) {
       } else {
         await sendTelegramMessage(
           chat_id,
-          `📊 <b>Account Status</b>\n\n📧 ${profile.email}\n📦 Plan: ${profile.tier}\n🔗 Linked: ${new Date(profile.telegram_linked_at).toLocaleDateString()}`
+          `📊 <b>Account Status</b>\n\n📧 ${escapeTelegramHtml(profile.email)}\n📦 Plan: ${escapeTelegramHtml(profile.tier)}\n🔗 Linked: ${new Date(profile.telegram_linked_at).toLocaleDateString()}`
         )
       }
       return NextResponse.json({ ok: true })
@@ -111,7 +118,7 @@ export async function POST(request: NextRequest) {
         .update({ telegram_chat_id: null, telegram_linked_at: null })
         .eq('telegram_chat_id', chat_id)
 
-      await sendTelegramMessage(chat_id, '✅ Account unlinked. You will no longer receive signals.')
+      await sendTelegramMessage(chat_id, '✅ Account unlinked. Telegram notifications are now disabled.')
       return NextResponse.json({ ok: true })
     }
 

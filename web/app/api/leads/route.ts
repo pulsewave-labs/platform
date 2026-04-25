@@ -1,10 +1,14 @@
 import { NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/api'
 
+const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
+const EMAIL_FROM = process.env.EMAIL_FROM || 'PulseWave <hello@system.pulsewavelabs.io>'
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'hello@pulsewavelabs.io'
+
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, source = 'playbook', utm_source, utm_medium, utm_campaign } = body
+    const { email, source = 'journal', utm_source, utm_medium, utm_campaign } = body
 
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: 'Valid email required' }, { status: 400 })
@@ -12,12 +16,10 @@ export async function POST(request: Request) {
 
     const cleanEmail = email.trim().toLowerCase()
 
-    // Get IP from headers
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
                request.headers.get('x-real-ip') || null
 
-    // Upsert lead (don't error on duplicate)
-    const { data, error } = await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from('leads')
       .upsert(
         {
@@ -34,42 +36,46 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error('Lead capture error:', error)
-      // Still return success to user even if DB fails
+      console.error('[lead-capture] Database error:', error.message)
       return NextResponse.json({ success: true })
     }
 
-    // Send welcome email via Resend
-    try {
-      const resendKey = process.env.RESEND_API_KEY
-      if (resendKey) {
-        await fetch('https://api.resend.com/emails', {
+    if (RESEND_API_KEY) {
+      try {
+        const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${resendKey}`,
+            Authorization: `Bearer ${RESEND_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            from: 'Mason <mason@system.pulsewavelabs.io>',
+            from: EMAIL_FROM,
+            reply_to: EMAIL_REPLY_TO,
             to: [cleanEmail],
-            subject: 'Your playbook is inside (+ the trade I took this morning)',
-            html: getPlaybookEmail(),
+            subject: 'Your PulseWave Journal overview',
+            html: getJournalLeadEmail(),
           }),
         })
+
+        if (!res.ok) {
+          const text = await res.text()
+          console.error('[lead-capture] Resend error:', res.status, text.slice(0, 500))
+        }
+      } catch (emailErr) {
+        console.error('[lead-capture] Welcome email error:', emailErr)
       }
-    } catch (emailErr) {
-      console.error('Welcome email error:', emailErr)
-      // Don't fail the lead capture if email fails
+    } else {
+      console.warn('[lead-capture] RESEND_API_KEY is not configured; email skipped')
     }
 
     return NextResponse.json({ success: true })
   } catch (err) {
-    console.error('Lead API error:', err)
+    console.error('[lead-capture] API error:', err)
     return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }
 
-function getPlaybookEmail(): string {
+function getJournalLeadEmail(): string {
   return `
 <!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -85,30 +91,25 @@ Hey — Mason here.
 </p>
 
 <p style="color:#c8c8c8;font-size:16px;line-height:1.7;margin-bottom:24px;">
-Your playbook is ready. This is the exact framework we use to trade 5 crypto pairs — the same system that turned $10K into $218K across 624 trades.
+PulseWave Journal is built for one job: turn your trade history into a feedback loop you can actually act on.
 </p>
 
 <div style="text-align:center;margin:32px 0;">
-  <a href="https://www.pulsewavelabs.io/playbook/read" style="display:inline-block;padding:14px 32px;background:#00e5a0;color:#06060a;font-weight:700;font-size:15px;text-decoration:none;border-radius:8px;">
-    Read The 5-Pair Playbook →
+  <a href="https://www.pulsewavelabs.io" style="display:inline-block;padding:14px 32px;background:#00e5a0;color:#06060a;font-weight:700;font-size:15px;text-decoration:none;border-radius:8px;">
+    Open PulseWave Journal →
   </a>
 </div>
 
 <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:24px;">
-Quick taste of what's inside:
+The core workflow is simple:
 </p>
 
 <ul style="color:#888;font-size:14px;line-height:1.8;padding-left:20px;margin-bottom:24px;">
-  <li>Why we only trade BTC, ETH, SOL, AVAX, and XRP (and ignore everything else)</li>
-  <li>The 3-pillar confluence scoring system — how we score every trade 0-100</li>
-  <li>A real winning trade walkthrough with full breakdown</li>
-  <li>A real <em>losing</em> trade — and why we're still profitable at 40.7% win rate</li>
-  <li>Position sizing table for $1K–$100K accounts</li>
+  <li>Log the thesis before the result can rewrite the story</li>
+  <li>Debrief the plan versus the actual execution</li>
+  <li>Find leaks by setup, session, emotion, and rules followed</li>
+  <li>Turn repeat mistakes into a concrete trading rulebook</li>
 </ul>
-
-<p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:24px;">
-One more thing — I took a trade this morning on SOL at the 4H support zone. Confluence score came in at 68, R:R was 2.3:1. Still running. I'll share how it went tomorrow.
-</p>
 
 <p style="color:#888;font-size:14px;line-height:1.7;margin-bottom:32px;">
 Talk soon,<br/>
@@ -118,7 +119,7 @@ Talk soon,<br/>
 
 <div style="border-top:1px solid #1a1a1a;padding-top:20px;text-align:center;">
   <p style="color:#333;font-size:11px;line-height:1.6;">
-    You're receiving this because you downloaded The 5-Pair Playbook.<br/>
+    You're receiving this because you requested PulseWave Journal updates.<br/>
     <a href="https://www.pulsewavelabs.io" style="color:#444;text-decoration:underline;">pulsewavelabs.io</a>
   </p>
 </div>

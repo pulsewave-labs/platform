@@ -19,7 +19,10 @@ function fmt(n: number): string {
 
 export async function sendDiscordSignal(signal: SignalData, webhookUrl?: string): Promise<boolean> {
   var url = webhookUrl || DISCORD_WEBHOOK_URL
-  if (!url) return false
+  if (!url) {
+    console.warn('[discord] DISCORD_WEBHOOK_URL is not configured; notification skipped')
+    return false
+  }
 
   var isLong = signal.action === 'LONG'
   var color = isLong ? 0x00e5a0 : 0xff4d4d
@@ -33,13 +36,13 @@ export async function sendDiscordSignal(signal: SignalData, webhookUrl?: string)
     color: color,
     fields: [
       { name: 'Entry', value: `\`${fmt(signal.entry)}\``, inline: true },
-      { name: 'Stop Loss', value: `\`${fmt(signal.stopLoss)}\` (${slPct}%)`, inline: true },
-      { name: 'Take Profit', value: `\`${fmt(signal.takeProfit)}\``, inline: true },
+      { name: 'Invalidation', value: `\`${fmt(signal.stopLoss)}\` (${slPct}%)`, inline: true },
+      { name: 'Target', value: `\`${fmt(signal.takeProfit)}\``, inline: true },
       { name: 'Risk/Reward', value: `\`${signal.rr}\``, inline: true },
       { name: 'Timeframe', value: `\`${signal.timeframe}\``, inline: true },
       { name: 'Confidence', value: `\`${signal.confidence}%\``, inline: true },
     ],
-    footer: { text: 'PulseWave Signals • Not financial advice' },
+    footer: { text: 'PulseWave trade alert • Educational only, not financial advice' },
     timestamp: new Date().toISOString(),
   }
 
@@ -48,7 +51,7 @@ export async function sendDiscordSignal(signal: SignalData, webhookUrl?: string)
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        username: 'PulseWave Signals',
+        username: 'PulseWave',
         avatar_url: 'https://www.pulsewavelabs.io/logo.png',
         embeds: [embed],
       }),
@@ -59,7 +62,7 @@ export async function sendDiscordSignal(signal: SignalData, webhookUrl?: string)
       return false
     }
 
-    console.log('[discord] Signal sent:', signal.action, signal.pair)
+    console.log('[discord] Trade alert sent:', signal.action, signal.pair)
     return true
   } catch (err) {
     console.error('[discord] Failed:', err)
