@@ -1,219 +1,634 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 
-interface Trade {
-  id: string; pair: string; direction: string; pnl: number | null; r_multiple: number | null
-  status: string; setup_type: string | null; emotional_state: string | null; session: string | null
-  closed_at: string | null; created_at: string
+type Trade = {
+  id: string
+  pair: string
+  direction: string
+  pnl: number | null
+  pnl_percent?: number | null
+  r_multiple: number | null
+  status: string
+  setup_type: string | null
+  emotional_state: string | null
+  session: string | null
+  timeframe?: string | null
+  grade?: string | null
+  pre_thesis?: string | null
+  post_right?: string | null
+  post_wrong?: string | null
+  lesson?: string | null
+  confluence?: number | null
+  risk_amount?: number | null
+  closed_at: string | null
+  created_at: string
 }
 
-interface Rule {
-  id: string; rule_text: string; active: boolean
+type Rule = {
+  id: string
+  rule_text: string
+  active: boolean
 }
 
-const EMOTIONAL_EMOJIS: Record<string, string> = { confident: '😎', neutral: '😐', fomo: '😤', revenge: '👿', uncertain: '🤔' }
-const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+type Segment = {
+  key: string
+  label: string
+  total: number
+  wins: number
+  pnl: number
+  rSum: number
+  rCount: number
+  avgR: number
+  winRate: number
+  expectancy: number
+}
 
-const INSIGHT_ICONS: Record<string, string> = {
-  setup: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2',
-  emotion: 'M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-  session: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-  day: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z',
-  r: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
-  streak: 'M13 10V3L4 14h7v7l9-11h-7z',
+type Leak = {
+  id: string
+  title: string
+  severity: 'critical' | 'warning' | 'watch' | 'edge'
+  metric: string
+  detail: string
+  rule: string
+  sampleIds: string[]
+}
+
+const SEVERITY_STYLES: Record<Leak['severity'], { label: string; text: string; ring: string; bg: string }> = {
+  critical: { label: 'CRITICAL LEAK', text: 'text-[#ff4976]', ring: 'border-[#ff4976]/30', bg: 'bg-[#ff4976]/10' },
+  warning: { label: 'RULE CANDIDATE', text: 'text-amber-300', ring: 'border-amber-300/25', bg: 'bg-amber-300/10' },
+  watch: { label: 'WATCHLIST', text: 'text-sky-300', ring: 'border-sky-300/25', bg: 'bg-sky-300/10' },
+  edge: { label: 'PROTECT EDGE', text: 'text-[#00e5a0]', ring: 'border-[#00e5a0]/25', bg: 'bg-[#00e5a0]/10' },
+}
+
+const EMOTION_LABELS: Record<string, string> = {
+  confident: 'Confident',
+  neutral: 'Neutral',
+  uncertain: 'Uncertain',
+  fomo: 'FOMO',
+  revenge: 'Revenge',
+}
+
+const SETUP_LABELS: Record<string, string> = {
+  breakout: 'Breakout',
+  rejection: 'Rejection',
+  pullback: 'Pullback',
+  reversal: 'Reversal',
+  liquidity_sweep: 'Liquidity sweep',
+  continuation: 'Continuation',
+}
+
+function money(value: number) {
+  const sign = value > 0 ? '+' : value < 0 ? '-' : ''
+  return `${sign}$${Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+}
+
+function pct(value: number) {
+  return `${Math.round(value)}%`
+}
+
+function r(value: number) {
+  const sign = value > 0 ? '+' : ''
+  return `${sign}${value.toFixed(2)}R`
+}
+
+function cleanLabel(value: string | null | undefined, map?: Record<string, string>) {
+  if (!value) return 'Unclassified'
+  return map?.[value] || value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+}
+
+function isWin(trade: Trade) {
+  return (trade.pnl || 0) > 0
+}
+
+function avg(values: number[]) {
+  if (!values.length) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+function segmentBy(trades: Trade[], getKey: (trade: Trade) => string | null | undefined, labels?: Record<string, string>) {
+  const map = new Map<string, Segment>()
+  trades.forEach(trade => {
+    const raw = getKey(trade) || 'unclassified'
+    const key = raw || 'unclassified'
+    const current = map.get(key) || {
+      key,
+      label: key === 'unclassified' ? 'Unclassified' : cleanLabel(key, labels),
+      total: 0,
+      wins: 0,
+      pnl: 0,
+      rSum: 0,
+      rCount: 0,
+      avgR: 0,
+      winRate: 0,
+      expectancy: 0,
+    }
+    current.total += 1
+    current.wins += isWin(trade) ? 1 : 0
+    current.pnl += trade.pnl || 0
+    if (trade.r_multiple !== null && trade.r_multiple !== undefined) {
+      current.rSum += trade.r_multiple
+      current.rCount += 1
+    }
+    map.set(key, current)
+  })
+
+  return Array.from(map.values())
+    .map(segment => ({
+      ...segment,
+      avgR: segment.rCount ? segment.rSum / segment.rCount : 0,
+      winRate: segment.total ? segment.wins / segment.total : 0,
+      expectancy: segment.rCount ? segment.rSum / segment.rCount : segment.total ? segment.pnl / segment.total : 0,
+    }))
+    .sort((a, b) => b.total - a.total)
+}
+
+function makeRuleFromLeak(leak: Leak) {
+  return leak.rule.replace(/\s+/g, ' ').trim()
+}
+
+function getTradeDayUtc(trade: Trade) {
+  return new Date(trade.closed_at || trade.created_at).getUTCDay()
+}
+
+function segmentScore(segment: Segment) {
+  return segment.rCount ? segment.avgR : segment.pnl / Math.max(1, segment.total)
+}
+
+function segmentMetric(segment: Segment) {
+  return segment.rCount ? r(segment.avgR) : `${money(segment.pnl / Math.max(1, segment.total))}/trade`
 }
 
 export default function InsightsClient() {
   const [trades, setTrades] = useState<Trade[]>([])
   const [rules, setRules] = useState<Rule[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
   const [newRule, setNewRule] = useState('')
   const [savingRule, setSavingRule] = useState(false)
+  const [ruleBusyId, setRuleBusyId] = useState<string | null>(null)
 
   useEffect(() => {
-    Promise.all([
-      fetch('/api/journal?limit=1000').then(r => r.json()),
-      fetch('/api/journal/rules').then(r => r.json()).catch(() => ({ rules: [] })),
-    ]).then(([tradesData, rulesData]) => {
-      setTrades(tradesData.trades || [])
-      setRules(rulesData.rules || [])
-    }).finally(() => setLoading(false))
+    let active = true
+
+    async function load() {
+      setLoading(true)
+      setError('')
+      try {
+        const [tradesRes, rulesRes] = await Promise.all([
+          fetch('/api/journal?limit=1000'),
+          fetch('/api/journal/rules'),
+        ])
+
+        if (!tradesRes.ok) throw new Error('Could not load journal trades.')
+        const tradesData = await tradesRes.json()
+        const rulesData = rulesRes.ok ? await rulesRes.json() : { rules: [] }
+
+        if (!active) return
+        setTrades(tradesData.trades || [])
+        setRules(rulesData.rules || [])
+      } catch (err) {
+        if (!active) return
+        setError(err instanceof Error ? err.message : 'Could not load insights.')
+      } finally {
+        if (active) setLoading(false)
+      }
+    }
+
+    load()
+    return () => { active = false }
   }, [])
 
-  const closed = useMemo(() => trades.filter(t => t.status === 'closed' && t.pnl != null), [trades])
-  const wins = useMemo(() => closed.filter(t => (t.pnl || 0) > 0), [closed])
+  const closed = useMemo(() => trades.filter(t => t.status === 'closed' && t.pnl !== null && t.pnl !== undefined), [trades])
+  const openTrades = useMemo(() => trades.filter(t => t.status !== 'closed').length, [trades])
+  const closedMissingPnl = useMemo(() => trades.filter(t => t.status === 'closed' && (t.pnl === null || t.pnl === undefined)).length, [trades])
 
-  const insights = useMemo(() => {
-    if (closed.length < 3) return []
-    const results: { icon: string; title: string; detail: string; color: string }[] = []
+  const stats = useMemo(() => {
+    const pnl = closed.reduce((sum, trade) => sum + (trade.pnl || 0), 0)
+    const wins = closed.filter(isWin).length
+    const rValues = closed.map(t => t.r_multiple).filter((value): value is number => value !== null && value !== undefined)
+    const avgR = avg(rValues)
+    const winRate = closed.length ? wins / closed.length : 0
+    const missingThesis = trades.filter(t => !t.pre_thesis || t.pre_thesis.trim().length < 20).length
+    const graded = trades.filter(t => t.grade).length
+    const reviewed = closed.filter(t => (t.post_right && t.post_right.trim()) || (t.post_wrong && t.post_wrong.trim()) || (t.lesson && t.lesson.trim())).length
+    const expectancyR = rValues.length ? avgR : null
+    const avgPnl = closed.length ? pnl / closed.length : 0
 
-    // Best setup
-    const setupMap: Record<string, { wins: number; total: number }> = {}
-    closed.forEach(t => {
-      const s = t.setup_type || 'unknown'
-      if (!setupMap[s]) setupMap[s] = { wins: 0, total: 0 }
-      setupMap[s].total++
-      if ((t.pnl || 0) > 0) setupMap[s].wins++
+    return { pnl, wins, rValues, avgR, expectancyR, avgPnl, winRate, missingThesis, graded, reviewed }
+  }, [closed, trades])
+
+  const setupSegments = useMemo(() => segmentBy(closed, t => t.setup_type, SETUP_LABELS), [closed])
+  const emotionSegments = useMemo(() => segmentBy(closed, t => t.emotional_state, EMOTION_LABELS), [closed])
+  const sessionSegments = useMemo(() => segmentBy(closed, t => t.session), [closed])
+  const timeframeSegments = useMemo(() => segmentBy(closed, t => t.timeframe), [closed])
+
+  const leaks = useMemo<Leak[]>(() => {
+    const results: Leak[] = []
+    const minSample = closed.length >= 12 ? 3 : 2
+
+    const missingThesisTrades = trades.filter(t => !t.pre_thesis || t.pre_thesis.trim().length < 20)
+    if (trades.length >= 3 && missingThesisTrades.length / trades.length >= 0.35) {
+      results.push({
+        id: 'missing-thesis',
+        title: 'Trades are being logged without a real thesis',
+        severity: missingThesisTrades.length / trades.length >= 0.6 ? 'critical' : 'warning',
+        metric: `${pct((missingThesisTrades.length / trades.length) * 100)} missing thesis`,
+        detail: `${missingThesisTrades.length} of ${trades.length} trades do not explain the pre-trade idea clearly enough to review later.`,
+        rule: 'No entry without a written thesis: setup, invalidation, target, and why this trade belongs in the playbook.',
+        sampleIds: missingThesisTrades.slice(0, 3).map(t => t.id),
+      })
+    }
+
+    const fomo = emotionSegments.find(s => s.key === 'fomo')
+    const revenge = emotionSegments.find(s => s.key === 'revenge')
+    ;[fomo, revenge].filter(Boolean).forEach(segment => {
+      if (!segment || segment.total < minSample) return
+      const score = segmentScore(segment)
+      if (score < -0.15 || segment.pnl < 0) {
+        results.push({
+          id: `emotion-${segment.key}`,
+          title: `${segment.label} trades are draining the account`,
+          severity: score < -0.5 || segment.pnl < -500 ? 'critical' : 'warning',
+          metric: `${segmentMetric(segment)} across ${segment.total}`,
+          detail: `${segment.label} entries produced ${money(segment.pnl)} total P&L with a ${pct(segment.winRate * 100)} win rate.`,
+          rule: `If emotional state is ${segment.label.toLowerCase()}, reduce size or skip until a checklist-confirmed setup appears.`,
+          sampleIds: closed.filter(t => t.emotional_state === segment.key).slice(0, 3).map(t => t.id),
+        })
+      }
     })
-    const bestSetup = Object.entries(setupMap)
-      .filter(([, d]) => d.total >= 2)
-      .sort(([, a], [, b]) => (b.wins / b.total) - (a.wins / a.total))[0]
-    if (bestSetup && bestSetup[0] !== 'unknown') {
-      const wr = Math.round(bestSetup[1].wins / bestSetup[1].total * 100)
-      results.push({ icon: 'setup', title: `Your best setup: ${bestSetup[0].replace('_', ' ')}`, detail: `${wr}% win rate across ${bestSetup[1].total} trades`, color: 'text-[#00e5a0]' })
+
+    const weakSetup = setupSegments
+      .filter(s => s.key !== 'unclassified' && s.total >= minSample && (segmentScore(s) < -0.1 || s.pnl < 0))
+      .sort((a, b) => segmentScore(a) - segmentScore(b))[0]
+    if (weakSetup) {
+      const score = segmentScore(weakSetup)
+      results.push({
+        id: `setup-${weakSetup.key}`,
+        title: `${weakSetup.label} needs tighter rules`,
+        severity: score < -0.5 || weakSetup.pnl < -500 ? 'critical' : 'warning',
+        metric: segmentMetric(weakSetup),
+        detail: `${weakSetup.total} trades, ${pct(weakSetup.winRate * 100)} win rate, ${money(weakSetup.pnl)} total P&L.`,
+        rule: `Do not take ${weakSetup.label.toLowerCase()} setups unless confluence is 3+ and invalidation is defined before entry.`,
+        sampleIds: closed.filter(t => t.setup_type === weakSetup.key).slice(0, 3).map(t => t.id),
+      })
     }
 
-    // Emotional comparison
-    const emotionMap: Record<string, { wins: number; total: number }> = {}
-    closed.forEach(t => {
-      const e = t.emotional_state
-      if (!e) return
-      if (!emotionMap[e]) emotionMap[e] = { wins: 0, total: 0 }
-      emotionMap[e].total++
-      if ((t.pnl || 0) > 0) emotionMap[e].wins++
+    const bestSetup = setupSegments
+      .filter(s => s.key !== 'unclassified' && s.total >= minSample && segmentScore(s) > 0.2)
+      .sort((a, b) => segmentScore(b) - segmentScore(a))[0]
+    if (bestSetup) {
+      results.push({
+        id: `edge-${bestSetup.key}`,
+        title: `${bestSetup.label} is your current edge`,
+        severity: 'edge',
+        metric: segmentMetric(bestSetup),
+        detail: `${bestSetup.total} trades generated ${money(bestSetup.pnl)} with ${pct(bestSetup.winRate * 100)} wins. Protect this pattern before adding new ones.`,
+        rule: `Prioritize ${bestSetup.label.toLowerCase()} setups and require every non-${bestSetup.label.toLowerCase()} trade to justify why it deserves risk.`,
+        sampleIds: closed.filter(t => t.setup_type === bestSetup.key).slice(0, 3).map(t => t.id),
+      })
+    }
+
+    const unreviewedClosed = closed.filter(t => !(t.post_right && t.post_right.trim()) && !(t.post_wrong && t.post_wrong.trim()) && !(t.lesson && t.lesson.trim()))
+    if (closed.length >= 3 && unreviewedClosed.length / closed.length >= 0.4) {
+      results.push({
+        id: 'missing-review',
+        title: 'Closed trades are not being converted into lessons',
+        severity: 'watch',
+        metric: `${pct((unreviewedClosed.length / closed.length) * 100)} unreviewed`,
+        detail: `${unreviewedClosed.length} closed trades have no post-trade lesson, right/wrong note, or rule update.`,
+        rule: 'Every closed trade gets a 3-line debrief: what worked, what failed, and the next rule to follow.',
+        sampleIds: unreviewedClosed.slice(0, 3).map(t => t.id),
+      })
+    }
+
+    const sessionLeak = sessionSegments
+      .filter(s => s.key !== 'unclassified' && s.total >= minSample && segmentScore(s) < -0.1)
+      .sort((a, b) => segmentScore(a) - segmentScore(b))[0]
+    if (sessionLeak) {
+      results.push({
+        id: `session-${sessionLeak.key}`,
+        title: `${sessionLeak.label} session is underperforming`,
+        severity: 'watch',
+        metric: segmentMetric(sessionLeak),
+        detail: `${sessionLeak.total} ${sessionLeak.label} trades generated ${money(sessionLeak.pnl)} total P&L.`,
+        rule: `Trade ${sessionLeak.label.toLowerCase()} only with reduced size until expectancy turns positive over the next 10 closed trades.`,
+        sampleIds: closed.filter(t => t.session === sessionLeak.key).slice(0, 3).map(t => t.id),
+      })
+    }
+
+    if (!results.length && closed.length >= 3) {
+      results.push({
+        id: 'baseline',
+        title: 'No dominant leak yet — keep collecting clean samples',
+        severity: (stats.expectancyR ?? stats.avgPnl) >= 0 ? 'edge' : 'watch',
+        metric: stats.expectancyR !== null ? `${r(stats.expectancyR)} expectancy` : `${money(stats.avgPnl)}/trade`,
+        detail: `The journal has ${closed.length} closed trades. The next unlock is more consistent thesis, setup, and debrief data.`,
+        rule: 'For the next 10 trades, capture the same fields every time: setup, emotion, thesis, invalidation, and lesson.',
+        sampleIds: closed.slice(0, 3).map(t => t.id),
+      })
+    }
+
+    return results.slice(0, 6)
+  }, [closed, emotionSegments, sessionSegments, setupSegments, stats.avgPnl, stats.expectancyR, trades])
+
+  const dayBreakdown = useMemo(() => {
+    const rows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, index) => ({ label, index, total: 0, pnl: 0, rSum: 0, rCount: 0 }))
+    closed.forEach(trade => {
+      const day = getTradeDayUtc(trade)
+      rows[day].total += 1
+      rows[day].pnl += trade.pnl || 0
+      if (trade.r_multiple !== null && trade.r_multiple !== undefined) {
+        rows[day].rSum += trade.r_multiple
+        rows[day].rCount += 1
+      }
     })
-    if (emotionMap.fomo && emotionMap.confident) {
-      const fomoWr = Math.round(emotionMap.fomo.wins / emotionMap.fomo.total * 100)
-      const confWr = Math.round(emotionMap.confident.wins / emotionMap.confident.total * 100)
-      results.push({ icon: 'emotion', title: `FOMO trades: ${fomoWr}% win rate vs ${confWr}% when confident`, detail: `${emotionMap.fomo.total} FOMO trades, ${emotionMap.confident.total} confident trades`, color: fomoWr < confWr ? 'text-[#ff4976]' : 'text-yellow-400' })
-    }
+    return rows.map(row => ({ ...row, avgR: row.rCount ? row.rSum / row.rCount : 0 }))
+  }, [closed])
 
-    // Best session
-    const sessionMap: Record<string, { wins: number; total: number }> = {}
-    closed.forEach(t => {
-      const s = t.session
-      if (!s) return
-      if (!sessionMap[s]) sessionMap[s] = { wins: 0, total: 0 }
-      sessionMap[s].total++
-      if ((t.pnl || 0) > 0) sessionMap[s].wins++
-    })
-    const bestSession = Object.entries(sessionMap)
-      .filter(([, d]) => d.total >= 2)
-      .sort(([, a], [, b]) => (b.wins / b.total) - (a.wins / a.total))[0]
-    if (bestSession) {
-      const wr = Math.round(bestSession[1].wins / bestSession[1].total * 100)
-      results.push({ icon: 'session', title: `You trade best during ${bestSession[0]} session`, detail: `${wr}% win rate across ${bestSession[1].total} trades`, color: 'text-[#00e5a0]' })
-    }
+  const coachNotes = useMemo(() => {
+    if (closed.length < 3) return ['Close at least three trades to unlock meaningful leak detection.']
+    const notes: string[] = []
+    const expectancyValue = stats.expectancyR ?? stats.avgPnl
+    const expectancyLabel = stats.expectancyR !== null ? r(stats.expectancyR) : `${money(stats.avgPnl)}/trade`
+    if (expectancyValue > 0) notes.push(`Expectancy is positive at ${expectancyLabel}. The job now is to protect the setups creating it.`)
+    else notes.push(`Expectancy is negative at ${expectancyLabel}. Reduce new risk until the largest leak has a written rule.`)
+    const critical = leaks.filter(leak => leak.severity === 'critical')
+    if (critical.length) notes.push(`${critical.length} critical leak${critical.length === 1 ? '' : 's'} detected. Convert the top one into a rule before the next session.`)
+    if (stats.reviewed < closed.length) notes.push(`${closed.length - stats.reviewed} closed trade${closed.length - stats.reviewed === 1 ? '' : 's'} still need a debrief.`)
+    if (closedMissingPnl) notes.push(`${closedMissingPnl} closed trade${closedMissingPnl === 1 ? '' : 's'} missing P&L are excluded from expectancy.`)
+    if (openTrades) notes.push(`${openTrades} open trade${openTrades === 1 ? '' : 's'} should be closed or reviewed before analyzing final expectancy.`)
+    return notes.slice(0, 4)
+  }, [closed.length, closedMissingPnl, leaks, openTrades, stats.avgPnl, stats.expectancyR, stats.reviewed])
 
-    // Worst day
-    const dayMap: number[] = [0,0,0,0,0,0,0]
-    const dayCounts: number[] = [0,0,0,0,0,0,0]
-    closed.forEach(t => {
-      const day = new Date(t.closed_at || t.created_at).getDay()
-      dayMap[day] += t.pnl || 0
-      dayCounts[day]++
-    })
-    const worstDay = dayMap.reduce((mi, v, i, a) => v < a[mi] ? i : mi, 0)
-    if (dayCounts[worstDay] >= 2) {
-      results.push({ icon: 'day', title: `Your worst day is ${DAYS[worstDay]}`, detail: `$${dayMap[worstDay].toFixed(2)} total P&L across ${dayCounts[worstDay]} trades`, color: 'text-[#ff4976]' })
-    }
-
-    // Avg winner vs loser R
-    const winRs = wins.filter(t => t.r_multiple != null).map(t => t.r_multiple || 0)
-    const lossRs = closed.filter(t => (t.pnl || 0) < 0 && t.r_multiple != null).map(t => t.r_multiple || 0)
-    if (winRs.length > 0 && lossRs.length > 0) {
-      const avgWinR = (winRs.reduce((s, r) => s + r, 0) / winRs.length).toFixed(1)
-      const avgLossR = (Math.abs(lossRs.reduce((s, r) => s + r, 0) / lossRs.length)).toFixed(1)
-      results.push({ icon: 'r', title: `Average winner: ${avgWinR}R, average loser: ${avgLossR}R`, detail: `Risk/reward across ${winRs.length} wins and ${lossRs.length} losses`, color: 'text-white' })
-    }
-
-    return results
-  }, [closed, wins])
-
-  async function addRule() {
-    if (!newRule.trim()) return
+  async function addRule(ruleText = newRule) {
+    const text = ruleText.trim()
+    if (!text) return
     setSavingRule(true)
+    setError('')
     try {
       const res = await fetch('/api/journal/rules', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ rule_text: newRule.trim() }),
+        body: JSON.stringify({ rule_text: text }),
       })
-      if (res.ok) {
-        const data = await res.json()
-        setRules(prev => [...prev, data.rule])
-        setNewRule('')
-      }
-    } catch {}
-    setSavingRule(false)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not save rule.')
+      setRules(prev => [...prev, data.rule])
+      if (text === newRule.trim()) setNewRule('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save rule.')
+    } finally {
+      setSavingRule(false)
+    }
+  }
+
+  async function toggleRule(rule: Rule) {
+    setRuleBusyId(rule.id)
+    setError('')
+    try {
+      const res = await fetch('/api/journal/rules', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: rule.id, active: !rule.active }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not update rule.')
+      setRules(prev => prev.map(item => item.id === rule.id ? data.rule : item))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not update rule.')
+    } finally {
+      setRuleBusyId(null)
+    }
   }
 
   async function deleteRule(id: string) {
+    setRuleBusyId(id)
+    setError('')
     try {
-      await fetch('/api/journal/rules', {
+      const res = await fetch('/api/journal/rules', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id }),
       })
-      setRules(prev => prev.filter(r => r.id !== id))
-    } catch {}
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not delete rule.')
+      setRules(prev => prev.filter(rule => rule.id !== id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not delete rule.')
+    } finally {
+      setRuleBusyId(null)
+    }
   }
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[#00e5a0] border-t-transparent rounded-full animate-spin" /></div>
+  if (loading) {
+    return (
+      <div className="flex min-h-[420px] items-center justify-center rounded-3xl border border-white/[0.06] bg-[#08080a]">
+        <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#00e5a0] border-t-transparent" />
+      </div>
+    )
+  }
+
+  const activeRules = rules.filter(rule => rule.active).length
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Link href="/dashboard/journal" className="text-[10px] text-[#555] hover:text-[#999] font-mono tracking-wider">← JOURNAL</Link>
-          <h1 className="text-xl font-bold text-white mt-2">Insights</h1>
+      <div className="relative overflow-hidden rounded-[28px] border border-white/[0.08] bg-[#050507] p-6 shadow-2xl shadow-black/40 md:p-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(0,229,160,0.16),transparent_34%),radial-gradient(circle_at_bottom_left,rgba(255,73,118,0.08),transparent_30%)]" />
+        <div className="relative flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <Link href="/dashboard/journal" className="font-mono text-[10px] tracking-[0.3em] text-white/35 transition-colors hover:text-[#00e5a0]">← JOURNAL</Link>
+            <p className="mt-5 font-mono text-[10px] uppercase tracking-[0.34em] text-[#00e5a0]">Leak detection engine</p>
+            <h1 className="mt-3 max-w-3xl text-3xl font-black tracking-[-0.03em] text-white md:text-5xl">Turn repeated mistakes into rules.</h1>
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-white/55 md:text-base">
+              PulseWave scans your closed trades for setup, emotion, session, and review-quality patterns. The output is not vanity stats — it is a rule queue for the next trading session.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[520px]">
+            <Metric label="Closed" value={String(closed.length)} tone="neutral" />
+            <Metric label="Win rate" value={pct(stats.winRate * 100)} tone={stats.winRate >= 0.5 ? 'good' : stats.winRate === 0 ? 'neutral' : 'bad'} />
+            <Metric label="Expectancy" value={stats.expectancyR !== null ? r(stats.expectancyR) : `${money(stats.avgPnl)}/trade`} tone={(stats.expectancyR ?? stats.avgPnl) > 0 ? 'good' : (stats.expectancyR ?? stats.avgPnl) < 0 ? 'bad' : 'neutral'} />
+            <Metric label="Rules active" value={String(activeRules)} tone={activeRules ? 'good' : 'neutral'} />
+          </div>
         </div>
       </div>
 
-      {/* Pattern Insights */}
-      {insights.length === 0 ? (
-        <div className="text-center py-16 text-[#555] text-sm">
-          Need at least 3 closed trades to generate insights.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {insights.map((insight, i) => (
-            <div key={i} className="p-4 rounded-lg border border-white/[0.04] bg-[#0a0a0c] flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg border border-white/[0.06] bg-white/[0.02] flex items-center justify-center flex-shrink-0">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className={insight.color}>
-                  <path d={INSIGHT_ICONS[insight.icon]} />
-                </svg>
-              </div>
+      {error && <div className="rounded-2xl border border-[#ff4976]/25 bg-[#ff4976]/10 px-4 py-3 text-sm text-[#ff8aa4]">{error}</div>}
+
+      <div className="grid gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="space-y-6">
+          <section className="rounded-3xl border border-white/[0.07] bg-[#08080a] p-5 md:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className={`text-sm font-medium ${insight.color}`}>{insight.title}</p>
-                <p className="text-xs text-[#555] mt-0.5">{insight.detail}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/35">Priority leaks</p>
+                <h2 className="mt-2 text-xl font-bold text-white">What to fix first</h2>
               </div>
+              <Link href="/dashboard/journal/new" className="rounded-full border border-[#00e5a0]/25 bg-[#00e5a0]/10 px-4 py-2 text-xs font-bold text-[#00e5a0] transition-colors hover:bg-[#00e5a0]/15">Log next sample</Link>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* Trading Rules */}
-      <div className="p-4 rounded-lg border border-white/[0.04] bg-[#0a0a0c] space-y-4">
-        <p className="text-[10px] text-[#555] font-mono tracking-wider">TRADING RULES</p>
-
-        {rules.length > 0 && (
-          <div className="space-y-2">
-            {rules.map(rule => (
-              <div key={rule.id} className="flex items-center justify-between p-2.5 rounded-lg border border-white/[0.04] bg-white/[0.01]">
-                <span className={`text-sm ${rule.active ? 'text-[#ccc]' : 'text-[#555] line-through'}`}>{rule.rule_text}</span>
-                <button onClick={() => deleteRule(rule.id)}
-                  className="text-[10px] text-[#555] hover:text-[#ff4976] transition-colors ml-3 flex-shrink-0">
-                  ✕
-                </button>
+            {closed.length < 3 ? (
+              <div className="mt-5 rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-8 text-center">
+                <p className="text-lg font-semibold text-white">Need a few more closed trades.</p>
+                <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-white/45">Three closed trades unlock the first layer of pattern detection. Ten to twenty creates a much cleaner read on setups, sessions, and emotional leaks.</p>
               </div>
-            ))}
-          </div>
-        )}
+            ) : (
+              <div className="mt-5 grid gap-4 md:grid-cols-2">
+                {leaks.map(leak => (
+                  <LeakCard key={leak.id} leak={leak} savingRule={savingRule} onMakeRule={() => addRule(makeRuleFromLeak(leak))} />
+                ))}
+              </div>
+            )}
+          </section>
 
-        <div className="flex gap-2">
-          <input value={newRule} onChange={e => setNewRule(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && addRule()}
-            className="flex-1 px-3 py-2.5 text-sm bg-[#08080a] border border-white/[0.06] rounded-lg text-white placeholder:text-[#444] focus:outline-none focus:border-[#00e5a0]/30 min-h-[48px]"
-            placeholder="Add a trading rule..." />
-          <button onClick={addRule} disabled={savingRule || !newRule.trim()}
-            className="px-4 py-2.5 text-xs font-bold text-black bg-[#00e5a0] rounded-lg hover:bg-[#00cc8e] disabled:opacity-50 min-h-[48px]">
-            Add
-          </button>
+          <section className="grid gap-6 lg:grid-cols-2">
+            <Breakdown title="Setup expectancy" subtitle="Which playbooks deserve risk" segments={setupSegments} />
+            <Breakdown title="Emotion expectancy" subtitle="When your state changes your edge" segments={emotionSegments} />
+            <Breakdown title="Session expectancy" subtitle="Where your timing helps or hurts" segments={sessionSegments} />
+            <Breakdown title="Timeframe expectancy" subtitle="The charts producing cleaner outcomes" segments={timeframeSegments} />
+          </section>
+
+          <section className="rounded-3xl border border-white/[0.07] bg-[#08080a] p-5 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/35">Weekly rhythm</p>
+                <h2 className="mt-2 text-xl font-bold text-white">Day-of-week P&L</h2>
+              </div>
+              <span className="rounded-full border border-white/[0.07] px-3 py-1 font-mono text-[10px] text-white/35">CLOSED TRADES</span>
+            </div>
+            <div className="mt-5 grid gap-2 sm:grid-cols-7">
+              {dayBreakdown.map(day => (
+                <div key={day.label} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <p className="font-mono text-[10px] text-white/35">{day.label}</p>
+                  <p className={`mt-2 text-sm font-bold ${day.pnl > 0 ? 'text-[#00e5a0]' : day.pnl < 0 ? 'text-[#ff4976]' : 'text-white/45'}`}>{money(day.pnl)}</p>
+                  <p className="mt-1 text-[11px] text-white/35">{day.total} trade{day.total === 1 ? '' : 's'}</p>
+                  <p className="mt-1 text-[11px] text-white/35">{day.rCount ? r(day.avgR) : 'No R data'}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
+
+        <aside className="space-y-6">
+          <section className="rounded-3xl border border-[#00e5a0]/15 bg-[#00e5a0]/[0.05] p-5 md:p-6">
+            <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-[#00e5a0]">Journal Coach</p>
+            <h2 className="mt-2 text-xl font-bold text-white">Current read</h2>
+            <div className="mt-5 space-y-3">
+              {coachNotes.map((note, index) => (
+                <div key={`${index}-${note}`} className="rounded-2xl border border-white/[0.06] bg-black/20 p-3 text-sm leading-6 text-white/60">
+                  {note}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-white/[0.07] bg-[#08080a] p-5 md:p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/35">Trading rules</p>
+                <h2 className="mt-2 text-xl font-bold text-white">Rule book</h2>
+              </div>
+              <span className="text-xs text-white/35">{rules.length} total</span>
+            </div>
+
+            <div className="mt-5 space-y-2">
+              {rules.length ? rules.map(rule => (
+                <div key={rule.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <div className="flex items-start gap-3">
+                    <button type="button" disabled={ruleBusyId === rule.id} onClick={() => toggleRule(rule)} className={`mt-0.5 h-5 w-5 rounded border text-[10px] ${rule.active ? 'border-[#00e5a0]/50 bg-[#00e5a0]/15 text-[#00e5a0]' : 'border-white/[0.12] text-white/25'}`}>
+                      {rule.active ? '✓' : ''}
+                    </button>
+                    <p className={`flex-1 text-sm leading-6 ${rule.active ? 'text-white/70' : 'text-white/30 line-through'}`}>{rule.rule_text}</p>
+                    <button type="button" disabled={ruleBusyId === rule.id} onClick={() => deleteRule(rule.id)} className="text-xs text-white/25 transition-colors hover:text-[#ff4976]">×</button>
+                  </div>
+                </div>
+              )) : (
+                <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-center text-sm text-white/40">No rules yet. Promote a detected leak into a rule.</div>
+              )}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              <input
+                value={newRule}
+                onChange={event => setNewRule(event.target.value)}
+                onKeyDown={event => event.key === 'Enter' && addRule()}
+                className="min-h-[48px] flex-1 rounded-2xl border border-white/[0.08] bg-black/25 px-4 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#00e5a0]/35"
+                placeholder="Add a rule for your next session..."
+              />
+              <button type="button" onClick={() => addRule()} disabled={savingRule || !newRule.trim()} className="min-h-[48px] rounded-2xl bg-[#00e5a0] px-5 text-xs font-black text-black transition-colors hover:bg-[#00cc8e] disabled:cursor-not-allowed disabled:opacity-50">Add</button>
+            </div>
+          </section>
+        </aside>
       </div>
     </div>
+  )
+}
+
+function Metric({ label, value, tone }: { label: string; value: string; tone: 'good' | 'bad' | 'neutral' }) {
+  const color = tone === 'good' ? 'text-[#00e5a0]' : tone === 'bad' ? 'text-[#ff4976]' : 'text-white'
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-black/25 p-4 backdrop-blur">
+      <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">{label}</p>
+      <p className={`mt-2 text-xl font-black ${color}`}>{value}</p>
+    </div>
+  )
+}
+
+function LeakCard({ leak, savingRule, onMakeRule }: { leak: Leak; savingRule: boolean; onMakeRule: () => void }) {
+  const style = SEVERITY_STYLES[leak.severity]
+  return (
+    <div className={`rounded-3xl border ${style.ring} ${style.bg} p-5`}>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className={`font-mono text-[10px] uppercase tracking-[0.24em] ${style.text}`}>{style.label}</p>
+          <h3 className="mt-2 text-lg font-bold text-white">{leak.title}</h3>
+        </div>
+        <span className={`rounded-full border ${style.ring} px-3 py-1 text-xs font-bold ${style.text}`}>{leak.metric}</span>
+      </div>
+      <p className="mt-3 text-sm leading-6 text-white/55">{leak.detail}</p>
+      <div className="mt-4 rounded-2xl border border-white/[0.07] bg-black/20 p-3">
+        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/30">Suggested rule</p>
+        <p className="mt-2 text-sm leading-6 text-white/70">{leak.rule}</p>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-2">
+          {leak.sampleIds.map((id, index) => (
+            <Link key={`${id}-${index}`} href={`/dashboard/journal/${id}`} className="rounded-full border border-white/[0.07] px-3 py-1 text-[11px] text-white/40 transition-colors hover:border-[#00e5a0]/30 hover:text-[#00e5a0]">Sample {index + 1}</Link>
+          ))}
+        </div>
+        <button type="button" disabled={savingRule} onClick={onMakeRule} className="rounded-full bg-white px-4 py-2 text-xs font-black text-black transition-opacity hover:opacity-90 disabled:opacity-50">Make rule</button>
+      </div>
+    </div>
+  )
+}
+
+function Breakdown({ title, subtitle, segments }: { title: string; subtitle: string; segments: Segment[] }) {
+  const visible = segments.filter(segment => segment.total > 0).slice(0, 5)
+  return (
+    <section className="rounded-3xl border border-white/[0.07] bg-[#08080a] p-5 md:p-6">
+      <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-white/35">{subtitle}</p>
+      <h2 className="mt-2 text-xl font-bold text-white">{title}</h2>
+      <div className="mt-5 space-y-3">
+        {visible.length ? visible.map(segment => (
+          <div key={segment.key} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-white">{segment.label}</p>
+                <p className="mt-1 text-xs text-white/35">{segment.total} trade{segment.total === 1 ? '' : 's'} · {pct(segment.winRate * 100)} WR</p>
+              </div>
+              <div className="text-right">
+                <p className={`text-sm font-bold ${segmentScore(segment) > 0 ? 'text-[#00e5a0]' : segmentScore(segment) < 0 ? 'text-[#ff4976]' : 'text-white/45'}`}>{segmentMetric(segment)}</p>
+                <p className={`mt-1 text-xs ${segment.pnl > 0 ? 'text-[#00e5a0]' : segment.pnl < 0 ? 'text-[#ff4976]' : 'text-white/35'}`}>{money(segment.pnl)}</p>
+              </div>
+            </div>
+              <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <div className={`h-full rounded-full ${segmentScore(segment) >= 0 ? 'bg-[#00e5a0]' : 'bg-[#ff4976]'}`} style={{ width: `${Math.max(8, Math.min(100, Math.abs(segmentScore(segment)) * (segment.rCount ? 45 : 0.18) + 12))}%` }} />
+            </div>
+          </div>
+        )) : (
+          <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.02] p-5 text-center text-sm text-white/40">No closed trades in this category yet.</div>
+        )}
+      </div>
+    </section>
   )
 }
