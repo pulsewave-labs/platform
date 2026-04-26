@@ -3,12 +3,12 @@
 @import 'tailwindcss/utilities';
 
 :root {
-  --bg: #09090b;
-  --surface: #18181b;
-  --border: #27272a;
-  --text: #ffffff;
-  --text-secondary: #a1a1aa;
-  --text-muted: #71717a;
+  --bg: #0f1115;
+  --surface: #1d2128;
+  --border: #323846;
+  --text: #f8fafc;
+  --text-secondary: #c7ced8;
+  --text-muted: #8b95a5;
   --accent: #22c55e;
   --accent-hover: #16a34a;
   --accent-dark: #15803d;
@@ -16,6 +16,12 @@
   --long: #22c55e;
   --short: #ef4444;
   --warning: #f59e0b;
+  --pw-light-bg: #f4f6f8;
+  --pw-light-surface: #ffffff;
+  --pw-light-panel: #eef2f5;
+  --pw-light-border: #d9e1ea;
+  --pw-light-text: #111827;
+  --pw-light-muted: #607084;
 }
 
 * { box-sizing: border-box; }
@@ -97,3 +103,99 @@ input:focus, textarea:focus, select:focus {
 .bg-loss { background-color: rgb(239 68 68 / 0.1); }
 .border-profit { border-color: rgb(34 197 94 / 0.2); }
 .border-loss { border-color: rgb(239 68 68 / 0.2); }
+
+/* PulseWave dashboard themes */
+body.pw-dashboard {
+  background:
+    radial-gradient(circle at 20% 0%, rgba(0, 229, 160, 0.08), transparent 30%),
+    linear-gradient(180deg, #11141a 0%, #0f1115 52%, #12151b 100%);
+}
+
+body[data-pw-theme="light"] {
+  background: var(--pw-light-bg) !important;
+  color: var(--pw-light-text) !important;
+}
+
+body[data-pw-theme="light"] .bg-\[\#0a0a0a\],
+body[data-pw-theme="light"] .bg-\[\#0c0c0c\],
+body[data-pw-theme="light"] .bg-\[\#050505\],
+body[data-pw-theme="light"] .bg-\[\#080808\],
+body[data-pw-theme="light"] .bg-\[\#0b0b0b\],
+body[data-pw-theme="light"] .bg-\[\#111\],
+body[data-pw-theme="light"] .bg-\[\#111111\] {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+body[data-pw-theme="light"] .bg-black,
+body[data-pw-theme="light"] .bg-zinc-950,
+body[data-pw-theme="light"] .bg-neutral-950 {
+  background-color: var(--pw-light-bg) !important;
+}
+
+body[data-pw-theme="light"] .bg-white\/\[0\.02\],
+body[data-pw-theme="light"] .bg-white\/\[0\.03\],
+body[data-pw-theme="light"] .bg-white\/\[0\.04\],
+body[data-pw-theme="light"] .bg-white\/\[0\.05\],
+body[data-pw-theme="light"] .bg-white\/5,
+body[data-pw-theme="light"] .bg-white\/10 {
+  background-color: rgba(17, 24, 39, 0.04) !important;
+}
+
+body[data-pw-theme="light"] .text-white,
+body[data-pw-theme="light"] .text-\[\#e0e0e0\],
+body[data-pw-theme="light"] .text-\[\#d8d8d8\],
+body[data-pw-theme="light"] .text-\[\#ccc\] {
+  color: var(--pw-light-text) !important;
+}
+
+body[data-pw-theme="light"] .text-white\/40,
+body[data-pw-theme="light"] .text-white\/50,
+body[data-pw-theme="light"] .text-white\/60,
+body[data-pw-theme="light"] .text-\[\#555\],
+body[data-pw-theme="light"] .text-\[\#666\],
+body[data-pw-theme="light"] .text-\[\#777\],
+body[data-pw-theme="light"] .text-\[\#888\],
+body[data-pw-theme="light"] .text-\[\#999\] {
+  color: var(--pw-light-muted) !important;
+}
+
+body[data-pw-theme="light"] .border-white\/\[0\.03\],
+body[data-pw-theme="light"] .border-white\/\[0\.04\],
+body[data-pw-theme="light"] .border-white\/\[0\.05\],
+body[data-pw-theme="light"] .border-white\/\[0\.08\],
+body[data-pw-theme="light"] .border-white\/10,
+body[data-pw-theme="light"] .border-white\/15 {
+  border-color: var(--pw-light-border) !important;
+}
+
+body[data-pw-theme="light"] input,
+body[data-pw-theme="light"] textarea,
+body[data-pw-theme="light"] select {
+  background: #ffffff !important;
+  border-color: #cfd8e3 !important;
+  color: var(--pw-light-text) !important;
+}
+
+body[data-pw-theme="light"] .shadow-\[0_0_0_1px_rgba\(255\,255\,255\,0\.04\)\],
+body[data-pw-theme="light"] .shadow-\[0_0_0_1px_rgba\(255\,255\,255\,0\.06\)\] {
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.08) !important;
+}
+
+body[data-pw-theme="light"] [class*="bg-[#0"],
+body[data-pw-theme="light"] [class*="bg-[#111"] {
+  background-color: rgba(255, 255, 255, 0.88) !important;
+}
+
+body[data-pw-theme="light"] [class*="from-[#0"],
+body[data-pw-theme="light"] [class*="from-[#111"] {
+  --tw-gradient-from: #ffffff var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(255 255 255 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+body[data-pw-theme="light"] [class*="to-[#0"],
+body[data-pw-theme="light"] [class*="to-[#111"],
+body[data-pw-theme="light"] [class*="via-[#0"],
+body[data-pw-theme="light"] [class*="via-[#111"] {
+  --tw-gradient-to: var(--pw-light-panel) var(--tw-gradient-to-position) !important;
+}

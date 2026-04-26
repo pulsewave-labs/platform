@@ -29,6 +29,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const router = useRouter()
   var [subBanner, setSubBanner] = useState(false)
+  var [theme, setTheme] = useState<'dark' | 'light'>('dark')
+
+  useEffect(function() {
+    try {
+      var savedTheme = window.localStorage.getItem('pulsewave-theme')
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme)
+      }
+    } catch (error) {}
+  }, [])
+
+  useEffect(function() {
+    try {
+      window.localStorage.setItem('pulsewave-theme', theme)
+    } catch (error) {}
+    document.documentElement.dataset.pwTheme = theme
+  }, [theme])
 
   useEffect(function() {
     fetch('/api/subscription')
@@ -46,6 +63,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const supabase = createClient()
     await supabase.auth.signOut()
     router.push('/auth/login')
+  }
+
+  function toggleTheme() {
+    setTheme(function(current) { return current === 'dark' ? 'light' : 'dark' })
   }
 
   if (subBanner) {
@@ -72,7 +93,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="theme-color" content="#0a0a0a" />
       </head>
-      <body className="min-h-screen bg-[#0a0a0a] text-[#e0e0e0] overflow-x-hidden" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <body data-pw-theme={theme} className="pw-dashboard min-h-screen bg-[#0a0a0a] text-[#e0e0e0] overflow-x-hidden" style={{ fontFamily: 'Inter, system-ui, sans-serif' }}>
         <style dangerouslySetInnerHTML={{ __html: `
           .mono { font-family: 'JetBrains Mono', monospace; }
           .scrollbar-none::-webkit-scrollbar { display: none; }
@@ -104,11 +125,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </nav>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
             <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#00e5a0]/[0.04] border border-[#00e5a0]/[0.08]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#00e5a0]"></span>
               <span className="text-[10px] text-[#00e5a0] mono font-medium">JOURNAL</span>
             </div>
+            <button
+              type="button"
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              className="inline-flex items-center gap-2 rounded-md border border-white/[0.06] bg-white/[0.03] px-2.5 py-1.5 text-[10px] font-medium tracking-wider text-[#aaa] transition-colors hover:border-[#00e5a0]/30 hover:text-[#00e5a0] mono"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-current"></span>
+              {theme === 'dark' ? 'DARK' : 'LIGHT'}
+            </button>
             <button onClick={handleSignOut} className="text-[10px] text-[#555] hover:text-[#888] transition-colors mono tracking-wider">
               SIGN OUT
             </button>
