@@ -2,6 +2,9 @@ import { welcomeEmailHtml } from './welcome'
 import { signalEmailHtml } from './signal'
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY || ''
+const EMAIL_FROM = process.env.EMAIL_FROM || 'PulseWave Signals <hello@system.pulsewavelabs.io>'
+const SIGNAL_EMAIL_FROM = process.env.SIGNAL_EMAIL_FROM || 'PulseWave Signals <signals@system.pulsewavelabs.io>'
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'hello@pulsewaveindicator.com'
 
 export type SignalEmailData = {
   action: string
@@ -26,8 +29,8 @@ export async function sendSignalEmail(email: string, signal: SignalEmailData): P
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PulseWave Signals <signals@system.pulsewavelabs.io>',
-        reply_to: 'hello@pulsewaveindicator.com',
+        from: SIGNAL_EMAIL_FROM,
+        reply_to: EMAIL_REPLY_TO,
         to: email,
         subject: `${icon} ${signal.action} ${signal.pair} @ $${signal.entry.toLocaleString()}`,
         html,
@@ -58,8 +61,8 @@ export async function sendWelcomeEmail(email: string, name?: string, setPassword
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'PulseWave Signals <hello@system.pulsewavelabs.io>',
-        reply_to: 'hello@pulsewaveindicator.com',
+        from: EMAIL_FROM,
+        reply_to: EMAIL_REPLY_TO,
         to: email,
         subject: 'Welcome to PulseWave Signals',
         html,
