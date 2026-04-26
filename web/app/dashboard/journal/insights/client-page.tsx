@@ -2,8 +2,26 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
+import {
+  buildDayBreakdown,
+  buildJournalOverview,
+  cleanLabel,
+  countClosedTradesMissingPnl,
+  formatMoney,
+  formatR,
+  formatRoundedPercent,
+  getClosedTrades,
+  getOpenTrades,
+  hasMeaningfulThesis,
+  hasReview,
+  segmentMetric,
+  segmentScore,
+  segmentTrades,
+  type JournalTrade,
+  type Segment,
+} from '@/lib/journal-analytics'
 
-type Trade = {
+type Trade = JournalTrade & {
   id: string
   pair: string
   direction: string
@@ -30,19 +48,6 @@ type Rule = {
   id: string
   rule_text: string
   active: boolean
-}
-
-type Segment = {
-  key: string
-  label: string
-  total: number
-  wins: number
-  pnl: number
-  rSum: number
-  rCount: number
-  avgR: number
-  winRate: number
-  expectancy: number
 }
 
 type Leak = {
@@ -79,85 +84,8 @@ const SETUP_LABELS: Record<string, string> = {
   continuation: 'Continuation',
 }
 
-function money(value: number) {
-  const sign = value > 0 ? '+' : value < 0 ? '-' : ''
-  return `${sign}$${Math.abs(value).toLocaleString(undefined, { maximumFractionDigits: 2 })}`
-}
-
-function pct(value: number) {
-  return `${Math.round(value)}%`
-}
-
-function r(value: number) {
-  const sign = value > 0 ? '+' : ''
-  return `${sign}${value.toFixed(2)}R`
-}
-
-function cleanLabel(value: string | null | undefined, map?: Record<string, string>) {
-  if (!value) return 'Unclassified'
-  return map?.[value] || value.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
-}
-
-function isWin(trade: Trade) {
-  return (trade.pnl || 0) > 0
-}
-
-function avg(values: number[]) {
-  if (!values.length) return 0
-  return values.reduce((sum, value) => sum + value, 0) / values.length
-}
-
-function segmentBy(trades: Trade[], getKey: (trade: Trade) => string | null | undefined, labels?: Record<string, string>) {
-  const map = new Map<string, Segment>()
-  trades.forEach(trade => {
-    const raw = getKey(trade) || 'unclassified'
-    const key = raw || 'unclassified'
-    const current = map.get(key) || {
-      key,
-      label: key === 'unclassified' ? 'Unclassified' : cleanLabel(key, labels),
-      total: 0,
-      wins: 0,
-      pnl: 0,
-      rSum: 0,
-      rCount: 0,
-      avgR: 0,
-      winRate: 0,
-      expectancy: 0,
-    }
-    current.total += 1
-    current.wins += isWin(trade) ? 1 : 0
-    current.pnl += trade.pnl || 0
-    if (trade.r_multiple !== null && trade.r_multiple !== undefined) {
-      current.rSum += trade.r_multiple
-      current.rCount += 1
-    }
-    map.set(key, current)
-  })
-
-  return Array.from(map.values())
-    .map(segment => ({
-      ...segment,
-      avgR: segment.rCount ? segment.rSum / segment.rCount : 0,
-      winRate: segment.total ? segment.wins / segment.total : 0,
-      expectancy: segment.rCount ? segment.rSum / segment.rCount : segment.total ? segment.pnl / segment.total : 0,
-    }))
-    .sort((a, b) => b.total - a.total)
-}
-
 function makeRuleFromLeak(leak: Leak) {
   return leak.rule.replace(/\s+/g, ' ').trim()
-}
-
-function getTradeDayUtc(trade: Trade) {
-  return new Date(trade.closed_at || trade.created_at).getUTCDay()
-}
-
-function segmentScore(segment: Segment) {
-  return segment.rCount ? segment.avgR : segment.pnl / Math.max(1, segment.total)
-}
-
-function segmentMetric(segment: Segment) {
-  return segment.rCount ? r(segment.avgR) : `${money(segment.pnl / Math.max(1, segment.total))}/trade`
 }
 
 export default function InsightsClient() {
@@ -200,41 +128,41 @@ export default function InsightsClient() {
     return () => { active = false }
   }, [])
 
-  const closed = useMemo(() => trades.filter(t => t.status === 'closed' && t.pnl !== null && t.pnl !== undefined), [trades])
-  const openTrades = useMemo(() => trades.filter(t => t.status !== 'closed').length, [trades])
-  const closedMissingPnl = useMemo(() => trades.filter(t => t.status === 'closed' && (t.pnl === null || t.pnl === undefined)).length, [trades])
+  const closed = useMemo(() => getClosedTrades(trades), [trades])
+  const openTrades = useMemo(() => getOpenTrades(trades).length, [trades])
+  const closedMissingPnl = useMemo(() => countClosedTradesMissingPnl(trades), [trades])
 
   const stats = useMemo(() => {
-    const pnl = closed.reduce((sum, trade) => sum + (trade.pnl || 0), 0)
-    const wins = closed.filter(isWin).length
-    const rValues = closed.map(t => t.r_multiple).filter((value): value is number => value !== null && value !== undefined)
-    const avgR = avg(rValues)
-    const winRate = closed.length ? wins / closed.length : 0
-    const missingThesis = trades.filter(t => !t.pre_thesis || t.pre_thesis.trim().length < 20).length
-    const graded = trades.filter(t => t.grade).length
-    const reviewed = closed.filter(t => (t.post_right && t.post_right.trim()) || (t.post_wrong && t.post_wrong.trim()) || (t.lesson && t.lesson.trim())).length
-    const expectancyR = rValues.length ? avgR : null
-    const avgPnl = closed.length ? pnl / closed.length : 0
+    const overview = buildJournalOverview(trades)
+    return {
+      pnl: overview.totalPnl,
+      wins: overview.winningTrades.length,
+      avgR: overview.avgR ?? 0,
+      expectancyR: overview.expectancyR,
+      avgPnl: overview.avgPnl,
+      winRate: overview.winRate,
+      missingThesis: overview.missingThesis,
+      graded: trades.filter(t => t.grade).length,
+      reviewed: overview.reviewedClosed,
+    }
+  }, [trades])
 
-    return { pnl, wins, rValues, avgR, expectancyR, avgPnl, winRate, missingThesis, graded, reviewed }
-  }, [closed, trades])
-
-  const setupSegments = useMemo(() => segmentBy(closed, t => t.setup_type, SETUP_LABELS), [closed])
-  const emotionSegments = useMemo(() => segmentBy(closed, t => t.emotional_state, EMOTION_LABELS), [closed])
-  const sessionSegments = useMemo(() => segmentBy(closed, t => t.session), [closed])
-  const timeframeSegments = useMemo(() => segmentBy(closed, t => t.timeframe), [closed])
+  const setupSegments = useMemo(() => segmentTrades(closed, t => t.setup_type, SETUP_LABELS), [closed])
+  const emotionSegments = useMemo(() => segmentTrades(closed, t => t.emotional_state, EMOTION_LABELS), [closed])
+  const sessionSegments = useMemo(() => segmentTrades(closed, t => t.session), [closed])
+  const timeframeSegments = useMemo(() => segmentTrades(closed, t => t.timeframe), [closed])
 
   const leaks = useMemo<Leak[]>(() => {
     const results: Leak[] = []
     const minSample = closed.length >= 12 ? 3 : 2
 
-    const missingThesisTrades = trades.filter(t => !t.pre_thesis || t.pre_thesis.trim().length < 20)
+    const missingThesisTrades = trades.filter(t => !hasMeaningfulThesis(t))
     if (trades.length >= 3 && missingThesisTrades.length / trades.length >= 0.35) {
       results.push({
         id: 'missing-thesis',
         title: 'Trades are being logged without a real thesis',
         severity: missingThesisTrades.length / trades.length >= 0.6 ? 'critical' : 'warning',
-        metric: `${pct((missingThesisTrades.length / trades.length) * 100)} missing thesis`,
+        metric: `${formatRoundedPercent(missingThesisTrades.length / trades.length)} missing thesis`,
         detail: `${missingThesisTrades.length} of ${trades.length} trades do not explain the pre-trade idea clearly enough to review later.`,
         rule: 'No entry without a written thesis: setup, invalidation, target, and why this trade belongs in the playbook.',
         sampleIds: missingThesisTrades.slice(0, 3).map(t => t.id),
@@ -252,7 +180,7 @@ export default function InsightsClient() {
           title: `${segment.label} trades are draining the account`,
           severity: score < -0.5 || segment.pnl < -500 ? 'critical' : 'warning',
           metric: `${segmentMetric(segment)} across ${segment.total}`,
-          detail: `${segment.label} entries produced ${money(segment.pnl)} total P&L with a ${pct(segment.winRate * 100)} win rate.`,
+          detail: `${segment.label} entries produced ${formatMoney(segment.pnl)} total P&L with a ${formatRoundedPercent(segment.winRate)} win rate.`,
           rule: `If emotional state is ${segment.label.toLowerCase()}, reduce size or skip until a checklist-confirmed setup appears.`,
           sampleIds: closed.filter(t => t.emotional_state === segment.key).slice(0, 3).map(t => t.id),
         })
@@ -269,7 +197,7 @@ export default function InsightsClient() {
         title: `${weakSetup.label} needs tighter rules`,
         severity: score < -0.5 || weakSetup.pnl < -500 ? 'critical' : 'warning',
         metric: segmentMetric(weakSetup),
-        detail: `${weakSetup.total} trades, ${pct(weakSetup.winRate * 100)} win rate, ${money(weakSetup.pnl)} total P&L.`,
+        detail: `${weakSetup.total} trades, ${formatRoundedPercent(weakSetup.winRate)} win rate, ${formatMoney(weakSetup.pnl)} total P&L.`,
         rule: `Do not take ${weakSetup.label.toLowerCase()} setups unless confluence is 3+ and invalidation is defined before entry.`,
         sampleIds: closed.filter(t => t.setup_type === weakSetup.key).slice(0, 3).map(t => t.id),
       })
@@ -284,7 +212,7 @@ export default function InsightsClient() {
         title: `${bestSetup.label} is your current edge`,
         severity: 'edge',
         metric: segmentMetric(bestSetup),
-        detail: `${bestSetup.total} trades generated ${money(bestSetup.pnl)} with ${pct(bestSetup.winRate * 100)} wins. Protect this pattern before adding new ones.`,
+        detail: `${bestSetup.total} trades generated ${formatMoney(bestSetup.pnl)} with ${formatRoundedPercent(bestSetup.winRate)} wins. Protect this pattern before adding new ones.`,
         rule: `Prioritize ${bestSetup.label.toLowerCase()} setups and require every non-${bestSetup.label.toLowerCase()} trade to justify why it deserves risk.`,
         sampleIds: closed.filter(t => t.setup_type === bestSetup.key).slice(0, 3).map(t => t.id),
       })
@@ -296,7 +224,7 @@ export default function InsightsClient() {
         id: 'missing-review',
         title: 'Closed trades are not being converted into lessons',
         severity: 'watch',
-        metric: `${pct((unreviewedClosed.length / closed.length) * 100)} unreviewed`,
+        metric: `${formatRoundedPercent(unreviewedClosed.length / closed.length)} unreviewed`,
         detail: `${unreviewedClosed.length} closed trades have no post-trade lesson, right/wrong note, or rule update.`,
         rule: 'Every closed trade gets a 3-line debrief: what worked, what failed, and the next rule to follow.',
         sampleIds: unreviewedClosed.slice(0, 3).map(t => t.id),
@@ -312,7 +240,7 @@ export default function InsightsClient() {
         title: `${sessionLeak.label} session is underperforming`,
         severity: 'watch',
         metric: segmentMetric(sessionLeak),
-        detail: `${sessionLeak.total} ${sessionLeak.label} trades generated ${money(sessionLeak.pnl)} total P&L.`,
+        detail: `${sessionLeak.total} ${sessionLeak.label} trades generated ${formatMoney(sessionLeak.pnl)} total P&L.`,
         rule: `Trade ${sessionLeak.label.toLowerCase()} only with reduced size until expectancy turns positive over the next 10 closed trades.`,
         sampleIds: closed.filter(t => t.session === sessionLeak.key).slice(0, 3).map(t => t.id),
       })
@@ -323,7 +251,7 @@ export default function InsightsClient() {
         id: 'baseline',
         title: 'No dominant leak yet — keep collecting clean samples',
         severity: (stats.expectancyR ?? stats.avgPnl) >= 0 ? 'edge' : 'watch',
-        metric: stats.expectancyR !== null ? `${r(stats.expectancyR)} expectancy` : `${money(stats.avgPnl)}/trade`,
+        metric: stats.expectancyR !== null ? `${formatR(stats.expectancyR)} expectancy` : `${formatMoney(stats.avgPnl)}/trade`,
         detail: `The journal has ${closed.length} closed trades. The next unlock is more consistent thesis, setup, and debrief data.`,
         rule: 'For the next 10 trades, capture the same fields every time: setup, emotion, thesis, invalidation, and lesson.',
         sampleIds: closed.slice(0, 3).map(t => t.id),
@@ -333,25 +261,13 @@ export default function InsightsClient() {
     return results.slice(0, 6)
   }, [closed, emotionSegments, sessionSegments, setupSegments, stats.avgPnl, stats.expectancyR, trades])
 
-  const dayBreakdown = useMemo(() => {
-    const rows = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((label, index) => ({ label, index, total: 0, pnl: 0, rSum: 0, rCount: 0 }))
-    closed.forEach(trade => {
-      const day = getTradeDayUtc(trade)
-      rows[day].total += 1
-      rows[day].pnl += trade.pnl || 0
-      if (trade.r_multiple !== null && trade.r_multiple !== undefined) {
-        rows[day].rSum += trade.r_multiple
-        rows[day].rCount += 1
-      }
-    })
-    return rows.map(row => ({ ...row, avgR: row.rCount ? row.rSum / row.rCount : 0 }))
-  }, [closed])
+  const dayBreakdown = useMemo(() => buildDayBreakdown(closed), [closed])
 
   const coachNotes = useMemo(() => {
     if (closed.length < 3) return ['Close at least three trades to unlock meaningful leak detection.']
     const notes: string[] = []
     const expectancyValue = stats.expectancyR ?? stats.avgPnl
-    const expectancyLabel = stats.expectancyR !== null ? r(stats.expectancyR) : `${money(stats.avgPnl)}/trade`
+    const expectancyLabel = stats.expectancyR !== null ? formatR(stats.expectancyR) : `${formatMoney(stats.avgPnl)}/trade`
     if (expectancyValue > 0) notes.push(`Expectancy is positive at ${expectancyLabel}. The job now is to protect the setups creating it.`)
     else notes.push(`Expectancy is negative at ${expectancyLabel}. Reduce new risk until the largest leak has a written rule.`)
     const critical = leaks.filter(leak => leak.severity === 'critical')
@@ -447,8 +363,8 @@ export default function InsightsClient() {
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:min-w-[520px]">
             <Metric label="Closed" value={String(closed.length)} tone="neutral" />
-            <Metric label="Win rate" value={pct(stats.winRate * 100)} tone={stats.winRate >= 0.5 ? 'good' : stats.winRate === 0 ? 'neutral' : 'bad'} />
-            <Metric label="Expectancy" value={stats.expectancyR !== null ? r(stats.expectancyR) : `${money(stats.avgPnl)}/trade`} tone={(stats.expectancyR ?? stats.avgPnl) > 0 ? 'good' : (stats.expectancyR ?? stats.avgPnl) < 0 ? 'bad' : 'neutral'} />
+            <Metric label="Win rate" value={formatRoundedPercent(stats.winRate)} tone={stats.winRate >= 0.5 ? 'good' : stats.winRate === 0 ? 'neutral' : 'bad'} />
+            <Metric label="Expectancy" value={stats.expectancyR !== null ? formatR(stats.expectancyR) : `${formatMoney(stats.avgPnl)}/trade`} tone={(stats.expectancyR ?? stats.avgPnl) > 0 ? 'good' : (stats.expectancyR ?? stats.avgPnl) < 0 ? 'bad' : 'neutral'} />
             <Metric label="Rules active" value={String(activeRules)} tone={activeRules ? 'good' : 'neutral'} />
           </div>
         </div>
@@ -500,9 +416,9 @@ export default function InsightsClient() {
               {dayBreakdown.map(day => (
                 <div key={day.label} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-3">
                   <p className="font-mono text-[10px] text-white/35">{day.label}</p>
-                  <p className={`mt-2 text-sm font-bold ${day.pnl > 0 ? 'text-[#00e5a0]' : day.pnl < 0 ? 'text-[#ff4976]' : 'text-white/45'}`}>{money(day.pnl)}</p>
+                  <p className={`mt-2 text-sm font-bold ${day.pnl > 0 ? 'text-[#00e5a0]' : day.pnl < 0 ? 'text-[#ff4976]' : 'text-white/45'}`}>{formatMoney(day.pnl)}</p>
                   <p className="mt-1 text-[11px] text-white/35">{day.total} trade{day.total === 1 ? '' : 's'}</p>
-                  <p className="mt-1 text-[11px] text-white/35">{day.rCount ? r(day.avgR) : 'No R data'}</p>
+                  <p className="mt-1 text-[11px] text-white/35">{day.rCount ? formatR(day.avgR) : 'No R data'}</p>
                 </div>
               ))}
             </div>
@@ -614,11 +530,11 @@ function Breakdown({ title, subtitle, segments }: { title: string; subtitle: str
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-white">{segment.label}</p>
-                <p className="mt-1 text-xs text-white/35">{segment.total} trade{segment.total === 1 ? '' : 's'} · {pct(segment.winRate * 100)} WR</p>
+                <p className="mt-1 text-xs text-white/35">{segment.total} trade{segment.total === 1 ? '' : 's'} · {formatRoundedPercent(segment.winRate)} WR</p>
               </div>
               <div className="text-right">
                 <p className={`text-sm font-bold ${segmentScore(segment) > 0 ? 'text-[#00e5a0]' : segmentScore(segment) < 0 ? 'text-[#ff4976]' : 'text-white/45'}`}>{segmentMetric(segment)}</p>
-                <p className={`mt-1 text-xs ${segment.pnl > 0 ? 'text-[#00e5a0]' : segment.pnl < 0 ? 'text-[#ff4976]' : 'text-white/35'}`}>{money(segment.pnl)}</p>
+                <p className={`mt-1 text-xs ${segment.pnl > 0 ? 'text-[#00e5a0]' : segment.pnl < 0 ? 'text-[#ff4976]' : 'text-white/35'}`}>{formatMoney(segment.pnl)}</p>
               </div>
             </div>
               <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">

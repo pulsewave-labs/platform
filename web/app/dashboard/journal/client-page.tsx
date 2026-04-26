@@ -3,6 +3,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import {
+  average,
+  buildJournalOverview,
+  compactLabel,
+  formatMoney,
+  formatPrice,
+  formatSigned,
+  getTradeDate,
+  isLosingTrade,
+  isWinningTrade,
+  segmentTrades,
+  toNumber,
+  type JournalTrade,
+} from '@/lib/journal-analytics'
 
 const SETUP_TYPES = ['breakout', 'rejection', 'squeeze', 'kijun_bounce', 'range_play', 'trend_follow', 'scalp', 'other']
 const EMOTIONAL_EMOJIS: Record<string, string> = {
@@ -20,7 +34,7 @@ const GRADE_COLORS: Record<string, string> = {
   F: 'text-[#ff4976]',
 }
 
-interface Trade {
+interface Trade extends JournalTrade {
   id: string
   pair: string
   direction: 'LONG' | 'SHORT' | string
@@ -59,61 +73,41 @@ type Leak = {
 }
 
 function num(value: number | string | null | undefined) {
-  if (value === null || value === undefined || value === '') return null
-  const n = Number(value)
-  return Number.isFinite(n) ? n : null
+  return toNumber(value)
 }
 
 function money(value: number | string | null | undefined) {
-  const n = num(value)
-  if (n === null) return '—'
-  return `${n >= 0 ? '+' : '-'}$${Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  return formatMoney(value, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
 function signed(value: number | string | null | undefined, suffix = '') {
-  const n = num(value)
-  if (n === null) return '—'
-  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}${suffix}`
+  return formatSigned(value, suffix)
 }
 
 function price(value: number | string | null | undefined) {
-  const n = num(value)
-  if (n === null) return '—'
-  return n.toLocaleString(undefined, { maximumFractionDigits: 8 })
+  return formatPrice(value)
 }
 
 function label(value: string | null | undefined) {
-  if (!value) return 'Unlabeled'
-  return value.replace(/_/g, ' ')
+  return compactLabel(value)
 }
 
 function tradeDate(trade: Trade) {
-  return trade.opened_at || trade.entry_date || trade.created_at
+  return getTradeDate(trade)
 }
 
 function isWin(trade: Trade) {
-  return trade.status === 'closed' && (num(trade.pnl) || 0) > 0
+  return isWinningTrade(trade)
 }
 
 function isLoss(trade: Trade) {
-  return trade.status === 'closed' && (num(trade.pnl) || 0) < 0
-}
-
-function average(values: number[]) {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0
+  return isLosingTrade(trade)
 }
 
 function groupAverage(trades: Trade[], field: 'setup_type' | 'session' | 'emotional_state') {
-  const groups = new Map<string, number[]>()
-  trades.forEach((trade) => {
-    const r = num(trade.r_multiple)
-    if (r === null) return
-    const key = label(trade[field])
-    groups.set(key, [...(groups.get(key) || []), r])
-  })
-
-  return Array.from(groups.entries())
-    .map(([name, values]) => ({ name, count: values.length, avgR: average(values) }))
+  return segmentTrades(trades, (trade) => trade[field])
+    .filter((segment) => segment.rCount > 0 && segment.avgR !== null)
+    .map((segment) => ({ name: segment.label === 'Unclassified' ? 'Unlabeled' : segment.label, count: segment.rCount, avgR: segment.avgR || 0 }))
     .sort((a, b) => b.avgR - a.avgR)
 }
 
@@ -201,20 +195,16 @@ export default function JournalClient() {
   }, [dateFrom, dateTo, filter, setupFilter, trades])
 
   const analytics = useMemo(() => {
-    const closedTrades = trades.filter((trade) => trade.status === 'closed' && num(trade.pnl) !== null)
-    const winningTrades = closedTrades.filter(isWin)
-    const losingTrades = closedTrades.filter(isLoss)
-    const openTrades = trades.filter((trade) => trade.status === 'open')
-    const rValues = closedTrades.map((trade) => num(trade.r_multiple)).filter((value): value is number => value !== null)
-    const pnlValues = closedTrades.map((trade) => num(trade.pnl)).filter((value): value is number => value !== null)
-    const avgR = average(rValues)
-    const expectancy = average(pnlValues)
-    const winRate = closedTrades.length ? (winningTrades.length / closedTrades.length) * 100 : 0
+    const overview = buildJournalOverview(trades, { openStatusMode: 'openOnly', missingThesisMode: 'thesisOrNotes' })
+    const { closedTrades, winningTrades, losingTrades, openTrades, totalPnl, avgPnl } = overview
+    const avgR = overview.avgR ?? 0
+    const expectancy = avgPnl
+    const winRate = overview.winRate * 100
     const setupGroups = groupAverage(closedTrades, 'setup_type')
     const sessionGroups = groupAverage(closedTrades, 'session')
     const emotionGroups = groupAverage(closedTrades, 'emotional_state')
-    const missingThesis = trades.filter((trade) => !trade.pre_thesis && !trade.notes).length
-    const weakGradeRate = closedTrades.length ? (closedTrades.filter((trade) => ['D', 'F'].includes(trade.grade || '')).length / closedTrades.length) * 100 : 0
+    const missingThesis = overview.missingThesis
+    const weakGradeRate = overview.weakGradeRate * 100
     const bestSetup = setupGroups.find((group) => group.name !== 'Unlabeled') || setupGroups[0]
     const worstSetup = [...setupGroups].reverse().find((group) => group.name !== 'Unlabeled') || setupGroups[setupGroups.length - 1]
     const worstEmotion = [...emotionGroups].reverse().find((group) => group.name !== 'Unlabeled')
@@ -286,7 +276,7 @@ export default function JournalClient() {
       winRate,
       avgR,
       expectancy,
-      totalPnl: pnlValues.reduce((sum, value) => sum + value, 0),
+      totalPnl,
       bestSetup,
       worstSetup,
       leaks: leaks.slice(0, 4),
