@@ -67,10 +67,15 @@ export default function JournalClient() {
     }
   }
 
+  const normalizeTradeStatus = (status?: string | null) => (status || 'open').toLowerCase()
+  const isClosedTrade = (trade: Trade) => normalizeTradeStatus(trade.status) === 'closed'
+  const isOpenTrade = (trade: Trade) => normalizeTradeStatus(trade.status) !== 'closed'
+
   const filtered = trades.filter(t => {
-    if (filter === 'wins') return t.status === 'closed' && (t.pnl || 0) > 0
-    if (filter === 'losses') return t.status === 'closed' && (t.pnl || 0) < 0
-    if (filter === 'open') return t.status === 'open'
+    const closed = isClosedTrade(t)
+    if (filter === 'wins') return closed && (t.pnl || 0) > 0
+    if (filter === 'losses') return closed && (t.pnl || 0) < 0
+    if (filter === 'open') return isOpenTrade(t)
     return true
   }).filter(t => {
     if (setupFilter && t.setup_type !== setupFilter) return false
@@ -80,9 +85,9 @@ export default function JournalClient() {
     return true
   })
 
-  const winCount = trades.filter(t => t.status === 'closed' && (t.pnl || 0) > 0).length
-  const lossCount = trades.filter(t => t.status === 'closed' && (t.pnl || 0) < 0).length
-  const openCount = trades.filter(t => t.status === 'open').length
+  const winCount = trades.filter(t => isClosedTrade(t) && (t.pnl || 0) > 0).length
+  const lossCount = trades.filter(t => isClosedTrade(t) && (t.pnl || 0) < 0).length
+  const openCount = trades.filter(t => isOpenTrade(t)).length
 
   return (
     <div className="space-y-6">
@@ -178,8 +183,8 @@ export default function JournalClient() {
               </thead>
               <tbody>
                 {filtered.map(t => {
-                  const isWin = t.status === 'closed' && (t.pnl || 0) > 0
-                  const isLoss = t.status === 'closed' && (t.pnl || 0) < 0
+                  const isWin = isClosedTrade(t) && (t.pnl || 0) > 0
+                  const isLoss = isClosedTrade(t) && (t.pnl || 0) < 0
                   const rowBg = isWin ? 'bg-[#00e5a0]/[0.02] hover:bg-[#00e5a0]/[0.05]' : isLoss ? 'bg-[#ff4976]/[0.02] hover:bg-[#ff4976]/[0.05]' : 'hover:bg-white/[0.02]'
                   const dateStr = t.opened_at || t.entry_date || t.created_at
                   return (
@@ -216,8 +221,8 @@ export default function JournalClient() {
           {/* Mobile cards */}
           <div className="md:hidden space-y-2">
             {filtered.map(t => {
-              const isWin = t.status === 'closed' && (t.pnl || 0) > 0
-              const isLoss = t.status === 'closed' && (t.pnl || 0) < 0
+              const isWin = isClosedTrade(t) && (t.pnl || 0) > 0
+              const isLoss = isClosedTrade(t) && (t.pnl || 0) < 0
               const dateStr = t.opened_at || t.entry_date || t.created_at
               return (
                 <Link key={t.id} href={`/dashboard/journal/${t.id}`}
@@ -231,7 +236,7 @@ export default function JournalClient() {
                       {t.emotional_state && <span>{EMOTIONAL_EMOJIS[t.emotional_state]}</span>}
                     </div>
                     <span className={`font-mono font-bold text-sm ${isWin ? 'text-[#00e5a0]' : isLoss ? 'text-[#ff4976]' : 'text-[#555]'}`}>
-                      {t.pnl != null ? `${t.pnl >= 0 ? '+' : ''}$${Number(t.pnl).toFixed(2)}` : t.status === 'open' ? 'OPEN' : '—'}
+                      {t.pnl != null ? `${t.pnl >= 0 ? '+' : ''}$${Number(t.pnl).toFixed(2)}` : isOpenTrade(t) ? 'OPEN' : '—'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-1.5 text-[10px] text-[#555] font-mono">

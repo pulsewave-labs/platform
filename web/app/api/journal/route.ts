@@ -22,32 +22,48 @@ export async function GET(request: NextRequest) {
     const strategy = searchParams.get('strategy')
     const tags = searchParams.get('tags')?.split(',') || []
 
-    // Build the query
-    let query = supabaseAdmin
-      .from('trades')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('entry_date', { ascending: false })
-      .range(offset, offset + limit - 1)
+    const missingOrderColumn = (message: string) => /entry_date|opened_at/i.test(message || '')
 
-    // Apply filters
-    if (status) {
-      query = query.eq('status', status)
-    }
-    
-    if (pair) {
-      query = query.eq('pair', pair)
-    }
-    
-    if (strategy) {
-      query = query.eq('strategy', strategy)
+    const buildJournalQuery = (orderColumn: 'entry_date' | 'opened_at') => {
+      let query = supabaseAdmin
+        .from('trades')
+        .select('*')
+        .eq('user_id', user.id)
+        .order(orderColumn, { ascending: false })
+        .range(offset, offset + limit - 1)
+
+      // Apply filters
+      if (status) {
+        query = query.eq('status', status)
+      }
+
+      if (pair) {
+        query = query.eq('pair', pair)
+      }
+
+      if (strategy) {
+        query = query.eq('strategy', strategy)
+      }
+
+      if (tags.length > 0) {
+        query = query.overlaps('tags', tags)
+      }
+
+      return query
     }
 
-    if (tags.length > 0) {
-      query = query.overlaps('tags', tags)
-    }
+    let { data: trades, error, count } = await buildJournalQuery('entry_date')
 
-    const { data: trades, error, count } = await query
+    // Production can still be on the original trade schema, which stores the
+    // open timestamp as opened_at instead of entry_date. If ordering by the new
+    // column fails, retry the list query with the legacy order column so newly
+    // logged open trades do not disappear from the journal.
+    if (error && missingOrderColumn(error.message || '')) {
+      const retry = await buildJournalQuery('opened_at')
+      trades = retry.data
+      error = retry.error
+      count = retry.count
+    }
 
     if (error) {
       console.error('Database error:', error)
