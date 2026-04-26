@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test:market-symbols": "node scripts/test-market-symbols.mjs",
+    "test:journal-legacy-fallback": "node scripts/test-journal-legacy-fallback.mjs",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

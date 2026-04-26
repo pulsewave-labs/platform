@@ -208,7 +208,7 @@ export async function POST(request: NextRequest) {
     // Some older PulseWave databases used quantity/opened_at instead of
     // position_size/entry_date. Retry with the compatible base schema so users
     // can still log trades while migrations catch up.
-    if (error && /position_size|entry_date|exit_date|screenshots|strategy/i.test(error.message || '')) {
+    if (error && /position_size|entry_date|exit_date|screenshots|strategy|auto_imported/i.test(error.message || '')) {
       const compatibleTradeData = {
         user_id: user.id,
         signal_id: body.signal_id || null,
