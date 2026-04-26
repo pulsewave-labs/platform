@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -32,19 +32,9 @@ function detectSession(): string {
   return 'ny'
 }
 
-interface Signal {
-  id: string
-  pair: string
-  direction: string
-  entry_price: number
-  status: string
-  created_at: string
-}
-
 export default function NewTradeClient() {
   const router = useRouter()
   const [saving, setSaving] = useState(false)
-  const [signals, setSignals] = useState<Signal[]>([])
   const [error, setError] = useState('')
 
   const [form, setForm] = useState({
@@ -60,19 +50,8 @@ export default function NewTradeClient() {
     confluence: 3,
     emotional_state: '',
     pre_thesis: '',
-    signal_id: '',
     session: detectSession(),
   })
-
-  useEffect(() => {
-    fetch('/api/signals')
-      .then(r => r.json())
-      .then(data => {
-        const active = (data.signals || data || []).filter((s: Signal) => s.status === 'active')
-        setSignals(active)
-      })
-      .catch(() => {})
-  }, [])
 
   function update(field: string, value: any) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -97,10 +76,10 @@ export default function NewTradeClient() {
         confluence: form.confluence,
         emotional_state: form.emotional_state || null,
         pre_thesis: form.pre_thesis || null,
-        signal_id: form.signal_id || null,
+        signal_id: null,
         session: form.session,
         status: 'open',
-        source: form.signal_id ? 'signal' : 'manual',
+        source: 'manual',
         entry_date: new Date().toISOString(),
       }
 
@@ -272,22 +251,6 @@ export default function NewTradeClient() {
             className={`${inputClass} min-h-[100px] resize-none`}
             placeholder="Why are you taking this trade? What's your thesis?" />
         </div>
-
-        {/* Link to Signal */}
-        {signals.length > 0 && (
-          <div className="p-4 rounded-lg border border-white/[0.04] bg-[#0a0a0c] space-y-3">
-            <p className="text-[10px] text-[#555] font-mono tracking-wider">LINK TO SIGNAL (OPTIONAL)</p>
-            <select value={form.signal_id} onChange={e => update('signal_id', e.target.value)}
-              className={inputClass}>
-              <option value="">None</option>
-              {signals.map(s => (
-                <option key={s.id} value={s.id}>
-                  {s.pair} {s.direction} @ {s.entry_price} — {new Date(s.created_at).toLocaleDateString()}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
 
         {/* Submit */}
         <button type="submit" disabled={saving || !form.entry_price}

@@ -195,8 +195,8 @@ export default function SettingsClientPage() {
             <div>
               <div className="flex items-center justify-between mb-1">
                 <div>
-                  <div className="text-sm text-[#ccc] font-medium">Telegram Alerts</div>
-                  <div className="text-[13px] text-[#777] mono">Get instant signal notifications</div>
+                  <div className="text-sm text-[#ccc] font-medium">Telegram Connection</div>
+                  <div className="text-[13px] text-[#777] mono">Optional account updates and journal reminders</div>
                 </div>
               </div>
               <button onClick={handleConnectTelegram} disabled={linkLoading} className="mt-2 w-full py-2 bg-[#00e5a0] hover:bg-[#00cc8e] text-black text-sm font-semibold rounded-lg transition-colors disabled:opacity-50">
@@ -208,12 +208,12 @@ export default function SettingsClientPage() {
       </section>
 
       <section>
-        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">EMAIL SIGNALS</div>
+        <div className="text-[12px] mono text-[#888] tracking-widest font-medium mb-2">EMAIL</div>
         <div className="border border-[#161616] rounded-lg bg-[#0c0c0c] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3">
             <div>
-              <div className="text-sm text-[#ccc] font-medium">Email Delivery</div>
-              <div className="text-[13px] text-[#777] mono">Receive signals at {userEmail || 'your email'}</div>
+              <div className="text-sm text-[#ccc] font-medium">Journal Emails</div>
+              <div className="text-[13px] text-[#777] mono">Receive product updates at {userEmail || 'your email'}</div>
             </div>
             <button
               onClick={handleToggleEmailSignals}
@@ -224,7 +224,7 @@ export default function SettingsClientPage() {
             </button>
           </div>
           <div className="border-t border-[#141414] px-4 py-2">
-            <div className="text-[12px] text-[#555] mono">Signals include entry, stop loss, take profit, and position sizing. {!telegramLinked && 'Connect Telegram above for faster delivery.'}</div>
+            <div className="text-[12px] text-[#555] mono">Journal emails can include onboarding, reminders, and product education. {!telegramLinked && 'Connect Telegram above for optional account updates.'}</div>
           </div>
         </div>
       </section>
@@ -234,8 +234,8 @@ export default function SettingsClientPage() {
         <div className="border border-[#161616] rounded-lg overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 bg-[#0c0c0c]">
             <div>
-              <div className="text-sm text-[#ccc] font-medium">Signal Alerts</div>
-              <div className="text-[13px] text-[#777] mono">New signal notifications</div>
+              <div className="text-sm text-[#ccc] font-medium">Journal Reminders</div>
+              <div className="text-[13px] text-[#777] mono">Prompts to log, review, and improve</div>
             </div>
             <button
               onClick={function() { setTelegramEnabled(!telegramEnabled) }}

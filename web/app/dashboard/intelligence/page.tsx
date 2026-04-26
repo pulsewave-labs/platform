@@ -1,5 +1,7 @@
-import IntelligenceDashboard from './client-page'
+export var dynamic = 'force-dynamic'
+
+import { redirect } from 'next/navigation'
 
 export default function Page() {
-  return <IntelligenceDashboard />
+  redirect('/dashboard/journal/insights?from=intel')
 }
