@@ -10,6 +10,7 @@
     "test:market-symbols": "node scripts/test-market-symbols.mjs",
     "test:journal-legacy-fallback": "node scripts/test-journal-legacy-fallback.mjs",
     "test:journal-open-listing-fallback": "node scripts/test-journal-open-listing-fallback.mjs",
+    "test:journal-field-mapping": "node scripts/test-journal-field-mapping.mjs",
     "test:dashboard-theme-toggle": "node scripts/test-dashboard-theme-toggle.mjs",
     "type-check": "tsc --noEmit"
   },

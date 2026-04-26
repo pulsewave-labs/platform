@@ -67,7 +67,22 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    
+
+    const missingUpdateColumn = (message: string) => /pre_thesis|post_right|post_wrong|lesson|grade|emotional_state|confluence|screenshot_entry|screenshot_exit|session|risk_amount|auto_imported|position_size|entry_date|exit_date|timeframe|setup_type/i.test(message || '')
+
+    const buildLegacyNotes = () => {
+      if (body.pre_thesis !== undefined) return body.pre_thesis || null
+      if (body.notes !== undefined) return body.notes || null
+
+      const reviewParts = [
+        body.post_right ? `Right: ${body.post_right}` : '',
+        body.post_wrong ? `Wrong: ${body.post_wrong}` : '',
+        body.lesson ? `Lesson: ${body.lesson}` : '',
+      ].filter(Boolean)
+
+      return reviewParts.length > 0 ? reviewParts.join('\n\n') : undefined
+    }
+
     // Get existing trade to validate ownership
     const { data: existingTrade, error: fetchError } = await supabaseAdmin
       .from('trades')
@@ -98,7 +113,7 @@ export async function PATCH(
       const entryPrice = body.entry_price || existingTrade.entry_price
       const exitPrice = body.exit_price || existingTrade.exit_price
       const stopLoss = body.stop_loss || existingTrade.stop_loss
-      const positionSize = body.position_size || existingTrade.position_size
+      const positionSize = body.position_size || body.quantity || existingTrade.position_size || existingTrade.quantity
       const direction = (body.direction || existingTrade.direction).toUpperCase()
       const fees = body.fees !== undefined ? body.fees : existingTrade.fees
 
@@ -129,13 +144,54 @@ export async function PATCH(
     delete updateData.created_at
     
     // Update the trade
-    const { data: trade, error } = await supabaseAdmin
+    let { data: trade, error } = await supabaseAdmin
       .from('trades')
       .update(updateData)
       .eq('id', params.id)
       .eq('user_id', user.id)
       .select()
       .single()
+
+    // Some production databases are still on the original trade schema. Keep
+    // the UI fields canonical, but retry updates with the legacy column names
+    // when Supabase reports newer journal fields are missing.
+    if (error && missingUpdateColumn(error.message || '')) {
+      const compatibleUpdateData: any = { ...updateData }
+      const legacyNotes = buildLegacyNotes()
+
+      if (compatibleUpdateData.position_size !== undefined) {
+        compatibleUpdateData.quantity = compatibleUpdateData.position_size
+      }
+      if (compatibleUpdateData.entry_date !== undefined) {
+        compatibleUpdateData.opened_at = compatibleUpdateData.entry_date
+      }
+      if (compatibleUpdateData.exit_date !== undefined) {
+        compatibleUpdateData.closed_at = compatibleUpdateData.exit_date
+      }
+      if (legacyNotes !== undefined) {
+        compatibleUpdateData.notes = legacyNotes
+      }
+
+      for (const unsupportedColumn of [
+        'position_size', 'entry_date', 'exit_date', 'pre_thesis', 'post_right',
+        'post_wrong', 'lesson', 'grade', 'emotional_state', 'confluence',
+        'screenshot_entry', 'screenshot_exit', 'session', 'risk_amount',
+        'auto_imported', 'timeframe', 'setup_type', 'screenshots', 'strategy',
+      ]) {
+        delete compatibleUpdateData[unsupportedColumn]
+      }
+
+      const retry = await supabaseAdmin
+        .from('trades')
+        .update(compatibleUpdateData)
+        .eq('id', params.id)
+        .eq('user_id', user.id)
+        .select()
+        .single()
+
+      trade = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error('Database error:', error)

@@ -135,6 +135,12 @@ export default function TradeDetailClient({ id }: { id: string }) {
     finally { setSaving(false) }
   }
 
+  function beginEditing() {
+    if (!trade) return
+    setEditing(true)
+    setEditForm({ ...trade, pre_thesis: trade.pre_thesis || trade.notes || '' })
+  }
+
   async function handleDelete() {
     if (!confirm('Delete this trade?')) return
     try {
@@ -149,10 +155,13 @@ export default function TradeDetailClient({ id }: { id: string }) {
   if (loading) return <div className="flex items-center justify-center py-20"><div className="w-6 h-6 border-2 border-[#00e5a0] border-t-transparent rounded-full animate-spin" /></div>
   if (!trade) return <div className="text-center py-20 text-[#555]">{error || 'Trade not found'}</div>
 
-  const isOpen = trade.status === 'open'
-  const isWin = trade.status === 'closed' && (trade.pnl || 0) > 0
-  const isLoss = trade.status === 'closed' && (trade.pnl || 0) < 0
+  const status = (trade.status || 'open').toLowerCase()
+  const isOpen = status !== 'closed'
+  const isWin = status === 'closed' && (trade.pnl || 0) > 0
+  const isLoss = status === 'closed' && (trade.pnl || 0) < 0
   const dateStr = trade.opened_at || trade.entry_date || trade.created_at
+  const preTradePlan = trade.pre_thesis || trade.notes
+  const hasSeparateAdditionalNotes = Boolean(trade.notes && trade.pre_thesis && trade.notes !== trade.pre_thesis)
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -161,7 +170,7 @@ export default function TradeDetailClient({ id }: { id: string }) {
           ← BACK TO JOURNAL
         </Link>
         <div className="flex items-center gap-2">
-          <button onClick={() => { setEditing(!editing); setEditForm(trade) }}
+          <button onClick={() => editing ? setEditing(false) : beginEditing()}
             className="px-3 py-1.5 text-[10px] text-[#666] hover:text-white border border-white/[0.06] rounded-md transition-colors">
             {editing ? 'CANCEL' : 'EDIT'}
           </button>
@@ -195,8 +204,8 @@ export default function TradeDetailClient({ id }: { id: string }) {
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
           {[
-            { label: 'ENTRY', value: Number(trade.entry_price).toLocaleString() },
-            { label: 'EXIT', value: trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—' },
+            { label: 'PLANNED ENTRY', value: Number(trade.entry_price).toLocaleString() },
+            { label: 'CLOSE / EXIT', value: trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—' },
             { label: 'STOP LOSS', value: trade.stop_loss ? Number(trade.stop_loss).toLocaleString() : '—' },
             { label: 'TAKE PROFIT', value: trade.take_profit ? Number(trade.take_profit).toLocaleString() : '—' },
           ].map(item => (
@@ -207,7 +216,7 @@ export default function TradeDetailClient({ id }: { id: string }) {
           ))}
         </div>
 
-        {trade.status === 'closed' && (
+        {status === 'closed' && (
           <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t border-white/[0.04]">
             <div>
               <p className="text-[10px] text-[#555] font-mono">PNL</p>
@@ -240,11 +249,11 @@ export default function TradeDetailClient({ id }: { id: string }) {
         </div>
       </div>
 
-      {/* Pre-trade Thesis */}
-      {trade.pre_thesis && (
+      {/* Pre-trade Plan */}
+      {preTradePlan && (
         <div className="p-4 rounded-lg border border-white/[0.04] bg-[#0a0a0c]">
-          <p className="text-[10px] text-[#555] font-mono tracking-wider mb-2">PRE-TRADE THESIS</p>
-          <p className="text-sm text-[#ccc] whitespace-pre-wrap">{trade.pre_thesis}</p>
+          <p className="text-[10px] text-[#555] font-mono tracking-wider mb-2">PRE-TRADE PLAN / THESIS</p>
+          <p className="text-sm text-[#ccc] whitespace-pre-wrap">{preTradePlan}</p>
         </div>
       )}
 
@@ -377,7 +386,7 @@ export default function TradeDetailClient({ id }: { id: string }) {
               </select>
             </div>
             <div>
-              <label className={labelClass}>ENTRY PRICE</label>
+              <label className={labelClass}>PLANNED ENTRY PRICE</label>
               <input type="number" step="any" value={editForm.entry_price || ''} onChange={e => setEditForm(p => ({...p, entry_price: parseFloat(e.target.value)}))}
                 className={inputClass} />
             </div>
@@ -388,8 +397,8 @@ export default function TradeDetailClient({ id }: { id: string }) {
             </div>
           </div>
           <div>
-            <label className={labelClass}>NOTES</label>
-            <textarea value={editForm.notes || ''} onChange={e => setEditForm(p => ({...p, notes: e.target.value}))}
+            <label className={labelClass}>PRE-TRADE PLAN / THESIS</label>
+            <textarea value={(editForm.pre_thesis as string) || ''} onChange={e => setEditForm(p => ({...p, pre_thesis: e.target.value}))}
               className={`${inputClass} min-h-[80px] resize-none`} />
           </div>
           <button onClick={handleSaveEdit} disabled={saving}
@@ -399,10 +408,10 @@ export default function TradeDetailClient({ id }: { id: string }) {
         </div>
       )}
 
-      {/* Notes */}
-      {trade.notes && !editing && (
+      {/* Additional Context */}
+      {hasSeparateAdditionalNotes && !editing && (
         <div className="p-4 rounded-lg border border-white/[0.04] bg-[#0a0a0c]">
-          <p className="text-[10px] text-[#555] font-mono tracking-wider mb-2">NOTES</p>
+          <p className="text-[10px] text-[#555] font-mono tracking-wider mb-2">ADDITIONAL CONTEXT</p>
           <p className="text-sm text-[#ccc] whitespace-pre-wrap">{trade.notes}</p>
         </div>
       )}
