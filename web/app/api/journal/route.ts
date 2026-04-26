@@ -88,16 +88,48 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
-    // Validate required fields
-    const requiredFields = ['pair', 'direction', 'entry_price']
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { error: 'Validation error', message: `Field '${field}' is required` },
-          { status: 400 }
-        )
+
+    const parsePositiveNumber = (value: any, field: string, required = false) => {
+      if (value === null || value === undefined || value === '') {
+        if (required) throw new Error(`${field} is required`)
+        return null
       }
+      const parsed = Number(value)
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        throw new Error(`${field} must be a positive number`)
+      }
+      return parsed
+    }
+
+    if (!body.pair) {
+      return NextResponse.json(
+        { error: 'Validation error', message: "Field 'pair' is required" },
+        { status: 400 }
+      )
+    }
+
+    let entryPrice: number
+    let exitPrice: number | null
+    let stopLoss: number | null
+    let takeProfit: number | null
+    let positionSize: number | null
+    let riskAmount: number | null
+    let fees: number | null
+
+    try {
+      entryPrice = parsePositiveNumber(body.entry_price, 'Entry price', true) as number
+      exitPrice = parsePositiveNumber(body.exit_price, 'Exit price')
+      stopLoss = parsePositiveNumber(body.stop_loss, 'Stop loss')
+      takeProfit = parsePositiveNumber(body.take_profit, 'Take profit')
+      positionSize = parsePositiveNumber(body.position_size, 'Size')
+      riskAmount = parsePositiveNumber(body.risk_amount, 'Risk amount')
+      fees = body.fees === null || body.fees === undefined || body.fees === '' ? 0 : Number(body.fees)
+      if (!Number.isFinite(fees) || fees < 0) throw new Error('Fees must be zero or greater')
+    } catch (validationError: any) {
+      return NextResponse.json(
+        { error: 'Validation error', message: validationError.message },
+        { status: 400 }
+      )
     }
 
     // Validate direction
@@ -113,17 +145,17 @@ export async function POST(request: NextRequest) {
     let pnl = null
     let pnl_percent = null
 
-    if (body.exit_price && body.stop_loss && body.entry_price) {
-      const risk = Math.abs(body.entry_price - body.stop_loss)
+    if (exitPrice && stopLoss) {
+      const risk = Math.abs(entryPrice - stopLoss)
       const reward = body.direction.toUpperCase() === 'LONG' 
-        ? body.exit_price - body.entry_price
-        : body.entry_price - body.exit_price
+        ? exitPrice - entryPrice
+        : entryPrice - exitPrice
       
       r_multiple = risk > 0 ? reward / risk : 0
       
-      if (body.position_size) {
-        pnl = reward * body.position_size - (body.fees || 0)
-        pnl_percent = (reward / body.entry_price) * 100
+      if (positionSize) {
+        pnl = reward * positionSize - (fees || 0)
+        pnl_percent = (reward / entryPrice) * 100
       }
     }
 
@@ -132,15 +164,15 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       pair: body.pair.toUpperCase(),
       direction: body.direction.toUpperCase(),
-      entry_price: parseFloat(body.entry_price),
-      exit_price: body.exit_price ? parseFloat(body.exit_price) : null,
-      stop_loss: body.stop_loss ? parseFloat(body.stop_loss) : null,
-      take_profit: body.take_profit ? parseFloat(body.take_profit) : null,
-      position_size: body.position_size ? parseFloat(body.position_size) : null,
+      entry_price: entryPrice,
+      exit_price: exitPrice,
+      stop_loss: stopLoss,
+      take_profit: takeProfit,
+      position_size: positionSize,
       pnl,
       pnl_percent,
       r_multiple,
-      fees: body.fees ? parseFloat(body.fees) : 0,
+      fees: fees || 0,
       status: body.status || 'open',
       source: body.source || 'manual',
       exchange: body.exchange || null,
@@ -163,15 +195,52 @@ export async function POST(request: NextRequest) {
       screenshot_entry: body.screenshot_entry || null,
       screenshot_exit: body.screenshot_exit || null,
       session: body.session || null,
-      risk_amount: body.risk_amount ? parseFloat(body.risk_amount) : null,
+      risk_amount: riskAmount,
       auto_imported: body.auto_imported || false
     }
 
-    const { data: trade, error } = await supabaseAdmin
+    let { data: trade, error } = await supabaseAdmin
       .from('trades')
       .insert(tradeData)
       .select()
       .single()
+
+    // Some older PulseWave databases used quantity/opened_at instead of
+    // position_size/entry_date. Retry with the compatible base schema so users
+    // can still log trades while migrations catch up.
+    if (error && /position_size|entry_date|exit_date|screenshots|strategy/i.test(error.message || '')) {
+      const compatibleTradeData = {
+        user_id: user.id,
+        signal_id: body.signal_id || null,
+        pair: body.pair.toUpperCase(),
+        direction: body.direction.toUpperCase(),
+        entry_price: entryPrice,
+        exit_price: exitPrice,
+        stop_loss: stopLoss,
+        take_profit: takeProfit,
+        quantity: positionSize,
+        pnl,
+        pnl_percent,
+        r_multiple,
+        fees: fees || 0,
+        status: body.status || 'open',
+        source: body.source || 'manual',
+        exchange: body.exchange || null,
+        notes: body.notes || body.pre_thesis || null,
+        tags: body.tags || [],
+        opened_at: body.entry_date || new Date().toISOString(),
+        closed_at: body.exit_date || null,
+      }
+
+      const retry = await supabaseAdmin
+        .from('trades')
+        .insert(compatibleTradeData)
+        .select()
+        .single()
+
+      trade = retry.data
+      error = retry.error
+    }
 
     if (error) {
       console.error('Database error:', error)

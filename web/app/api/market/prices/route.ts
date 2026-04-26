@@ -1,39 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { coinGeckoIdForSymbol, normalizeMarketSymbol } from '../../../../lib/market-symbols'
+
+export const dynamic = 'force-dynamic'
 
 // Cache for price data
 const priceCache = new Map<string, { data: any, timestamp: number }>()
 const CACHE_DURATION = 30 * 1000 // 30 seconds
-
-// Mapping from common trading symbols to CoinGecko IDs
-const SYMBOL_TO_ID: { [key: string]: string } = {
-  'bitcoin': 'bitcoin',
-  'btc': 'bitcoin',
-  'ethereum': 'ethereum', 
-  'eth': 'ethereum',
-  'solana': 'solana',
-  'sol': 'solana',
-  'cardano': 'cardano',
-  'ada': 'cardano',
-  'polkadot': 'polkadot',
-  'dot': 'polkadot',
-  'chainlink': 'chainlink',
-  'link': 'chainlink',
-  'polygon': 'matic-network',
-  'matic': 'matic-network',
-  'avalanche': 'avalanche-2',
-  'avax': 'avalanche-2',
-  'cosmos': 'cosmos',
-  'atom': 'cosmos',
-  'near': 'near',
-  'algorand': 'algorand',
-  'algo': 'algorand',
-  'fantom': 'fantom',
-  'ftm': 'fantom',
-  'arbitrum': 'arbitrum',
-  'arb': 'arbitrum',
-  'optimism': 'optimism',
-  'op': 'optimism'
-}
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,15 +13,11 @@ export async function GET(request: NextRequest) {
     const symbolsParam = searchParams.get('symbols') || 'bitcoin,ethereum'
     const currency = searchParams.get('currency') || 'usd'
     
-    // Parse and normalize symbols
-    const requestedSymbols = symbolsParam.toLowerCase().split(',').map(s => s.trim())
-    
-    // Convert symbols to CoinGecko IDs
-    const coinGeckoIds = requestedSymbols.map(symbol => {
-      return SYMBOL_TO_ID[symbol] || symbol
-    })
-    
-    const uniqueIds = [...new Set(coinGeckoIds)]
+    // Parse and normalize symbols. Accepts BTC, BTCUSDT, BTC/USDT, or bitcoin.
+    const requestedSymbols = symbolsParam.split(',').map(s => s.trim()).filter(Boolean)
+    const normalizedSymbols = requestedSymbols.map(symbol => normalizeMarketSymbol(symbol))
+    const coinGeckoIds = normalizedSymbols.map(symbol => coinGeckoIdForSymbol(symbol.coinGeckoSymbol))
+    const uniqueIds = Array.from(new Set(coinGeckoIds))
     const cacheKey = `${uniqueIds.join(',')}_${currency}`
     
     // Check cache
@@ -82,7 +50,10 @@ export async function GET(request: NextRequest) {
     const data = await response.json()
 
     // Transform the data to a more user-friendly format
-    const transformedData = {
+    const transformedData: {
+      prices: Record<string, any>
+      meta: Record<string, any>
+    } = {
       prices: {} as any,
       meta: {
         currency: currency.toUpperCase(),
@@ -93,7 +64,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Map the response back to requested symbols
-    requestedSymbols.forEach((originalSymbol, index) => {
+    normalizedSymbols.forEach((normalizedSymbol, index) => {
+      const originalSymbol = normalizedSymbol.pair
       const coinGeckoId = coinGeckoIds[index]
       const priceData = data[coinGeckoId]
       
@@ -149,7 +121,7 @@ export async function GET(request: NextRequest) {
     })
 
     // Clean old cache entries
-    for (const [key, value] of priceCache.entries()) {
+    for (const [key, value] of Array.from(priceCache.entries())) {
       if (Date.now() - value.timestamp > CACHE_DURATION * 2) {
         priceCache.delete(key)
       }
@@ -164,9 +136,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const symbolsParam = searchParams.get('symbols') || 'bitcoin,ethereum'
     const currency = searchParams.get('currency') || 'usd'
-    const requestedSymbols = symbolsParam.toLowerCase().split(',').map(s => s.trim())
-    const coinGeckoIds = requestedSymbols.map(symbol => SYMBOL_TO_ID[symbol] || symbol)
-    const uniqueIds = [...new Set(coinGeckoIds)]
+    const normalizedSymbols = symbolsParam.split(',').map(s => s.trim()).filter(Boolean).map(symbol => normalizeMarketSymbol(symbol))
+    const coinGeckoIds = normalizedSymbols.map(symbol => coinGeckoIdForSymbol(symbol.coinGeckoSymbol))
+    const uniqueIds = Array.from(new Set(coinGeckoIds))
     const cacheKey = `${uniqueIds.join(',')}_${currency}`
     
     const cached = priceCache.get(cacheKey)

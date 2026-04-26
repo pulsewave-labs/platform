@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test:market-symbols": "node scripts/test-market-symbols.mjs",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
